@@ -1,0 +1,12 @@
+{
+  "name": "boogagart-crm",
+  "version": "1.0.0",
+  "description": "BooGagArt CRM - event management system",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}
