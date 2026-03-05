@@ -1,0 +1,1333 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>BooGagArt CRM</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+    :root{
+      --bg:#0f1117;--bg2:#1a1d27;--bg3:#242736;--bg4:#2e3246;
+      --border:rgba(255,255,255,0.06);--text:#8b95a5;--text2:#c9d1d9;--white:#fff;
+      --primary:#FF6B35;--primary-bg:rgba(255,107,53,0.1);
+      --green:#00C9A7;--green-bg:rgba(0,201,167,0.1);
+      --blue:#6366F1;--blue-bg:rgba(99,102,241,0.1);
+      --red:#EF4444;--red-bg:rgba(239,68,68,0.1);
+      --yellow:#F59E0B;--yellow-bg:rgba(245,158,11,0.1);
+      --purple:#A855F7;--purple-bg:rgba(168,85,247,0.1);
+      --radius:10px;--shadow:0 4px 20px rgba(0,0,0,0.3);
+    }
+    html{scroll-behavior:smooth}
+    body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);line-height:1.6;display:flex;min-height:100vh}
+
+    /* SIDEBAR */
+    .sidebar{width:250px;background:var(--bg2);border-right:1px solid var(--border);display:flex;flex-direction:column;position:fixed;top:0;bottom:0;z-index:50}
+    .sidebar-logo{padding:1.5rem;border-bottom:1px solid var(--border)}
+    .sidebar-logo .brand{font-size:1.25rem;font-weight:800;color:var(--white)}
+    .sidebar-logo .brand span{color:var(--primary)}
+    .sidebar-logo small{display:block;font-size:0.65rem;color:var(--text);letter-spacing:1px;text-transform:uppercase;margin-top:2px}
+    .sidebar-nav{flex:1;padding:0.8rem 0;overflow-y:auto}
+    .nav-group{padding:0.5rem 1.5rem 0.3rem;font-size:0.6rem;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;color:var(--text);margin-top:0.5rem}
+    .nav-item{display:flex;align-items:center;gap:0.8rem;padding:0.6rem 1.5rem;color:var(--text);font-size:0.83rem;font-weight:500;cursor:pointer;transition:all 0.2s;border:none;background:none;width:100%;text-align:left;font-family:inherit}
+    .nav-item:hover{color:var(--text2);background:rgba(255,255,255,0.03)}
+    .nav-item.active{color:var(--primary);background:var(--primary-bg);border-right:3px solid var(--primary)}
+    .nav-item .icon{font-size:1.1rem;width:22px;text-align:center}
+    .nav-item .badge{margin-left:auto;background:var(--primary);color:var(--white);font-size:0.6rem;font-weight:700;padding:2px 7px;border-radius:10px}
+    .nav-item.hidden{display:none}
+    .sidebar-user{padding:1rem 1.5rem;border-top:1px solid var(--border);display:flex;align-items:center;gap:0.8rem}
+    .sidebar-user .avatar{width:34px;height:34px;border-radius:8px;background:var(--primary);display:flex;align-items:center;justify-content:center;color:var(--white);font-weight:700;font-size:0.85rem}
+    .sidebar-user .info{flex:1}
+    .sidebar-user .info .uname{font-size:0.8rem;font-weight:600;color:var(--white)}
+    .sidebar-user .info .urole{font-size:0.65rem;color:var(--text)}
+    .sidebar-user .logout{background:none;border:none;color:var(--text);cursor:pointer;font-size:1rem;padding:4px}
+    .sidebar-user .logout:hover{color:var(--red)}
+
+    /* MAIN */
+    .main{margin-left:250px;flex:1}
+    .topbar{position:sticky;top:0;z-index:40;background:rgba(15,17,23,0.88);backdrop-filter:blur(20px);border-bottom:1px solid var(--border);padding:1rem 2rem;display:flex;align-items:center;justify-content:space-between}
+    .topbar h1{font-size:1.15rem;font-weight:700;color:var(--white)}
+    .topbar-actions{display:flex;gap:0.7rem}
+    .content{padding:2rem}
+
+    /* BUTTONS */
+    .btn{display:inline-flex;align-items:center;gap:0.4rem;padding:0.5rem 1.1rem;border-radius:8px;font-family:inherit;font-size:0.8rem;font-weight:600;cursor:pointer;border:none;transition:all 0.2s}
+    .btn-primary{background:var(--primary);color:var(--white)}
+    .btn-primary:hover{filter:brightness(1.1);transform:translateY(-1px)}
+    .btn-secondary{background:var(--bg3);color:var(--text2);border:1px solid var(--border)}
+    .btn-secondary:hover{border-color:var(--primary);color:var(--white)}
+    .btn-danger{background:var(--red-bg);color:var(--red)}
+    .btn-danger:hover{background:var(--red);color:var(--white)}
+    .btn-sm{padding:0.3rem 0.7rem;font-size:0.72rem}
+    .btn-green{background:var(--green);color:var(--white)}
+
+    /* STATS */
+    .stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:1.2rem;margin-bottom:2rem}
+    .stat-card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:1.3rem 1.5rem;transition:border-color 0.3s;position:relative;overflow:hidden}
+    .stat-card:hover{border-color:rgba(255,107,53,0.2)}
+    .stat-card::after{content:'';position:absolute;bottom:0;left:0;right:0;height:2px}
+    .stat-card:nth-child(1)::after{background:var(--primary)}
+    .stat-card:nth-child(2)::after{background:var(--green)}
+    .stat-card:nth-child(3)::after{background:var(--blue)}
+    .stat-card:nth-child(4)::after{background:var(--yellow)}
+    .stat-label{font-size:0.72rem;text-transform:uppercase;letter-spacing:1px;color:var(--text);margin-bottom:0.4rem}
+    .stat-value{font-size:1.8rem;font-weight:800;color:var(--white)}
+    .stat-sub{font-size:0.72rem;color:var(--text);margin-top:0.2rem}
+    .stat-icon{position:absolute;top:1.2rem;right:1.2rem;width:40px;height:40px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:1.2rem}
+
+    /* TABLE */
+    .table-wrap{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;margin-bottom:1.5rem}
+    .table-header{display:flex;justify-content:space-between;align-items:center;padding:1rem 1.5rem;border-bottom:1px solid var(--border)}
+    .table-header h3{font-size:0.92rem;font-weight:600;color:var(--white)}
+    .table-filter{display:flex;gap:0.4rem}
+    .filter-btn{padding:0.25rem 0.7rem;border-radius:6px;font-size:0.7rem;font-weight:500;background:var(--bg3);color:var(--text);border:1px solid var(--border);cursor:pointer;font-family:inherit;transition:all 0.2s}
+    .filter-btn.active{background:var(--primary-bg);color:var(--primary);border-color:var(--primary)}
+    table{width:100%;border-collapse:collapse}
+    th{text-align:left;padding:0.7rem 1.5rem;font-size:0.68rem;font-weight:600;text-transform:uppercase;letter-spacing:1px;color:var(--text);border-bottom:1px solid var(--border)}
+    td{padding:0.7rem 1.5rem;font-size:0.82rem;border-bottom:1px solid var(--border)}
+    tr:last-child td{border-bottom:none}
+    tr:hover td{background:rgba(255,255,255,0.015)}
+    .status{display:inline-block;padding:0.2rem 0.6rem;border-radius:6px;font-size:0.68rem;font-weight:600}
+    .status-new{background:var(--blue-bg);color:var(--blue)}
+    .status-progress{background:var(--yellow-bg);color:var(--yellow)}
+    .status-done{background:var(--green-bg);color:var(--green)}
+    .status-cancelled{background:var(--red-bg);color:var(--red)}
+    .venue-badge{display:inline-block;padding:0.15rem 0.5rem;border-radius:4px;font-size:0.68rem;font-weight:500}
+    .venue-indoor{background:var(--blue-bg);color:var(--blue)}
+    .venue-outdoor{background:var(--green-bg);color:var(--green)}
+    .venue-both{background:var(--yellow-bg);color:var(--yellow)}
+
+    /* MODAL */
+    .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.6);backdrop-filter:blur(4px);z-index:100;display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity 0.3s}
+    .modal-overlay.open{opacity:1;pointer-events:auto}
+    .modal{background:var(--bg2);border:1px solid var(--border);border-radius:14px;width:580px;max-width:95vw;max-height:90vh;overflow-y:auto;transform:translateY(20px);transition:transform 0.3s;box-shadow:0 20px 60px rgba(0,0,0,0.5)}
+    .modal-overlay.open .modal{transform:translateY(0)}
+    .modal-head{display:flex;justify-content:space-between;align-items:center;padding:1.2rem 1.5rem;border-bottom:1px solid var(--border)}
+    .modal-head h3{font-size:1rem;font-weight:600;color:var(--white)}
+    .modal-close{background:none;border:none;color:var(--text);font-size:1.4rem;cursor:pointer;padding:4px;line-height:1}
+    .modal-close:hover{color:var(--white)}
+    .modal-body{padding:1.5rem}
+    .modal-foot{padding:1rem 1.5rem;border-top:1px solid var(--border);display:flex;justify-content:flex-end;gap:0.5rem}
+
+    /* FORM */
+    .form-group{margin-bottom:1rem}
+    .form-group label{display:block;font-size:0.72rem;font-weight:600;color:var(--text2);margin-bottom:0.3rem;text-transform:uppercase;letter-spacing:0.5px}
+    .form-group input,.form-group select,.form-group textarea{width:100%;padding:0.55rem 0.9rem;border-radius:8px;border:1px solid var(--border);background:var(--bg3);color:var(--white);font-family:inherit;font-size:0.83rem;outline:none;transition:border-color 0.2s}
+    .form-group input:focus,.form-group select:focus,.form-group textarea:focus{border-color:var(--primary)}
+    .form-group textarea{resize:vertical;min-height:55px}
+    .form-row{display:grid;grid-template-columns:1fr 1fr;gap:1rem}
+    .form-row-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:1rem}
+
+    /* PROPOSAL */
+    .proposal-result{background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius);padding:1.5rem;margin-top:1.5rem}
+    .proposal-result h4{color:var(--white);font-size:0.92rem;margin-bottom:1rem}
+    .proposal-section{margin-bottom:1.2rem}
+    .proposal-section h5{font-size:0.75rem;text-transform:uppercase;letter-spacing:1px;color:var(--primary);margin-bottom:0.5rem}
+    .proposal-item{display:flex;justify-content:space-between;align-items:center;padding:0.5rem 0.8rem;background:var(--bg2);border-radius:6px;margin-bottom:0.4rem;font-size:0.8rem}
+    .proposal-item .name{color:var(--text2);font-weight:500}
+    .proposal-item .meta{color:var(--text);font-size:0.72rem}
+    .proposal-total{display:flex;justify-content:space-between;padding:0.8rem;background:var(--primary-bg);border-radius:8px;margin-top:0.8rem;font-weight:600;color:var(--primary);font-size:0.85rem}
+
+    /* CALENDAR */
+    .calendar-wrap{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden}
+    .cal-header{display:flex;justify-content:space-between;align-items:center;padding:1rem 1.5rem;border-bottom:1px solid var(--border)}
+    .cal-header h3{font-size:0.95rem;font-weight:600;color:var(--white)}
+    .cal-nav{display:flex;gap:0.5rem}
+    .cal-nav button{width:32px;height:32px;border-radius:6px;border:1px solid var(--border);background:var(--bg3);color:var(--text2);cursor:pointer;font-size:1rem;display:flex;align-items:center;justify-content:center;font-family:inherit}
+    .cal-nav button:hover{border-color:var(--primary);color:var(--primary)}
+    .cal-grid{display:grid;grid-template-columns:repeat(7,1fr)}
+    .cal-day-name{padding:0.6rem;text-align:center;font-size:0.65rem;font-weight:600;text-transform:uppercase;letter-spacing:1px;color:var(--text);border-bottom:1px solid var(--border)}
+    .cal-day{min-height:90px;padding:0.5rem;border-right:1px solid var(--border);border-bottom:1px solid var(--border);cursor:pointer;transition:background 0.2s}
+    .cal-day:nth-child(7n){border-right:none}
+    .cal-day:hover{background:rgba(255,255,255,0.02)}
+    .cal-day.other-month{opacity:0.3}
+    .cal-day.today{background:rgba(255,107,53,0.05)}
+    .cal-day .day-num{font-size:0.75rem;font-weight:600;color:var(--text2);margin-bottom:0.3rem}
+    .cal-day.today .day-num{color:var(--primary);font-weight:700}
+    .cal-event{padding:0.15rem 0.4rem;border-radius:4px;font-size:0.6rem;font-weight:500;margin-bottom:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;cursor:pointer}
+    .cal-event.ev-birthday{background:var(--primary-bg);color:var(--primary)}
+    .cal-event.ev-kids{background:var(--green-bg);color:var(--green)}
+    .cal-event.ev-corporate{background:var(--blue-bg);color:var(--blue)}
+    .cal-event.ev-wedding{background:var(--purple-bg);color:var(--purple)}
+    .cal-event.ev-newyear{background:var(--red-bg);color:var(--red)}
+    .cal-event.ev-other{background:var(--yellow-bg);color:var(--yellow)}
+
+    /* FINANCE */
+    .fin-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:1.2rem;margin-bottom:2rem}
+    .fin-card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:1.3rem 1.5rem}
+    .fin-card .fin-label{font-size:0.72rem;text-transform:uppercase;letter-spacing:1px;color:var(--text);margin-bottom:0.4rem}
+    .fin-card .fin-value{font-size:1.6rem;font-weight:800}
+    .fin-card .fin-sub{font-size:0.72rem;margin-top:0.2rem}
+    .fin-revenue .fin-value{color:var(--green)}
+    .fin-expenses .fin-value{color:var(--red)}
+    .fin-profit .fin-value{color:var(--primary)}
+    .fin-avg .fin-value{color:var(--blue)}
+    .fin-chart{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:1.5rem;margin-bottom:1.5rem}
+    .fin-chart h4{font-size:0.88rem;font-weight:600;color:var(--white);margin-bottom:1rem}
+    .fin-bar-row{display:flex;align-items:center;gap:1rem;margin-bottom:0.6rem}
+    .fin-bar-label{font-size:0.75rem;color:var(--text2);width:120px;text-align:right;flex-shrink:0}
+    .fin-bar-track{flex:1;height:24px;background:var(--bg3);border-radius:6px;overflow:hidden;position:relative}
+    .fin-bar-fill{height:100%;border-radius:6px;display:flex;align-items:center;padding-left:8px;font-size:0.68rem;font-weight:600;color:var(--white);transition:width 0.5s}
+    .fin-bar-val{font-size:0.75rem;color:var(--text);width:80px;flex-shrink:0}
+
+    /* LOGIN */
+    .login-screen{position:fixed;inset:0;background:var(--bg);z-index:200;display:flex;align-items:center;justify-content:center}
+    .login-card{background:var(--bg2);border:1px solid var(--border);border-radius:16px;padding:2.5rem;width:380px;max-width:90vw;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,0.5)}
+    .login-card .brand{font-size:1.8rem;font-weight:800;color:var(--white);margin-bottom:0.3rem}
+    .login-card .brand span{color:var(--primary)}
+    .login-card .subtitle{font-size:0.8rem;color:var(--text);margin-bottom:2rem}
+    .login-card .form-group{text-align:left;margin-bottom:1.2rem}
+    .role-option{display:flex;align-items:center;gap:0.8rem;padding:0.8rem 1rem;border:1px solid var(--border);border-radius:10px;cursor:pointer;transition:all 0.2s;margin-bottom:0.5rem;background:var(--bg3)}
+    .role-option:hover{border-color:var(--primary)}
+    .role-option.selected{border-color:var(--primary);background:var(--primary-bg)}
+    .role-option .role-icon{font-size:1.4rem;width:36px;height:36px;border-radius:8px;display:flex;align-items:center;justify-content:center}
+    .role-option .role-name{font-size:0.85rem;font-weight:600;color:var(--white)}
+    .role-option .role-desc{font-size:0.7rem;color:var(--text)}
+
+    /* BOOKING */
+    .booking-section{margin-top:1rem;padding-top:1rem;border-top:1px solid var(--border)}
+    .booking-section h4{font-size:0.82rem;font-weight:600;color:var(--white);margin-bottom:0.8rem}
+    .booking-date-warn{background:var(--red-bg);color:var(--red);padding:0.5rem 0.8rem;border-radius:8px;font-size:0.75rem;margin-bottom:0.8rem;display:none}
+    .booking-date-warn.show{display:block}
+    .booking-grid{display:grid;grid-template-columns:1fr 1fr;gap:0.5rem;max-height:200px;overflow-y:auto;padding-right:0.3rem}
+    .booking-item{display:flex;align-items:center;gap:0.5rem;padding:0.45rem 0.6rem;border:1px solid var(--border);border-radius:8px;cursor:pointer;transition:all 0.2s;font-size:0.75rem;background:var(--bg3)}
+    .booking-item:hover{border-color:var(--primary)}
+    .booking-item.selected{border-color:var(--primary);background:var(--primary-bg)}
+    .booking-item.unavailable{opacity:0.4;cursor:not-allowed;border-color:var(--red)}
+    .booking-item .bk-check{width:16px;height:16px;border-radius:4px;border:1px solid var(--border);flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:0.6rem;color:var(--primary)}
+    .booking-item.selected .bk-check{background:var(--primary);border-color:var(--primary);color:var(--white)}
+    .booking-item .bk-name{flex:1;color:var(--text2);font-weight:500}
+    .booking-item .bk-avail{font-size:0.65rem;padding:0.1rem 0.4rem;border-radius:4px}
+    .bk-avail.ok{background:var(--green-bg);color:var(--green)}
+    .bk-avail.low{background:var(--yellow-bg);color:var(--yellow)}
+    .bk-avail.out{background:var(--red-bg);color:var(--red)}
+    .eq-cat{display:inline-block;padding:0.15rem 0.5rem;border-radius:4px;font-size:0.65rem;font-weight:500}
+    .eq-cat-звук{background:var(--blue-bg);color:var(--blue)}
+    .eq-cat-видео{background:var(--purple-bg);color:var(--purple)}
+    .eq-cat-свет{background:var(--yellow-bg);color:var(--yellow)}
+    .eq-cat-спецэффекты{background:var(--green-bg);color:var(--green)}
+    .eq-cat-фото{background:var(--primary-bg);color:var(--primary)}
+    .inv-cat{display:inline-block;padding:0.15rem 0.5rem;border-radius:4px;font-size:0.65rem;font-weight:500}
+    .inv-cat-игры{background:var(--blue-bg);color:var(--blue)}
+    .inv-cat-активные{background:var(--green-bg);color:var(--green)}
+    .inv-cat-творчество{background:var(--purple-bg);color:var(--purple)}
+    .inv-cat-костюмы{background:var(--primary-bg);color:var(--primary)}
+    .inv-cat-декор{background:var(--yellow-bg);color:var(--yellow)}
+    .inv-cat-шоу{background:var(--red-bg);color:var(--red)}
+    .conflict-list{margin-top:0.5rem}
+    .conflict-item{display:flex;align-items:center;gap:0.5rem;padding:0.3rem 0.6rem;background:var(--red-bg);border-radius:6px;margin-bottom:0.3rem;font-size:0.72rem;color:var(--red)}
+
+    /* PRINT FORMS */
+    .docs-layout{display:grid;grid-template-columns:280px 1fr;gap:1.5rem}
+    .docs-sidebar{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:1.2rem;height:fit-content}
+    .docs-sidebar h4{font-size:0.82rem;font-weight:600;color:var(--white);margin-bottom:0.8rem}
+    .doc-type-btn{display:block;width:100%;padding:0.6rem 0.9rem;border:1px solid var(--border);border-radius:8px;background:var(--bg3);color:var(--text2);font-size:0.78rem;font-weight:500;cursor:pointer;margin-bottom:0.4rem;text-align:left;font-family:inherit;transition:all 0.2s}
+    .doc-type-btn:hover{border-color:var(--primary)}
+    .doc-type-btn.active{border-color:var(--primary);background:var(--primary-bg);color:var(--primary)}
+    .doc-preview{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden}
+    .doc-toolbar{display:flex;gap:0.5rem;padding:0.8rem 1.2rem;border-bottom:1px solid var(--border);align-items:center}
+    .doc-toolbar select{background:var(--bg3);border:1px solid var(--border);color:var(--text2);border-radius:6px;padding:0.35rem 0.6rem;font-size:0.78rem;font-family:inherit}
+    .doc-body{padding:2rem;background:#fff;color:#111;min-height:500px;font-family:'Inter',sans-serif;font-size:13px;line-height:1.7}
+    .doc-body h1{font-size:20px;font-weight:800;margin-bottom:4px;color:#111}
+    .doc-body h2{font-size:15px;font-weight:700;margin:18px 0 8px;color:#222;border-bottom:1px solid #ddd;padding-bottom:4px}
+    .doc-body .doc-header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:20px;padding-bottom:12px;border-bottom:2px solid #FF6B35}
+    .doc-body .doc-logo{font-size:22px;font-weight:800;color:#FF6B35}
+    .doc-body .doc-meta{text-align:right;font-size:12px;color:#666}
+    .doc-body table{width:100%;border-collapse:collapse;margin:10px 0}
+    .doc-body th,.doc-body td{border:1px solid #ddd;padding:6px 10px;text-align:left;font-size:12px}
+    .doc-body th{background:#f5f5f5;font-weight:600;color:#333}
+    .doc-body .doc-total{text-align:right;font-size:14px;font-weight:700;margin:10px 0;padding:8px;background:#fff5f0;border-radius:6px;color:#FF6B35}
+    .doc-body .doc-sign{display:grid;grid-template-columns:1fr 1fr;gap:40px;margin-top:40px;padding-top:15px;border-top:1px solid #ddd}
+    .doc-body .doc-sign-col{font-size:12px;color:#555}
+    .doc-body .doc-sign-line{border-bottom:1px solid #111;margin:25px 0 4px;width:200px}
+    .doc-body [contenteditable]{outline:none;border-bottom:1px dashed #ccc;padding:0 2px;min-width:30px;display:inline-block}
+    .doc-body [contenteditable]:focus{border-bottom-color:var(--primary);background:#fff5f0}
+
+    /* EDITABLE PROPOSAL */
+    .prop-edit-row{display:flex;align-items:center;gap:0.5rem;padding:0.4rem 0.6rem;background:var(--bg2);border-radius:6px;margin-bottom:0.3rem;font-size:0.8rem}
+    .prop-edit-row .name{flex:1;color:var(--text2);font-weight:500}
+    .prop-edit-row input{width:70px;background:var(--bg3);border:1px solid var(--border);color:var(--white);border-radius:4px;padding:0.2rem 0.4rem;font-size:0.75rem;font-family:inherit;text-align:right}
+    .prop-edit-row .remove{background:none;border:none;color:var(--red);cursor:pointer;font-size:1rem;padding:0 4px}
+    .prop-add{display:flex;gap:0.5rem;margin-top:0.5rem}
+    .prop-add select{flex:1;background:var(--bg3);border:1px solid var(--border);color:var(--text2);border-radius:6px;padding:0.3rem;font-size:0.75rem;font-family:inherit}
+
+    @media print{
+      body *{display:none!important}
+      .doc-body,.doc-body *{display:block!important;color:#000!important}
+      .doc-body{padding:20px;background:#fff}
+      .doc-body table,.doc-body th,.doc-body td,.doc-body tr,.doc-body thead,.doc-body tbody{display:table!important}
+      .doc-body th,.doc-body td{display:table-cell!important}
+      .doc-body tr{display:table-row!important}
+      .doc-body thead{display:table-header-group!important}
+      .doc-body tbody{display:table-row-group!important}
+      .doc-body .doc-header{display:flex!important}
+      .doc-body .doc-sign{display:grid!important}
+      .doc-body [contenteditable]{border-bottom:none}
+    }
+
+    .empty{text-align:center;padding:3rem;color:var(--text)}
+    .empty-icon{font-size:2.5rem;margin-bottom:0.8rem;opacity:0.5}
+    .page{display:none}.page.active{display:block}
+    .actions{display:flex;gap:0.3rem}
+    .act-btn{width:28px;height:28px;border-radius:6px;border:none;background:var(--bg3);color:var(--text);cursor:pointer;font-size:0.85rem;display:flex;align-items:center;justify-content:center;transition:all 0.2s;font-family:inherit}
+    .act-btn:hover{color:var(--white);background:var(--bg4)}
+    .act-btn.del:hover{color:var(--red)}
+    @media(max-width:900px){
+      .sidebar{width:60px}
+      .sidebar-logo .brand,.sidebar-logo small,.nav-item span:not(.icon),.nav-item .badge,.nav-group,.sidebar-user .info{display:none}
+      .nav-item{justify-content:center;padding:0.7rem}
+      .main{margin-left:60px}
+      .stats-grid,.fin-grid{grid-template-columns:repeat(2,1fr)}
+      .form-row,.form-row-3{grid-template-columns:1fr}
+    }
+  </style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div class="login-screen" id="loginScreen">
+  <div class="login-card">
+    <div class="brand">Boo<span>Gag</span>Art</div>
+    <div class="subtitle">CRM-система управления мероприятиями</div>
+    <div class="form-group">
+      <label>Ваше имя</label>
+      <input id="loginName" value="" placeholder="Введите имя">
+    </div>
+    <div class="form-group" style="text-align:left">
+      <label>Роль</label>
+      <div class="role-option selected" data-role="ceo" onclick="selectRole(this)">
+        <div class="role-icon" style="background:var(--primary-bg);color:var(--primary)">&#128081;</div>
+        <div><div class="role-name">Генеральный директор</div><div class="role-desc">Полный доступ, финансы, аналитика</div></div>
+      </div>
+      <div class="role-option" data-role="admin" onclick="selectRole(this)">
+        <div class="role-icon" style="background:var(--blue-bg);color:var(--blue)">&#9881;</div>
+        <div><div class="role-name">Администратор</div><div class="role-desc">Заявки, база данных, генератор</div></div>
+      </div>
+      <div class="role-option" data-role="host" onclick="selectRole(this)">
+        <div class="role-icon" style="background:var(--green-bg);color:var(--green)">&#127908;</div>
+        <div><div class="role-name">Ведущий</div><div class="role-desc">Мои события, база конкурсов</div></div>
+      </div>
+    </div>
+    <button class="btn btn-primary" style="width:100%;padding:0.7rem;font-size:0.9rem;margin-top:0.5rem" onclick="doLogin()">Войти</button>
+  </div>
+</div>
+
+<!-- SIDEBAR -->
+<aside class="sidebar" id="sidebar" style="display:none">
+  <div class="sidebar-logo"><div class="brand">Boo<span>Gag</span>Art</div><small>CRM-система</small></div>
+  <nav class="sidebar-nav">
+    <div class="nav-group">Основное</div>
+    <button class="nav-item active" data-page="dashboard"><span class="icon">&#9632;</span><span>Дашборд</span></button>
+    <button class="nav-item" data-page="calendar"><span class="icon">&#128197;</span><span>Календарь</span></button>
+    <button class="nav-item" data-page="leads"><span class="icon">&#128172;</span><span>Заявки</span><span class="badge" id="leadsCount">0</span></button>
+    <div class="nav-group">База данных</div>
+    <button class="nav-item" data-page="contests"><span class="icon">&#127922;</span><span>Конкурсы</span></button>
+    <button class="nav-item" data-page="hosts"><span class="icon">&#127908;</span><span>Ведущие</span></button>
+    <button class="nav-item" data-page="locations"><span class="icon">&#127968;</span><span>Локации</span></button>
+    <button class="nav-item" data-page="equipment"><span class="icon">&#127911;</span><span>Оборудование</span></button>
+    <button class="nav-item" data-page="inventory"><span class="icon">&#127922;</span><span>Реквизит</span></button>
+    <div class="nav-group">Инструменты</div>
+    <button class="nav-item" data-page="proposal"><span class="icon">&#9889;</span><span>Генератор</span></button>
+    <button class="nav-item" data-page="docs"><span class="icon">&#128196;</span><span>Печатные формы</span></button>
+    <button class="nav-item" data-page="finance" data-min-role="admin"><span class="icon">&#128176;</span><span>Финансы</span></button>
+  </nav>
+  <div class="sidebar-user">
+    <div class="avatar" id="userAvatar">?</div>
+    <div class="info"><div class="uname" id="userName">-</div><div class="urole" id="userRole">-</div></div>
+    <button class="logout" onclick="doLogout()" title="Выйти">&#10145;</button>
+  </div>
+</aside>
+
+<!-- MAIN -->
+<div class="main" id="mainArea" style="display:none">
+  <div class="topbar">
+    <h1 id="pageTitle">Дашборд</h1>
+    <div class="topbar-actions" id="topbarActions"></div>
+  </div>
+  <div class="content">
+
+    <!-- DASHBOARD -->
+    <div class="page active" id="page-dashboard">
+      <div class="stats-grid">
+        <div class="stat-card"><div class="stat-icon" style="background:var(--primary-bg);color:var(--primary)">&#128172;</div><div class="stat-label">Заявки</div><div class="stat-value" id="statLeads">0</div><div class="stat-sub" id="statLeadsSub">всего</div></div>
+        <div class="stat-card"><div class="stat-icon" style="background:var(--green-bg);color:var(--green)">&#127922;</div><div class="stat-label">Конкурсы</div><div class="stat-value" id="statContests">0</div><div class="stat-sub">в базе</div></div>
+        <div class="stat-card"><div class="stat-icon" style="background:var(--blue-bg);color:var(--blue)">&#127908;</div><div class="stat-label">Ведущие</div><div class="stat-value" id="statHosts">0</div><div class="stat-sub">доступно</div></div>
+        <div class="stat-card"><div class="stat-icon" style="background:var(--yellow-bg);color:var(--yellow)">&#127968;</div><div class="stat-label">Локации</div><div class="stat-value" id="statLocations">0</div><div class="stat-sub">в базе</div></div>
+      </div>
+      <div class="table-wrap">
+        <div class="table-header"><h3>Последние заявки</h3></div>
+        <table><thead><tr><th>Дата</th><th>Имя</th><th>Тип</th><th>Гости</th><th>Статус</th></tr></thead>
+        <tbody id="dashLeads"></tbody></table>
+      </div>
+    </div>
+
+    <!-- CALENDAR -->
+    <div class="page" id="page-calendar">
+      <div class="calendar-wrap">
+        <div class="cal-header">
+          <h3 id="calTitle">Март 2026</h3>
+          <div class="cal-nav">
+            <button onclick="calNav(-1)">&#9664;</button>
+            <button onclick="calNav(0)" style="width:auto;padding:0 10px;font-size:0.72rem">Сегодня</button>
+            <button onclick="calNav(1)">&#9654;</button>
+          </div>
+        </div>
+        <div class="cal-grid" id="calGrid"></div>
+      </div>
+    </div>
+
+    <!-- LEADS -->
+    <div class="page" id="page-leads">
+      <div class="table-wrap">
+        <div class="table-header">
+          <h3>Все заявки</h3>
+          <div class="table-filter">
+            <button class="filter-btn active" data-filter="all">Все</button>
+            <button class="filter-btn" data-filter="new">Новые</button>
+            <button class="filter-btn" data-filter="progress">В работе</button>
+            <button class="filter-btn" data-filter="done">Готово</button>
+          </div>
+        </div>
+        <table><thead><tr><th>Дата</th><th>Имя</th><th>Телефон</th><th>Тип</th><th>Гости</th><th>Бюджет</th><th>Статус</th><th></th></tr></thead>
+        <tbody id="leadsTable"></tbody></table>
+      </div>
+    </div>
+
+    <!-- CONTESTS -->
+    <div class="page" id="page-contests">
+      <div class="table-wrap">
+        <div class="table-header"><h3>База конкурсов</h3></div>
+        <table><thead><tr><th>Название</th><th>Участники</th><th>Место</th><th>Стоимость</th><th>Реквизит</th><th>Длительность</th><th></th></tr></thead>
+        <tbody id="contestsTable"></tbody></table>
+      </div>
+    </div>
+
+    <!-- HOSTS -->
+    <div class="page" id="page-hosts">
+      <div class="table-wrap">
+        <div class="table-header"><h3>Ведущие</h3></div>
+        <table><thead><tr><th>Имя</th><th>Телефон</th><th>Ставка</th><th>Специализация</th><th></th></tr></thead>
+        <tbody id="hostsTable"></tbody></table>
+      </div>
+    </div>
+
+    <!-- LOCATIONS -->
+    <div class="page" id="page-locations">
+      <div class="table-wrap">
+        <div class="table-header"><h3>Локации</h3></div>
+        <table><thead><tr><th>Название</th><th>Адрес</th><th>Тип</th><th>Вместимость</th><th>Цена/час</th><th></th></tr></thead>
+        <tbody id="locationsTable"></tbody></table>
+      </div>
+    </div>
+
+    <!-- EQUIPMENT -->
+    <div class="page" id="page-equipment">
+      <div class="table-wrap">
+        <div class="table-header"><h3>Оборудование (техника)</h3></div>
+        <table><thead><tr><th>Название</th><th>Категория</th><th>Кол-во</th><th>Описание</th><th></th></tr></thead>
+        <tbody id="equipmentTable"></tbody></table>
+      </div>
+    </div>
+
+    <!-- INVENTORY -->
+    <div class="page" id="page-inventory">
+      <div class="table-wrap">
+        <div class="table-header"><h3>Реквизит и инвентарь</h3></div>
+        <table><thead><tr><th>Название</th><th>Категория</th><th>Кол-во</th><th></th></tr></thead>
+        <tbody id="inventoryTable"></tbody></table>
+      </div>
+    </div>
+
+    <!-- PROPOSAL -->
+    <div class="page" id="page-proposal">
+      <div class="table-wrap" style="max-width:750px">
+        <div class="table-header"><h3>Генератор предложений</h3></div>
+        <div style="padding:1.5rem">
+          <div class="form-group"><label>Привязать к заявке</label>
+            <select id="propLead" style="background:var(--bg3);border:1px solid var(--border);color:var(--text2);border-radius:6px;padding:0.4rem;font-size:0.8rem;font-family:inherit;width:100%" onchange="fillFromLead()">
+              <option value="">— Без привязки —</option>
+            </select>
+          </div>
+          <div class="form-row">
+            <div class="form-group"><label>Кол-во гостей</label><input type="number" id="propGuests" value="15"></div>
+            <div class="form-group"><label>Бюджет (тг)</label><input type="number" id="propBudget" value="200000"></div>
+          </div>
+          <div class="form-row">
+            <div class="form-group"><label>Место проведения</label>
+              <select id="propVenue"><option value="both">Любое</option><option value="indoor">Помещение</option><option value="outdoor">Улица</option></select>
+            </div>
+            <div class="form-group"><label>Длительность (мин)</label><input type="number" id="propDuration" value="120"></div>
+          </div>
+          <button class="btn btn-primary" onclick="generateProposal()">&#9889; Сгенерировать</button>
+          <div id="proposalResult"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- DOCS -->
+    <div class="page" id="page-docs">
+      <div class="docs-layout">
+        <div class="docs-sidebar">
+          <h4>Тип документа</h4>
+          <button class="doc-type-btn active" data-doc="estimate" onclick="selectDocType(this)">&#128203; Смета для заказчика</button>
+          <button class="doc-type-btn" data-doc="proposal" onclick="selectDocType(this)">&#128188; Коммерческое предложение</button>
+          <button class="doc-type-btn" data-doc="act" onclick="selectDocType(this)">&#9989; Акт выполненных работ</button>
+          <button class="doc-type-btn" data-doc="contract" onclick="selectDocType(this)">&#128221; Договор-оферта</button>
+          <h4 style="margin-top:1.2rem">Мероприятие</h4>
+          <select id="docLead" onchange="renderDoc()" style="width:100%;background:var(--bg3);border:1px solid var(--border);color:var(--text2);border-radius:6px;padding:0.4rem;font-size:0.78rem;font-family:inherit">
+            <option value="">— Выберите заявку —</option>
+          </select>
+        </div>
+        <div class="doc-preview">
+          <div class="doc-toolbar">
+            <button class="btn btn-primary btn-sm" onclick="window.print()">&#128424; Печать</button>
+            <button class="btn btn-secondary btn-sm" onclick="copyDocHTML()">&#128203; Копировать</button>
+          </div>
+          <div class="doc-body" id="docBody">
+            <div style="text-align:center;padding:60px 20px;color:#aaa">Выберите заявку и тип документа</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- FINANCE -->
+    <div class="page" id="page-finance">
+      <div class="fin-grid">
+        <div class="fin-card fin-revenue"><div class="fin-label">Выручка</div><div class="fin-value" id="finRevenue">0</div><div class="fin-sub" style="color:var(--green)">завершённые заказы</div></div>
+        <div class="fin-card fin-expenses"><div class="fin-label">Расходы</div><div class="fin-value" id="finExpenses">0</div><div class="fin-sub" style="color:var(--red)">ведущие + локации + реквизит</div></div>
+        <div class="fin-card fin-profit"><div class="fin-label">Прибыль</div><div class="fin-value" id="finProfit">0</div><div class="fin-sub" style="color:var(--primary)">чистая прибыль</div></div>
+        <div class="fin-card fin-avg"><div class="fin-label">Средний чек</div><div class="fin-value" id="finAvg">0</div><div class="fin-sub" style="color:var(--blue)">на заказ</div></div>
+      </div>
+      <div class="fin-chart">
+        <h4>Доходы по типам мероприятий</h4>
+        <div id="finByType"></div>
+      </div>
+      <div class="table-wrap">
+        <div class="table-header"><h3>Финансовая история</h3></div>
+        <table><thead><tr><th>Дата</th><th>Клиент</th><th>Тип</th><th>Выручка</th><th>Расходы</th><th>Прибыль</th></tr></thead>
+        <tbody id="finTable"></tbody></table>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<div class="modal-overlay" id="modal">
+  <div class="modal">
+    <div class="modal-head"><h3 id="modalTitle"></h3><button class="modal-close" onclick="closeModal()">&times;</button></div>
+    <div class="modal-body" id="modalBody"></div>
+    <div class="modal-foot" id="modalFoot"></div>
+  </div>
+</div>
+
+<script>
+const API='';
+let currentPage='dashboard', currentRole='ceo', currentUser='';
+let data={leads:[],contests:[],hosts:[],locations:[],equipment:[],inventory:[]};
+
+const EV={birthday:'День рождения',kids:'Детский праздник',newyear:'Новый год',corporate:'Корпоратив',wedding:'Свадьба',other:'Другое'};
+const ST={new:'Новая',progress:'В работе',done:'Завершена',cancelled:'Отменена'};
+const VN={indoor:'Помещение',outdoor:'Улица',both:'Любое'};
+const ROLES={ceo:'Генеральный директор',admin:'Администратор',host:'Ведущий'};
+const ROLE_LEVELS={host:1,admin:2,ceo:3};
+
+// === AUTH ===
+function selectRole(el){
+  document.querySelectorAll('.role-option').forEach(r=>r.classList.remove('selected'));
+  el.classList.add('selected');
+}
+function doLogin(){
+  const name=document.getElementById('loginName').value.trim()||'Пользователь';
+  const roleEl=document.querySelector('.role-option.selected');
+  currentRole=roleEl?roleEl.dataset.role:'host';
+  currentUser=name;
+  localStorage.setItem('crm_user',JSON.stringify({name,role:currentRole}));
+  applyAuth();
+}
+function doLogout(){
+  localStorage.removeItem('crm_user');
+  document.getElementById('loginScreen').style.display='flex';
+  document.getElementById('sidebar').style.display='none';
+  document.getElementById('mainArea').style.display='none';
+}
+function applyAuth(){
+  document.getElementById('loginScreen').style.display='none';
+  document.getElementById('sidebar').style.display='flex';
+  document.getElementById('mainArea').style.display='block';
+  document.getElementById('userName').textContent=currentUser;
+  document.getElementById('userRole').textContent=ROLES[currentRole];
+  document.getElementById('userAvatar').textContent=currentUser.charAt(0).toUpperCase();
+  // Hide nav items by role
+  const lvl=ROLE_LEVELS[currentRole];
+  document.querySelectorAll('.nav-item[data-min-role]').forEach(el=>{
+    const min=ROLE_LEVELS[el.dataset.minRole]||2;
+    el.classList.toggle('hidden',lvl<min);
+  });
+  // Host: hide certain pages
+  if(currentRole==='host'){
+    document.querySelectorAll('.nav-item[data-page="leads"],.nav-item[data-page="locations"],.nav-item[data-page="proposal"]').forEach(el=>el.classList.add('hidden'));
+  }else{
+    document.querySelectorAll('.nav-item[data-page="leads"],.nav-item[data-page="locations"],.nav-item[data-page="proposal"]').forEach(el=>el.classList.remove('hidden'));
+  }
+  loadAll();
+}
+
+// Check saved session
+(function(){
+  const saved=localStorage.getItem('crm_user');
+  if(saved){
+    const{name,role}=JSON.parse(saved);
+    currentUser=name;currentRole=role;
+    applyAuth();
+  }
+})();
+
+// === API ===
+async function apiCall(path,method='GET',body=null){
+  const opts={method,headers:{'Content-Type':'application/json'}};
+  if(body)opts.body=JSON.stringify(body);
+  const res=await fetch(API+'/api/'+path,opts);
+  return res.json();
+}
+async function loadAll(){
+  [data.leads,data.contests,data.hosts,data.locations,data.equipment,data.inventory]=await Promise.all([
+    apiCall('leads'),apiCall('contests'),apiCall('hosts'),apiCall('locations'),apiCall('equipment'),apiCall('inventory')
+  ]);
+  render();
+}
+
+// === NAVIGATION ===
+const PAGES={
+  dashboard:{title:'Дашборд',btn:null},
+  calendar:{title:'Календарь событий',btn:null},
+  leads:{title:'Заявки',btn:{label:'+ Новая заявка',action:()=>openLeadModal()}},
+  contests:{title:'База конкурсов',btn:currentRole==='host'?null:{label:'+ Добавить конкурс',action:()=>openContestModal()}},
+  hosts:{title:'Ведущие',btn:{label:'+ Добавить ведущего',action:()=>openHostModal()}},
+  locations:{title:'Локации',btn:{label:'+ Добавить локацию',action:()=>openLocationModal()}},
+  equipment:{title:'Оборудование',btn:{label:'+ Добавить оборудование',action:()=>openEquipmentModal()}},
+  inventory:{title:'Реквизит',btn:{label:'+ Добавить реквизит',action:()=>openInventoryModal()}},
+  proposal:{title:'Генератор предложений',btn:null},
+  docs:{title:'Печатные формы',btn:null},
+  finance:{title:'Финансы',btn:null},
+};
+
+document.querySelectorAll('.nav-item[data-page]').forEach(btn=>{
+  btn.addEventListener('click',()=>{
+    currentPage=btn.dataset.page;
+    document.querySelectorAll('.nav-item').forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active');
+    document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+    document.getElementById('page-'+currentPage)?.classList.add('active');
+    document.getElementById('pageTitle').textContent=PAGES[currentPage]?.title||'';
+    const ta=document.getElementById('topbarActions');
+    ta.innerHTML='';
+    const cfg=PAGES[currentPage]?.btn;
+    if(cfg&&canEdit()){const b=document.createElement('button');b.className='btn btn-primary';b.textContent=cfg.label;b.onclick=cfg.action;ta.appendChild(b);}
+    if(currentPage==='calendar')renderCalendar();
+    if(currentPage==='finance')renderFinance();
+    render();
+  });
+});
+
+function canEdit(){return ROLE_LEVELS[currentRole]>=2;}
+function canFinance(){return ROLE_LEVELS[currentRole]>=2;}
+
+// === RENDER ===
+function render(){
+  const newLeads=data.leads.filter(l=>(l.status||'new')==='new').length;
+  document.getElementById('statLeads').textContent=data.leads.length;
+  document.getElementById('statLeadsSub').textContent=newLeads+' новых';
+  document.getElementById('statContests').textContent=data.contests.length;
+  document.getElementById('statHosts').textContent=data.hosts.length;
+  document.getElementById('statLocations').textContent=data.locations.length;
+  document.getElementById('leadsCount').textContent=newLeads||'';
+
+  // Dashboard recent
+  const recent=[...data.leads].sort((a,b)=>new Date(b.createdAt)-new Date(a.createdAt)).slice(0,5);
+  document.getElementById('dashLeads').innerHTML=recent.length?recent.map(l=>`
+    <tr>
+      <td>${fmtDate(l.createdAt)}</td>
+      <td style="color:var(--white);font-weight:500">${esc(l.name||'-')}</td>
+      <td>${EV[l.eventType]||l.eventType||'-'}</td>
+      <td>${esc(l.guests||'-')}</td>
+      <td><span class="status status-${l.status||'new'}">${ST[l.status||'new']}</span></td>
+    </tr>`).join(''):'<tr><td colspan="5" class="empty">Нет заявок</td></tr>';
+
+  // Leads
+  const filter=document.querySelector('.filter-btn.active')?.dataset.filter||'all';
+  const filtered=filter==='all'?data.leads:data.leads.filter(l=>(l.status||'new')===filter);
+  document.getElementById('leadsTable').innerHTML=filtered.length?[...filtered].sort((a,b)=>new Date(b.createdAt)-new Date(a.createdAt)).map(l=>`
+    <tr>
+      <td>${fmtDate(l.createdAt)}</td>
+      <td style="color:var(--white);font-weight:500">${esc(l.name||'-')}</td>
+      <td>${esc(l.phone||'-')}</td>
+      <td>${EV[l.eventType]||l.eventType||'-'}</td>
+      <td>${esc(l.guests||'-')}</td>
+      <td>${esc(l.budget||'-')}</td>
+      <td>${canEdit()?`<select onchange="updateStatus('${l.id}',this.value)" style="background:var(--bg3);border:1px solid var(--border);color:var(--text2);border-radius:6px;padding:0.2rem 0.4rem;font-size:0.72rem;font-family:inherit">
+        ${['new','progress','done','cancelled'].map(s=>`<option value="${s}" ${(l.status||'new')===s?'selected':''}>${ST[s]}</option>`).join('')}</select>`:`<span class="status status-${l.status||'new'}">${ST[l.status||'new']}</span>`}</td>
+      <td><div class="actions">
+        ${canEdit()?`<button class="act-btn" onclick="openLeadModal('${l.id}')" title="Редактировать">&#9998;</button>
+        <button class="act-btn del" onclick="deleteItem('leads','${l.id}')" title="Удалить">&times;</button>`:''}
+        <button class="act-btn" onclick="openProposalForLead('${l.id}')" title="Предложение" style="color:var(--primary)">&#9889;</button>
+      </div></td>
+    </tr>`).join(''):'<tr><td colspan="8" class="empty">Нет заявок</td></tr>';
+
+  // Contests
+  document.getElementById('contestsTable').innerHTML=data.contests.length?data.contests.map(c=>`
+    <tr>
+      <td style="color:var(--white);font-weight:500">${esc(c.name)}</td>
+      <td>${c.minParticipants||'?'}–${c.maxParticipants||'?'}</td>
+      <td><span class="venue-badge venue-${c.venue||'both'}">${VN[c.venue||'both']}</span></td>
+      <td>${fmtMoney(c.cost)}</td>
+      <td style="font-size:0.75rem;max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${esc((c.props||[]).join(', '))}">${(c.props||[]).join(', ')||'—'}</td>
+      <td>${c.duration||'?'} мин</td>
+      <td>${canEdit()?`<div class="actions">
+        <button class="act-btn" onclick="openContestModal('${c.id}')" title="Редактировать">&#9998;</button>
+        <button class="act-btn del" onclick="deleteItem('contests','${c.id}')" title="Удалить">&times;</button>
+      </div>`:''}</td>
+    </tr>`).join(''):'<tr><td colspan="7" class="empty"><div class="empty-icon">&#127922;</div>Добавьте конкурсы в базу</td></tr>';
+
+  // Hosts
+  document.getElementById('hostsTable').innerHTML=data.hosts.length?data.hosts.map(h=>`
+    <tr>
+      <td style="color:var(--white);font-weight:500">${esc(h.name)}</td>
+      <td>${esc(h.phone||'-')}</td>
+      <td>${fmtMoney(h.rate)}</td>
+      <td style="font-size:0.75rem">${esc(h.specialties||'-')}</td>
+      <td>${canEdit()?`<div class="actions">
+        <button class="act-btn" onclick="openHostModal('${h.id}')" title="Редактировать">&#9998;</button>
+        <button class="act-btn del" onclick="deleteItem('hosts','${h.id}')" title="Удалить">&times;</button>
+      </div>`:''}</td>
+    </tr>`).join(''):'<tr><td colspan="5" class="empty"><div class="empty-icon">&#127908;</div>Добавьте ведущих</td></tr>';
+
+  // Locations
+  document.getElementById('locationsTable').innerHTML=data.locations.length?data.locations.map(l=>`
+    <tr>
+      <td style="color:var(--white);font-weight:500">${esc(l.name)}</td>
+      <td>${esc(l.address||'-')}</td>
+      <td><span class="venue-badge venue-${l.type||'both'}">${VN[l.type||'both']}</span></td>
+      <td>${l.capacity||'?'} чел</td>
+      <td>${fmtMoney(l.pricePerHour)}/ч</td>
+      <td>${canEdit()?`<div class="actions">
+        <button class="act-btn" onclick="openLocationModal('${l.id}')" title="Редактировать">&#9998;</button>
+        <button class="act-btn del" onclick="deleteItem('locations','${l.id}')" title="Удалить">&times;</button>
+      </div>`:''}</td>
+    </tr>`).join(''):'<tr><td colspan="6" class="empty"><div class="empty-icon">&#127968;</div>Добавьте локации</td></tr>';
+
+  // Equipment
+  document.getElementById('equipmentTable').innerHTML=data.equipment.length?data.equipment.map(e=>`
+    <tr>
+      <td style="color:var(--white);font-weight:500">${esc(e.name)}</td>
+      <td><span class="eq-cat eq-cat-${e.category||''}">${esc(e.category||'-')}</span></td>
+      <td>${e.quantity||1} шт</td>
+      <td style="font-size:0.75rem;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${esc(e.description||'')}">${esc(e.description||'-')}</td>
+      <td>${canEdit()?`<div class="actions">
+        <button class="act-btn" onclick="openEquipmentModal('${e.id}')" title="Редактировать">&#9998;</button>
+        <button class="act-btn del" onclick="deleteItem('equipment','${e.id}')" title="Удалить">&times;</button>
+      </div>`:''}</td>
+    </tr>`).join(''):'<tr><td colspan="5" class="empty"><div class="empty-icon">&#127911;</div>Добавьте оборудование</td></tr>';
+
+  // Inventory
+  document.getElementById('inventoryTable').innerHTML=data.inventory.length?data.inventory.map(i=>`
+    <tr>
+      <td style="color:var(--white);font-weight:500">${esc(i.name)}</td>
+      <td><span class="inv-cat inv-cat-${i.category||''}">${esc(i.category||'-')}</span></td>
+      <td>${i.quantity||1} шт</td>
+      <td>${canEdit()?`<div class="actions">
+        <button class="act-btn" onclick="openInventoryModal('${i.id}')" title="Редактировать">&#9998;</button>
+        <button class="act-btn del" onclick="deleteItem('inventory','${i.id}')" title="Удалить">&times;</button>
+      </div>`:''}</td>
+    </tr>`).join(''):'<tr><td colspan="4" class="empty"><div class="empty-icon">&#127922;</div>Добавьте реквизит</td></tr>';
+
+  // Fill lead selects in proposal & docs
+  fillLeadSelects();
+}
+
+// Filters
+document.querySelectorAll('.filter-btn').forEach(btn=>{
+  btn.addEventListener('click',()=>{
+    document.querySelectorAll('.filter-btn').forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active');render();
+  });
+});
+
+// === MODAL ===
+function openModal(title,body,foot){
+  document.getElementById('modalTitle').textContent=title;
+  document.getElementById('modalBody').innerHTML=body;
+  document.getElementById('modalFoot').innerHTML=foot;
+  document.getElementById('modal').classList.add('open');
+}
+function closeModal(){document.getElementById('modal').classList.remove('open');}
+document.getElementById('modal').addEventListener('click',e=>{if(e.target===e.currentTarget)closeModal();});
+
+// === LEAD MODAL ===
+function openLeadModal(id){
+  const l=id?data.leads.find(x=>x.id===id):{};
+  openModal(id?'Редактировать заявку':'Новая заявка',`
+    <div class="form-row">
+      <div class="form-group"><label>Имя</label><input id="fName" value="${esc(l.name||'')}"></div>
+      <div class="form-group"><label>Телефон</label><input id="fPhone" value="${esc(l.phone||'')}"></div>
+    </div>
+    <div class="form-row-3">
+      <div class="form-group"><label>Тип мероприятия</label>
+        <select id="fType">${Object.entries(EV).map(([k,v])=>`<option value="${k}" ${l.eventType===k?'selected':''}>${v}</option>`).join('')}</select></div>
+      <div class="form-group"><label>Кол-во гостей</label><input id="fGuests" value="${esc(l.guests||'')}"></div>
+      <div class="form-group"><label>Бюджет</label><input id="fBudget" value="${esc(l.budget||'')}"></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>Дата мероприятия</label><input type="date" id="fDate" value="${esc(l.eventDate||l.date||'')}"></div>
+      <div class="form-group"><label>Статус</label>
+        <select id="fStatus">${['new','progress','done','cancelled'].map(s=>`<option value="${s}" ${(l.status||'new')===s?'selected':''}>${ST[s]}</option>`).join('')}</select></div>
+    </div>
+    ${canFinance()?`<div class="form-row">
+      <div class="form-group"><label>Выручка (тг)</label><input type="number" id="fRevenue" value="${l.revenue||0}"></div>
+      <div class="form-group"><label>Расходы (тг)</label><input type="number" id="fExpenses" value="${l.expenses||0}"></div>
+    </div>`:''}
+    <div class="form-row">
+      <div class="form-group"><label>Ведущий</label>
+        <select id="fHost"><option value="">— Не назначен —</option>${data.hosts.map(h=>`<option value="${h.id}" ${l.hostId===h.id?'selected':''}>${h.name}</option>`).join('')}</select></div>
+      <div class="form-group"><label>Локация</label>
+        <select id="fLocation"><option value="">— Не выбрана —</option>${data.locations.map(x=>`<option value="${x.id}" ${l.locationId===x.id?'selected':''}>${x.name}</option>`).join('')}</select></div>
+    </div>
+    <div class="form-group"><label>Комментарий</label><textarea id="fComment">${esc(l.comment||'')}</textarea></div>
+    <div class="form-group"><label>Источник</label><input id="fSource" value="${esc(l.source||'')}"></div>
+    <div class="booking-section">
+      <h4>&#128274; Бронирование оборудования</h4>
+      <div class="booking-date-warn" id="bookingWarn"></div>
+      <div class="booking-grid" id="bookingEqGrid">
+        ${data.equipment.map(e=>`<div class="booking-item${(l.bookedEquipment||[]).includes(e.id)?' selected':''}" data-id="${e.id}" onclick="toggleBooking(this,'eq')">
+          <span class="bk-check">${(l.bookedEquipment||[]).includes(e.id)?'&#10003;':''}</span>
+          <span class="bk-name">${esc(e.name)}</span>
+          <span class="bk-avail ok">${e.quantity} шт</span>
+        </div>`).join('')}
+      </div>
+      <h4 style="margin-top:1rem">&#127922; Бронирование реквизита</h4>
+      <div class="booking-grid" id="bookingInvGrid">
+        ${data.inventory.map(i=>`<div class="booking-item${(l.bookedInventory||[]).includes(i.id)?' selected':''}" data-id="${i.id}" onclick="toggleBooking(this,'inv')">
+          <span class="bk-check">${(l.bookedInventory||[]).includes(i.id)?'&#10003;':''}</span>
+          <span class="bk-name">${esc(i.name)}</span>
+          <span class="bk-avail ok">${i.quantity} шт</span>
+        </div>`).join('')}
+      </div>
+      <div class="conflict-list" id="conflictList"></div>
+    </div>
+  `,`<button class="btn btn-secondary" onclick="closeModal()">Отмена</button>
+    <button class="btn btn-primary" onclick="saveLead('${id||''}')">${id?'Сохранить':'Добавить'}</button>`);
+  // Check availability after opening
+  const dateInput=document.getElementById('fDate');
+  if(dateInput.value)checkAvailability(dateInput.value,id||'');
+  dateInput.addEventListener('change',()=>checkAvailability(dateInput.value,id||''));
+}
+async function saveLead(id){
+  // Collect booked equipment & inventory
+  const bookedEquipment=[],bookedInventory=[];
+  document.querySelectorAll('#bookingEqGrid .booking-item.selected').forEach(el=>bookedEquipment.push(el.dataset.id));
+  document.querySelectorAll('#bookingInvGrid .booking-item.selected').forEach(el=>bookedInventory.push(el.dataset.id));
+  const body={
+    name:document.getElementById('fName').value,
+    phone:document.getElementById('fPhone').value,
+    eventType:document.getElementById('fType').value,
+    guests:document.getElementById('fGuests').value,
+    budget:document.getElementById('fBudget').value,
+    eventDate:document.getElementById('fDate').value,
+    status:document.getElementById('fStatus').value,
+    comment:document.getElementById('fComment').value,
+    source:document.getElementById('fSource').value,
+    hostId:document.getElementById('fHost').value,
+    locationId:document.getElementById('fLocation').value,
+    bookedEquipment,
+    bookedInventory,
+  };
+  if(canFinance()){
+    body.revenue=+document.getElementById('fRevenue').value;
+    body.expenses=+document.getElementById('fExpenses').value;
+  }
+  await apiCall(id?'leads/'+id:'leads',id?'PUT':'POST',body);
+  closeModal();await loadAll();
+}
+async function updateStatus(id,status){await apiCall('leads/'+id,'PUT',{status});await loadAll();}
+
+// === CONTEST MODAL ===
+function openContestModal(id){
+  const c=id?data.contests.find(x=>x.id===id):{};
+  openModal(id?'Редактировать конкурс':'Новый конкурс',`
+    <div class="form-group"><label>Название</label><input id="fcName" value="${esc(c.name||'')}"></div>
+    <div class="form-group"><label>Описание</label><textarea id="fcDesc">${esc(c.description||'')}</textarea></div>
+    <div class="form-row-3">
+      <div class="form-group"><label>Мин. участников</label><input type="number" id="fcMin" value="${c.minParticipants||2}"></div>
+      <div class="form-group"><label>Макс. участников</label><input type="number" id="fcMax" value="${c.maxParticipants||20}"></div>
+      <div class="form-group"><label>Место</label>
+        <select id="fcVenue"><option value="indoor" ${c.venue==='indoor'?'selected':''}>Помещение</option><option value="outdoor" ${c.venue==='outdoor'?'selected':''}>Улица</option><option value="both" ${c.venue==='both'||!c.venue?'selected':''}>Любое</option></select></div>
+    </div>
+    <div class="form-row-3">
+      <div class="form-group"><label>Себестоимость (тг)</label><input type="number" id="fcCost" value="${c.cost||0}"></div>
+      <div class="form-group"><label>Длительность (мин)</label><input type="number" id="fcDur" value="${c.duration||15}"></div>
+      <div class="form-group"><label>Категория</label><input id="fcCat" value="${esc(c.category||'')}"></div>
+    </div>
+    <div class="form-group"><label>Реквизит (через запятую)</label><input id="fcProps" value="${(c.props||[]).join(', ')}"></div>
+  `,`<button class="btn btn-secondary" onclick="closeModal()">Отмена</button>
+    <button class="btn btn-primary" onclick="saveContest('${id||''}')">${id?'Сохранить':'Добавить'}</button>`);
+}
+async function saveContest(id){
+  const body={
+    name:document.getElementById('fcName').value,
+    description:document.getElementById('fcDesc').value,
+    minParticipants:+document.getElementById('fcMin').value,
+    maxParticipants:+document.getElementById('fcMax').value,
+    venue:document.getElementById('fcVenue').value,
+    cost:+document.getElementById('fcCost').value,
+    duration:+document.getElementById('fcDur').value,
+    category:document.getElementById('fcCat').value,
+    props:document.getElementById('fcProps').value.split(',').map(s=>s.trim()).filter(Boolean),
+  };
+  await apiCall(id?'contests/'+id:'contests',id?'PUT':'POST',body);
+  closeModal();await loadAll();
+}
+
+// === HOST MODAL ===
+function openHostModal(id){
+  const h=id?data.hosts.find(x=>x.id===id):{};
+  openModal(id?'Редактировать ведущего':'Новый ведущий',`
+    <div class="form-row">
+      <div class="form-group"><label>Имя</label><input id="fhName" value="${esc(h.name||'')}"></div>
+      <div class="form-group"><label>Телефон</label><input id="fhPhone" value="${esc(h.phone||'')}"></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>Ставка (тг)</label><input type="number" id="fhRate" value="${h.rate||0}"></div>
+      <div class="form-group"><label>Специализация</label><input id="fhSpec" value="${esc(h.specialties||'')}"></div>
+    </div>
+  `,`<button class="btn btn-secondary" onclick="closeModal()">Отмена</button>
+    <button class="btn btn-primary" onclick="saveHost('${id||''}')">${id?'Сохранить':'Добавить'}</button>`);
+}
+async function saveHost(id){
+  const body={
+    name:document.getElementById('fhName').value,
+    phone:document.getElementById('fhPhone').value,
+    rate:+document.getElementById('fhRate').value,
+    specialties:document.getElementById('fhSpec').value,
+  };
+  await apiCall(id?'hosts/'+id:'hosts',id?'PUT':'POST',body);
+  closeModal();await loadAll();
+}
+
+// === LOCATION MODAL ===
+function openLocationModal(id){
+  const l=id?data.locations.find(x=>x.id===id):{};
+  openModal(id?'Редактировать локацию':'Новая локация',`
+    <div class="form-row">
+      <div class="form-group"><label>Название</label><input id="flName" value="${esc(l.name||'')}"></div>
+      <div class="form-group"><label>Адрес</label><input id="flAddr" value="${esc(l.address||'')}"></div>
+    </div>
+    <div class="form-row-3">
+      <div class="form-group"><label>Тип</label>
+        <select id="flType"><option value="indoor" ${l.type==='indoor'?'selected':''}>Помещение</option><option value="outdoor" ${l.type==='outdoor'?'selected':''}>Улица</option><option value="both" ${l.type==='both'||!l.type?'selected':''}>Любое</option></select></div>
+      <div class="form-group"><label>Вместимость (чел)</label><input type="number" id="flCap" value="${l.capacity||0}"></div>
+      <div class="form-group"><label>Цена/час (тг)</label><input type="number" id="flPrice" value="${l.pricePerHour||0}"></div>
+    </div>
+  `,`<button class="btn btn-secondary" onclick="closeModal()">Отмена</button>
+    <button class="btn btn-primary" onclick="saveLocation('${id||''}')">${id?'Сохранить':'Добавить'}</button>`);
+}
+async function saveLocation(id){
+  const body={
+    name:document.getElementById('flName').value,
+    address:document.getElementById('flAddr').value,
+    type:document.getElementById('flType').value,
+    capacity:+document.getElementById('flCap').value,
+    pricePerHour:+document.getElementById('flPrice').value,
+  };
+  await apiCall(id?'locations/'+id:'locations',id?'PUT':'POST',body);
+  closeModal();await loadAll();
+}
+
+// === BOOKING ===
+function toggleBooking(el,type){
+  if(el.classList.contains('unavailable'))return;
+  el.classList.toggle('selected');
+  el.querySelector('.bk-check').innerHTML=el.classList.contains('selected')?'&#10003;':'';
+}
+async function checkAvailability(date,excludeLeadId){
+  if(!date)return;
+  const res=await fetch(API+'/api/availability',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({date,excludeLeadId})});
+  const av=await res.json();
+  const warn=document.getElementById('bookingWarn');
+  const conflicts=document.getElementById('conflictList');
+  // Update equipment availability badges
+  document.querySelectorAll('#bookingEqGrid .booking-item').forEach(el=>{
+    const id=el.dataset.id;
+    const eq=av.equipment.find(e=>e.id===id);
+    if(!eq)return;
+    const badge=el.querySelector('.bk-avail');
+    const avail=eq.available;
+    badge.textContent=avail+'/'+eq.quantity+' св.';
+    badge.className='bk-avail '+(avail<=0?'out':avail<=1?'low':'ok');
+    if(avail<=0&&!el.classList.contains('selected')){el.classList.add('unavailable');}
+    else{el.classList.remove('unavailable');}
+  });
+  // Update inventory availability badges
+  document.querySelectorAll('#bookingInvGrid .booking-item').forEach(el=>{
+    const id=el.dataset.id;
+    const inv=av.inventory.find(i=>i.id===id);
+    if(!inv)return;
+    const badge=el.querySelector('.bk-avail');
+    const avail=inv.available;
+    badge.textContent=avail+'/'+inv.quantity+' св.';
+    badge.className='bk-avail '+(avail<=0?'out':avail<=1?'low':'ok');
+    if(avail<=0&&!el.classList.contains('selected')){el.classList.add('unavailable');}
+    else{el.classList.remove('unavailable');}
+  });
+  // Show warning if same-date events exist
+  if(av.sameDateLeads.length){
+    warn.classList.add('show');
+    warn.innerHTML='&#9888; На эту дату уже есть мероприятия: '+av.sameDateLeads.map(l=>`<strong>${esc(l.name)}</strong> (${EV[l.eventType]||l.eventType})`).join(', ');
+  }else{
+    warn.classList.remove('show');
+    warn.innerHTML='';
+  }
+}
+
+// === EQUIPMENT MODAL ===
+function openEquipmentModal(id){
+  const e=id?data.equipment.find(x=>x.id===id):{};
+  openModal(id?'Редактировать оборудование':'Новое оборудование',`
+    <div class="form-group"><label>Название</label><input id="feName" value="${esc(e.name||'')}"></div>
+    <div class="form-row-3">
+      <div class="form-group"><label>Категория</label>
+        <select id="feCat">${['звук','видео','свет','спецэффекты','фото'].map(c=>`<option value="${c}" ${e.category===c?'selected':''}>${c}</option>`).join('')}</select></div>
+      <div class="form-group"><label>Кол-во (шт)</label><input type="number" id="feQty" value="${e.quantity||1}"></div>
+      <div class="form-group"></div>
+    </div>
+    <div class="form-group"><label>Описание</label><textarea id="feDesc">${esc(e.description||'')}</textarea></div>
+  `,`<button class="btn btn-secondary" onclick="closeModal()">Отмена</button>
+    <button class="btn btn-primary" onclick="saveEquipment('${id||''}')">${id?'Сохранить':'Добавить'}</button>`);
+}
+async function saveEquipment(id){
+  const body={
+    name:document.getElementById('feName').value,
+    category:document.getElementById('feCat').value,
+    quantity:+document.getElementById('feQty').value,
+    description:document.getElementById('feDesc').value,
+  };
+  await apiCall(id?'equipment/'+id:'equipment',id?'PUT':'POST',body);
+  closeModal();await loadAll();
+}
+
+// === INVENTORY MODAL ===
+function openInventoryModal(id){
+  const i=id?data.inventory.find(x=>x.id===id):{};
+  openModal(id?'Редактировать реквизит':'Новый реквизит',`
+    <div class="form-group"><label>Название</label><input id="fiName" value="${esc(i.name||'')}"></div>
+    <div class="form-row">
+      <div class="form-group"><label>Категория</label>
+        <select id="fiCat">${['игры','активные','творчество','костюмы','декор','шоу'].map(c=>`<option value="${c}" ${i.category===c?'selected':''}>${c}</option>`).join('')}</select></div>
+      <div class="form-group"><label>Кол-во (шт)</label><input type="number" id="fiQty" value="${i.quantity||1}"></div>
+    </div>
+  `,`<button class="btn btn-secondary" onclick="closeModal()">Отмена</button>
+    <button class="btn btn-primary" onclick="saveInventory('${id||''}')">${id?'Сохранить':'Добавить'}</button>`);
+}
+async function saveInventory(id){
+  const body={
+    name:document.getElementById('fiName').value,
+    category:document.getElementById('fiCat').value,
+    quantity:+document.getElementById('fiQty').value,
+  };
+  await apiCall(id?'inventory/'+id:'inventory',id?'PUT':'POST',body);
+  closeModal();await loadAll();
+}
+
+// === DELETE ===
+async function deleteItem(col,id){if(!confirm('Удалить?'))return;await apiCall(col+'/'+id,'DELETE');await loadAll();}
+
+// === PROPOSAL ===
+let currentProposal=null;
+function fillLeadSelects(){
+  const sel1=document.getElementById('propLead');
+  const sel2=document.getElementById('docLead');
+  [sel1,sel2].forEach(sel=>{if(!sel)return;const v=sel.value;sel.innerHTML='<option value="">— Выберите заявку —</option>'+data.leads.map(l=>`<option value="${l.id}">${esc(l.name)} — ${EV[l.eventType]||''} (${fmtDate(l.eventDate)})</option>`).join('');sel.value=v;});
+}
+function fillFromLead(){
+  const id=document.getElementById('propLead').value;
+  const l=data.leads.find(x=>x.id===id);if(!l)return;
+  const gMap={'5-10':8,'10-25':18,'25-50':38,'50+':60};
+  const bMap={'до 100К':100000,'100-300К':200000,'300-500К':400000,'обсудим':500000};
+  document.getElementById('propGuests').value=gMap[l.guests]||parseInt(l.guests)||15;
+  document.getElementById('propBudget').value=bMap[l.budget]||parseInt(l.budget)||200000;
+  // Load saved proposal if exists
+  if(l.proposal){currentProposal=JSON.parse(JSON.stringify(l.proposal));renderEditableProposal();}
+}
+async function generateProposal(){
+  const body={guests:document.getElementById('propGuests').value,budget:document.getElementById('propBudget').value,venue:document.getElementById('propVenue').value,duration:document.getElementById('propDuration').value};
+  const res=await fetch(API+'/api/proposal',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
+  const p=await res.json();
+  currentProposal={
+    contests:p.contests.map(c=>({id:c.id,name:c.name,duration:c.duration,cost:c.cost,price:Math.round((c.cost||0)*1.8)})),
+    hosts:p.hosts.map(h=>({id:h.id,name:h.name,rate:h.rate,price:h.rate})),
+    locations:p.locations.map(l=>({id:l.id,name:l.name,pricePerHour:l.pricePerHour,hours:2,price:l.pricePerHour*2})),
+    totalProps:p.totalProps,
+    markup:80,
+  };
+  renderEditableProposal();
+}
+function openProposalForLead(id){
+  document.querySelector('[data-page="proposal"]')?.click();
+  document.getElementById('propLead').value=id;
+  fillFromLead();
+  if(!data.leads.find(x=>x.id===id)?.proposal)setTimeout(()=>generateProposal(),100);
+}
+function renderEditableProposal(){
+  const p=currentProposal;
+  if(!p){document.getElementById('proposalResult').innerHTML='';return;}
+  const el=document.getElementById('proposalResult');
+  const totalCost=p.contests.reduce((s,c)=>s+(c.cost||0),0)+p.hosts.reduce((s,h)=>s+(h.rate||0),0);
+  const totalPrice=p.contests.reduce((s,c)=>s+(c.price||0),0)+p.hosts.reduce((s,h)=>s+(h.price||0),0)+p.locations.reduce((s,l)=>s+(l.price||0),0);
+  const totalDur=p.contests.reduce((s,c)=>s+(c.duration||0),0);
+  el.innerHTML=`<div class="proposal-result">
+    <h4>Предложение <span style="font-size:0.75rem;color:var(--text);font-weight:400">(редактируйте цены и удаляйте позиции)</span></h4>
+    <div class="proposal-section"><h5>Конкурсы и игры</h5>
+      ${p.contests.map((c,i)=>`<div class="prop-edit-row">
+        <span class="name">${esc(c.name)}</span>
+        <span style="font-size:0.7rem;color:var(--text)">${c.duration} мин</span>
+        <span style="font-size:0.7rem;color:var(--text)">себ: ${fmtMoney(c.cost)}</span>
+        <input value="${c.price}" onchange="currentProposal.contests[${i}].price=+this.value;renderEditableProposal()" title="Цена для клиента">
+        <button class="remove" onclick="currentProposal.contests.splice(${i},1);renderEditableProposal()">&times;</button>
+      </div>`).join('')}
+      <div class="prop-add"><select id="addContest"><option value="">+ Добавить конкурс...</option>${data.contests.filter(c=>!p.contests.find(x=>x.id===c.id)).map(c=>`<option value="${c.id}">${c.name}</option>`).join('')}</select><button class="btn btn-sm btn-secondary" onclick="addContestToProposal()">Добавить</button></div>
+    </div>
+    <div class="proposal-section"><h5>Ведущие</h5>
+      ${p.hosts.map((h,i)=>`<div class="prop-edit-row">
+        <span class="name">${esc(h.name)}</span>
+        <span style="font-size:0.7rem;color:var(--text)">ставка: ${fmtMoney(h.rate)}</span>
+        <input value="${h.price}" onchange="currentProposal.hosts[${i}].price=+this.value;renderEditableProposal()" title="Цена для клиента">
+        <button class="remove" onclick="currentProposal.hosts.splice(${i},1);renderEditableProposal()">&times;</button>
+      </div>`).join('')}
+      <div class="prop-add"><select id="addHost"><option value="">+ Добавить ведущего...</option>${data.hosts.filter(h=>!p.hosts.find(x=>x.id===h.id)).map(h=>`<option value="${h.id}">${h.name}</option>`).join('')}</select><button class="btn btn-sm btn-secondary" onclick="addHostToProposal()">Добавить</button></div>
+    </div>
+    <div class="proposal-section"><h5>Локации</h5>
+      ${p.locations.map((l,i)=>`<div class="prop-edit-row">
+        <span class="name">${esc(l.name)}</span>
+        <span style="font-size:0.7rem;color:var(--text)">${fmtMoney(l.pricePerHour)}/ч</span>
+        <input value="${l.price}" onchange="currentProposal.locations[${i}].price=+this.value;renderEditableProposal()" title="Цена для клиента">
+        <button class="remove" onclick="currentProposal.locations.splice(${i},1);renderEditableProposal()">&times;</button>
+      </div>`).join('')}
+    </div>
+    ${p.totalProps?.length?`<div class="proposal-section"><h5>Необходимый реквизит</h5><div style="font-size:0.82rem;color:var(--text2)">${p.totalProps.join(', ')}</div></div>`:''}
+    <div class="proposal-total"><span>Программа: ${totalDur} мин</span><span>Себест.: ${fmtMoney(totalCost)}</span><span>Клиенту: ${fmtMoney(totalPrice)}</span></div>
+    <div style="margin-top:0.8rem;display:flex;gap:0.5rem">
+      ${document.getElementById('propLead').value?`<button class="btn btn-green btn-sm" onclick="saveProposalToLead()">&#128190; Сохранить в заявку</button>`:'<span style="font-size:0.72rem;color:var(--text)">Выберите заявку для сохранения</span>'}
+      <button class="btn btn-secondary btn-sm" onclick="document.querySelector('[data-page=\\'docs\\']').click();document.getElementById('docLead').value=document.getElementById('propLead').value;renderDoc()">&#128196; Печатная форма</button>
+    </div>
+  </div>`;
+}
+function addContestToProposal(){
+  const sel=document.getElementById('addContest');if(!sel.value)return;
+  const c=data.contests.find(x=>x.id===sel.value);if(!c)return;
+  currentProposal.contests.push({id:c.id,name:c.name,duration:c.duration,cost:c.cost,price:Math.round((c.cost||0)*1.8)});
+  currentProposal.totalProps=[...new Set([...(currentProposal.totalProps||[]),...(c.props||[])])];
+  renderEditableProposal();
+}
+function addHostToProposal(){
+  const sel=document.getElementById('addHost');if(!sel.value)return;
+  const h=data.hosts.find(x=>x.id===sel.value);if(!h)return;
+  currentProposal.hosts.push({id:h.id,name:h.name,rate:h.rate,price:h.rate});
+  renderEditableProposal();
+}
+async function saveProposalToLead(){
+  const leadId=document.getElementById('propLead').value;if(!leadId)return;
+  await apiCall('leads/'+leadId,'PUT',{proposal:currentProposal});
+  await loadAll();
+  alert('Предложение сохранено!');
+}
+
+// === CALENDAR ===
+let calDate=new Date();
+const MONTHS=['Январь','Февраль','Март','Апрель','Май','Июнь','Июль','Август','Сентябрь','Октябрь','Ноябрь','Декабрь'];
+const DAYS=['Пн','Вт','Ср','Чт','Пт','Сб','Вс'];
+
+function calNav(dir){
+  if(dir===0)calDate=new Date();
+  else calDate.setMonth(calDate.getMonth()+dir);
+  renderCalendar();
+}
+function renderCalendar(){
+  const y=calDate.getFullYear(),m=calDate.getMonth();
+  document.getElementById('calTitle').textContent=MONTHS[m]+' '+y;
+  const first=new Date(y,m,1),last=new Date(y,m+1,0);
+  let startDay=(first.getDay()+6)%7;
+  const today=new Date();today.setHours(0,0,0,0);
+  let html=DAYS.map(d=>`<div class="cal-day-name">${d}</div>`).join('');
+  // Events map
+  const events={};
+  data.leads.forEach(l=>{
+    if(!l.eventDate)return;
+    const key=l.eventDate;
+    if(!events[key])events[key]=[];
+    events[key].push(l);
+  });
+  // Previous month days
+  const prevLast=new Date(y,m,0).getDate();
+  for(let i=startDay-1;i>=0;i--){
+    html+=`<div class="cal-day other-month"><div class="day-num">${prevLast-i}</div></div>`;
+  }
+  // Current month
+  for(let d=1;d<=last.getDate();d++){
+    const date=new Date(y,m,d);
+    const dateStr=date.toISOString().split('T')[0];
+    const isToday=date.getTime()===today.getTime();
+    const dayEvents=events[dateStr]||[];
+    html+=`<div class="cal-day${isToday?' today':''}"><div class="day-num">${d}</div>`;
+    dayEvents.forEach(e=>{
+      html+=`<div class="cal-event ev-${e.eventType||'other'}" onclick="openLeadModal('${e.id}')" title="${esc(e.name)}: ${EV[e.eventType]||''}">${esc(e.name)}</div>`;
+    });
+    html+=`</div>`;
+  }
+  // Next month days
+  const totalCells=startDay+last.getDate();
+  const remaining=totalCells%7===0?0:7-totalCells%7;
+  for(let i=1;i<=remaining;i++){
+    html+=`<div class="cal-day other-month"><div class="day-num">${i}</div></div>`;
+  }
+  document.getElementById('calGrid').innerHTML=html;
+}
+
+// === FINANCE ===
+function renderFinance(){
+  const done=data.leads.filter(l=>l.status==='done'||l.revenue>0);
+  const totalRevenue=done.reduce((s,l)=>s+(l.revenue||0),0);
+  const totalExpenses=done.reduce((s,l)=>s+(l.expenses||0),0);
+  const profit=totalRevenue-totalExpenses;
+  const avg=done.length?Math.round(totalRevenue/done.length):0;
+
+  document.getElementById('finRevenue').textContent=fmtMoney(totalRevenue);
+  document.getElementById('finExpenses').textContent=fmtMoney(totalExpenses);
+  document.getElementById('finProfit').textContent=fmtMoney(profit);
+  document.getElementById('finAvg').textContent=fmtMoney(avg);
+
+  // By type chart
+  const byType={};
+  done.forEach(l=>{
+    const t=l.eventType||'other';
+    if(!byType[t])byType[t]={revenue:0,count:0};
+    byType[t].revenue+=(l.revenue||0);
+    byType[t].count++;
+  });
+  const maxRev=Math.max(...Object.values(byType).map(v=>v.revenue),1);
+  const colors={birthday:'var(--primary)',kids:'var(--green)',corporate:'var(--blue)',wedding:'var(--purple)',newyear:'var(--red)',other:'var(--yellow)'};
+  document.getElementById('finByType').innerHTML=Object.entries(byType).map(([t,v])=>`
+    <div class="fin-bar-row">
+      <div class="fin-bar-label">${EV[t]||t}</div>
+      <div class="fin-bar-track"><div class="fin-bar-fill" style="width:${(v.revenue/maxRev*100).toFixed(1)}%;background:${colors[t]||'var(--text)'}">${v.count} шт</div></div>
+      <div class="fin-bar-val">${fmtMoney(v.revenue)}</div>
+    </div>`).join('')||'<p style="color:var(--text);text-align:center;padding:1rem">Нет данных</p>';
+
+  // Finance table
+  document.getElementById('finTable').innerHTML=done.length?[...done].sort((a,b)=>new Date(b.eventDate||b.createdAt)-new Date(a.eventDate||a.createdAt)).map(l=>{
+    const p=(l.revenue||0)-(l.expenses||0);
+    return`<tr>
+      <td>${fmtDate(l.eventDate||l.createdAt)}</td>
+      <td style="color:var(--white);font-weight:500">${esc(l.name)}</td>
+      <td>${EV[l.eventType]||'-'}</td>
+      <td style="color:var(--green)">${fmtMoney(l.revenue||0)}</td>
+      <td style="color:var(--red)">${fmtMoney(l.expenses||0)}</td>
+      <td style="color:${p>=0?'var(--primary)':'var(--red)'};font-weight:600">${fmtMoney(p)}</td>
+    </tr>`;
+  }).join(''):'<tr><td colspan="6" class="empty">Нет финансовых данных</td></tr>';
+}
+
+// === DOCS ===
+let currentDocType='estimate';
+function selectDocType(btn){
+  document.querySelectorAll('.doc-type-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  currentDocType=btn.dataset.doc;
+  renderDoc();
+}
+function renderDoc(){
+  const leadId=document.getElementById('docLead').value;
+  const body=document.getElementById('docBody');
+  if(!leadId){body.innerHTML='<div style="text-align:center;padding:60px;color:#aaa">Выберите заявку</div>';return;}
+  const l=data.leads.find(x=>x.id===leadId);if(!l)return;
+  const p=l.proposal||null;
+  const host=data.hosts.find(h=>h.id===l.hostId);
+  const loc=data.locations.find(x=>x.id===l.locationId);
+  const today=new Date().toLocaleDateString('ru-RU',{day:'2-digit',month:'long',year:'numeric'});
+  const evDate=l.eventDate?new Date(l.eventDate).toLocaleDateString('ru-RU',{day:'2-digit',month:'long',year:'numeric'}):'___________';
+
+  const header=`<div class="doc-header">
+    <div><div class="doc-logo">BooGagArt</div><div style="font-size:11px;color:#888">Организация мероприятий, Алматы</div></div>
+    <div class="doc-meta">Дата: ${today}<br>Клиент: ${esc(l.name)}<br>Тел: ${esc(l.phone||'')}</div>
+  </div>`;
+
+  const contestRows=p?p.contests.map((c,i)=>`<tr><td>${i+1}</td><td>${esc(c.name)}</td><td>${c.duration} мин</td><td><span contenteditable="true">${(c.price||0).toLocaleString('ru-RU')}</span> тг</td></tr>`).join(''):'<tr><td colspan="4" style="text-align:center;color:#aaa">Сгенерируйте предложение</td></tr>';
+  const hostRows=p?p.hosts.map(h=>`<tr><td>Ведущий</td><td>${esc(h.name)}</td><td>—</td><td><span contenteditable="true">${(h.price||0).toLocaleString('ru-RU')}</span> тг</td></tr>`).join(''):'';
+  const locRows=p?p.locations.map(lo=>`<tr><td>Локация</td><td>${esc(lo.name)}</td><td>—</td><td><span contenteditable="true">${(lo.price||0).toLocaleString('ru-RU')}</span> тг</td></tr>`).join(''):'';
+  const totalPrice=p?(p.contests.reduce((s,c)=>s+(c.price||0),0)+p.hosts.reduce((s,h)=>s+(h.price||0),0)+p.locations.reduce((s,lo)=>s+(lo.price||0),0)):0;
+
+  const sign=`<div class="doc-sign">
+    <div class="doc-sign-col"><strong>Исполнитель:</strong><br>ИП "BooGagArt"<div class="doc-sign-line"></div><div style="font-size:10px">подпись / ФИО</div></div>
+    <div class="doc-sign-col"><strong>Заказчик:</strong><br><span contenteditable="true">${esc(l.name)}</span><div class="doc-sign-line"></div><div style="font-size:10px">подпись / ФИО</div></div>
+  </div>`;
+
+  if(currentDocType==='estimate'){
+    body.innerHTML=`${header}<h1>Смета</h1><div style="font-size:12px;color:#666;margin-bottom:15px">Мероприятие: <strong>${EV[l.eventType]||''}</strong> | Дата: <strong>${evDate}</strong> | Гостей: <strong contenteditable="true">${esc(l.guests||'')}</strong></div>
+    <h2>Программа и услуги</h2>
+    <table><thead><tr><th>#</th><th>Наименование</th><th>Длительность</th><th>Стоимость</th></tr></thead><tbody>${contestRows}${hostRows}${locRows}</tbody></table>
+    <div class="doc-total">ИТОГО: <span contenteditable="true">${totalPrice.toLocaleString('ru-RU')}</span> тг</div>
+    ${p?.totalProps?.length?`<h2>Необходимый реквизит</h2><div style="font-size:12px">${p.totalProps.join(', ')}</div>`:''}
+    <div style="font-size:11px;color:#888;margin-top:20px">* Цены указаны в тенге. Возможна корректировка по согласованию сторон.</div>
+    ${sign}`;
+  }
+  else if(currentDocType==='proposal'){
+    body.innerHTML=`${header}<h1>Коммерческое предложение</h1>
+    <p style="margin:10px 0">Уважаемый(ая) <strong contenteditable="true">${esc(l.name)}</strong>!</p>
+    <p>Благодарим за интерес к нашим услугам! Мы рады предложить вам организацию мероприятия «<strong contenteditable="true">${EV[l.eventType]||'Праздник'}</strong>», запланированного на <strong>${evDate}</strong>.</p>
+    <h2>Что мы предлагаем</h2>
+    <table><thead><tr><th>#</th><th>Услуга</th><th>Длительность</th><th>Стоимость</th></tr></thead><tbody>${contestRows}${hostRows}${locRows}</tbody></table>
+    <div class="doc-total">Стоимость: <span contenteditable="true">${totalPrice.toLocaleString('ru-RU')}</span> тг</div>
+    <h2>Почему BooGagArt?</h2>
+    <ul style="margin:8px 0 8px 20px;font-size:12px"><li>Более 36 успешно проведённых мероприятий</li><li>Индивидуальный подход к каждому клиенту</li><li>Полная организация под ключ</li><li>Гарантия качества и пунктуальности</li></ul>
+    <p style="margin-top:15px">С нетерпением ждём вашего ответа!<br><strong>Команда BooGagArt</strong><br><span style="font-size:11px">Instagram: @boogagart | Алматы</span></p>`;
+  }
+  else if(currentDocType==='act'){
+    body.innerHTML=`${header}<h1>Акт выполненных работ</h1>
+    <p style="margin:10px 0;font-size:12px">Настоящий акт составлен о том, что Исполнитель (ИП "BooGagArt") оказал Заказчику (<strong contenteditable="true">${esc(l.name)}</strong>) следующие услуги по организации мероприятия «<strong contenteditable="true">${EV[l.eventType]||''}</strong>», проведённого <strong>${evDate}</strong>.</p>
+    <h2>Перечень оказанных услуг</h2>
+    <table><thead><tr><th>#</th><th>Наименование</th><th>Длительность</th><th>Стоимость</th></tr></thead><tbody>${contestRows}${hostRows}${locRows}</tbody></table>
+    <div class="doc-total">ИТОГО: <span contenteditable="true">${totalPrice.toLocaleString('ru-RU')}</span> тг</div>
+    <p style="font-size:12px;margin:15px 0">Вышеуказанные услуги оказаны полностью и в срок. Заказчик претензий по объёму, качеству и срокам оказания услуг не имеет.</p>
+    ${sign}`;
+  }
+  else if(currentDocType==='contract'){
+    body.innerHTML=`${header}<h1>Договор-оферта на оказание услуг</h1>
+    <p style="font-size:12px;margin:10px 0"><strong>г. Алматы</strong>, ${today}</p>
+    <p style="font-size:12px">ИП "BooGagArt" (Исполнитель) и <strong contenteditable="true">${esc(l.name)}</strong> (Заказчик) заключили настоящий договор о нижеследующем:</p>
+    <h2>1. Предмет договора</h2>
+    <p style="font-size:12px">1.1. Исполнитель обязуется оказать услуги по организации мероприятия «<strong contenteditable="true">${EV[l.eventType]||'Праздник'}</strong>» в дату <strong>${evDate}</strong> для <strong contenteditable="true">${esc(l.guests||'___')}</strong> гостей.</p>
+    <p style="font-size:12px">1.2. Перечень услуг согласно Приложению (Смета).</p>
+    <h2>2. Стоимость и порядок оплаты</h2>
+    <p style="font-size:12px">2.1. Стоимость услуг: <strong contenteditable="true">${totalPrice.toLocaleString('ru-RU')}</strong> тг.</p>
+    <p style="font-size:12px">2.2. Предоплата <span contenteditable="true">50</span>% при подписании договора, остаток — в день мероприятия.</p>
+    <h2>3. Обязанности сторон</h2>
+    <p style="font-size:12px">3.1. Исполнитель обеспечивает: программу, оборудование, ведущего, реквизит.</p>
+    <p style="font-size:12px">3.2. Заказчик обеспечивает: доступ к площадке, своевременную оплату.</p>
+    <h2>4. Прочие условия</h2>
+    <p style="font-size:12px">4.1. Отмена за 3+ дней — возврат предоплаты. Менее 3 дней — предоплата не возвращается.</p>
+    <p style="font-size:12px">4.2. Спорные вопросы решаются путём переговоров.</p>
+    ${sign}`;
+  }
+}
+function copyDocHTML(){
+  const body=document.getElementById('docBody');
+  const range=document.createRange();range.selectNodeContents(body);
+  const sel=window.getSelection();sel.removeAllRanges();sel.addRange(range);
+  document.execCommand('copy');sel.removeAllRanges();
+  alert('Скопировано в буфер!');
+}
+
+// === UTILS ===
+function esc(s){const d=document.createElement('div');d.textContent=s;return d.innerHTML;}
+function fmtDate(d){if(!d)return'—';return new Date(d).toLocaleDateString('ru-RU',{day:'2-digit',month:'2-digit',year:'2-digit'});}
+function fmtMoney(n){return(n||0).toLocaleString('ru-RU')+' тг';}
+</script>
+</body>
+</html>
