@@ -1,0 +1,6 @@
+[
+  {"id":"dj001","name":"DJ Arman","phone":"+7 (707) 900-11-22","rate":30000,"city":"Алматы","rating":5,"specialties":"Свадьбы, корпоративы, deep house, поп","createdAt":"2026-01-15T10:00:00Z"},
+  {"id":"dj002","name":"DJ Aisha","phone":"+7 (701) 900-33-44","rate":25000,"city":"Алматы","rating":4,"specialties":"Детские праздники, поп, хиты","createdAt":"2026-01-15T10:00:00Z"},
+  {"id":"dj003","name":"DJ Max","phone":"+7 (775) 900-55-66","rate":35000,"city":"Астана","rating":5,"specialties":"Корпоративы, клубная музыка, ретро","createdAt":"2026-01-15T10:00:00Z"},
+  {"id":"dj004","name":"DJ Nurai","phone":"+7 (702) 900-77-88","rate":20000,"city":"Шымкент","rating":3,"specialties":"Свадьбы, казахские тои, восточная музыка","createdAt":"2026-01-15T10:00:00Z"}
+]
