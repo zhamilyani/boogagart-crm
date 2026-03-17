@@ -1,16 +1,12 @@
 [
-  {"id":"eq001","name":"JBL PartyBox 310","category":"звук","quantity":2,"description":"Портативная колонка 240 Вт, Bluetooth, караоке","createdAt":"2025-01-10T10:00:00Z"},
-  {"id":"eq002","name":"Yamaha MG10XU","category":"звук","quantity":1,"description":"Микшерный пульт 10 каналов, USB, эффекты","createdAt":"2025-01-10T10:00:00Z"},
-  {"id":"eq003","name":"Shure SM58","category":"звук","quantity":4,"description":"Динамический микрофон для вокала","createdAt":"2025-01-10T10:00:00Z"},
-  {"id":"eq004","name":"Радиомикрофон Boya","category":"звук","quantity":2,"description":"Беспроводной радиомикрофон","createdAt":"2025-01-10T10:00:00Z"},
-  {"id":"eq005","name":"Проектор Epson EB-X51","category":"видео","quantity":1,"description":"Проектор 3800 люмен, HDMI, VGA","createdAt":"2025-01-10T10:00:00Z"},
-  {"id":"eq006","name":"Экран для проектора 120\"","category":"видео","quantity":1,"description":"Экран на штативе, 120 дюймов","createdAt":"2025-01-10T10:00:00Z"},
-  {"id":"eq007","name":"Пеногенератор","category":"спецэффекты","quantity":1,"description":"Генератор пены, бак 20 л, производительность 50 м³/ч","createdAt":"2025-01-10T10:00:00Z"},
-  {"id":"eq008","name":"Дым-машина 1500W","category":"спецэффекты","quantity":2,"description":"Генератор дыма, пульт ДУ, бак 1.5 л","createdAt":"2025-01-10T10:00:00Z"},
-  {"id":"eq009","name":"Диско-шар LED","category":"свет","quantity":3,"description":"Светодиодный шар, DMX, авто-режим","createdAt":"2025-01-10T10:00:00Z"},
-  {"id":"eq010","name":"LED-панель RGBW","category":"свет","quantity":4,"description":"Светодиодная панель 54x3W, DMX","createdAt":"2025-01-10T10:00:00Z"},
-  {"id":"eq011","name":"Караоке-система AST","category":"звук","quantity":1,"description":"Караоке с базой 50 000 песен, 2 микрофона","createdAt":"2025-01-10T10:00:00Z"},
-  {"id":"eq012","name":"Фотобудка","category":"фото","quantity":1,"description":"Фотобудка с принтером, реквизит, фон","createdAt":"2025-01-10T10:00:00Z"},
-  {"id":"eq013","name":"Ноутбук (рабочий)","category":"видео","quantity":2,"description":"Ноутбук для презентаций и квизов","createdAt":"2025-01-10T10:00:00Z"},
-  {"id":"eq014","name":"Генератор мыльных пузырей","category":"спецэффекты","quantity":1,"description":"Автоматический генератор мыльных пузырей","createdAt":"2025-01-10T10:00:00Z"}
+  {"id":"eq001","name":"Electro-Voice TX112","category":"звук","quantity":2,"description":"Колонка (новая)","createdAt":"2026-01-01T00:00:00Z"},
+  {"id":"eq002","name":"Yamaha MG12","category":"звук","quantity":1,"description":"Микшерный пульт","createdAt":"2026-01-01T00:00:00Z"},
+  {"id":"eq003","name":"QSC 850","category":"звук","quantity":1,"description":"Усилитель мощности","createdAt":"2026-01-01T00:00:00Z"},
+  {"id":"eq004","name":"Martin Logan сабвуфер","category":"звук","quantity":2,"description":"Сабвуфер 1,5 КВт каждый","createdAt":"2026-01-01T00:00:00Z"},
+  {"id":"eq005","name":"Коммутация Speakon","category":"звук","quantity":1,"description":"Кабельная коммутация Speakon","createdAt":"2026-01-01T00:00:00Z"},
+  {"id":"eq006","name":"Радиомикрофон UHF","category":"звук","quantity":2,"description":"Радиомикрофон UHF","createdAt":"2026-01-01T00:00:00Z"},
+  {"id":"eq007","name":"Shure радиомикрофон","category":"звук","quantity":1,"description":"Радиомикрофон Shure","createdAt":"2026-01-01T00:00:00Z"},
+  {"id":"eq008","name":"Pioneer DDJ-800","category":"DJ-пульт","quantity":1,"description":"DJ-контроллер Pioneer DDJ-800","createdAt":"2026-01-01T00:00:00Z"},
+  {"id":"eq009","name":"Pioneer DDJ-FLX4","category":"DJ-пульт","quantity":1,"description":"DJ-контроллер Pioneer DDJ-FLX4","createdAt":"2026-01-01T00:00:00Z"},
+  {"id":"eq010","name":"Pioneer Rev-1","category":"DJ-пульт","quantity":1,"description":"DJ-контроллер Pioneer Rev-1","createdAt":"2026-01-01T00:00:00Z"}
 ]
