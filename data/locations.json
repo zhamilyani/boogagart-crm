@@ -1,8 +1,1 @@
-[
-  {"id":"l001","name":"Лофт «Артхаус»","address":"ул. Тимирязева, 42","type":"indoor","capacity":60,"pricePerHour":25000,"createdAt":"2025-01-10T10:00:00Z"},
-  {"id":"l002","name":"Парк Горького","address":"ул. Гоголя, 1","type":"outdoor","capacity":200,"pricePerHour":0,"createdAt":"2025-01-10T10:00:00Z"},
-  {"id":"l003","name":"Банкетный зал «Алтын»","address":"пр. Аль-Фараби, 77","type":"indoor","capacity":120,"pricePerHour":45000,"createdAt":"2025-01-10T10:00:00Z"},
-  {"id":"l004","name":"Детский центр «Радуга»","address":"ул. Жандосова, 15","type":"indoor","capacity":30,"pricePerHour":15000,"createdAt":"2025-01-10T10:00:00Z"},
-  {"id":"l005","name":"Коттедж «За городом»","address":"пос. Бесагаш, ул. Садовая, 8","type":"both","capacity":50,"pricePerHour":35000,"createdAt":"2025-01-10T10:00:00Z"},
-  {"id":"l006","name":"Ресторан «Тюбетейка»","address":"пр. Панфилова, 20","type":"indoor","capacity":80,"pricePerHour":30000,"createdAt":"2025-01-10T10:00:00Z"}
-]
+[]
