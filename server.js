@@ -131,7 +131,7 @@ const server = http.createServer(async (req, res) => {
   const parts = url.pathname.split('/').filter(Boolean);
 
   // API routes: /api/{collection}/{id?}
-  if (parts[0] === 'api' && ['leads', 'contests', 'hosts', 'locations', 'equipment', 'inventory', 'scenarios', 'djs'].includes(parts[1])) {
+  if (parts[0] === 'api' && ['leads', 'contests', 'hosts', 'locations', 'equipment', 'inventory', 'scenarios', 'djs', 'users'].includes(parts[1])) {
     return handleCRUD(parts[1], req, res, parts[2] || null);
   }
 

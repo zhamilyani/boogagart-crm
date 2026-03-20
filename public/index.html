@@ -295,28 +295,14 @@
     <div class="login-logo"><img src="logo.png" alt="BooGagArt"></div>
     <div class="subtitle">CRM-система управления мероприятиями</div>
     <div class="form-group">
-      <label>Ваше имя</label>
-      <input id="loginName" value="" placeholder="Введите имя">
+      <label>Логин</label>
+      <input id="loginUser" value="" placeholder="Введите логин" autocomplete="username">
     </div>
-    <div class="form-group" style="text-align:left">
-      <label>Роль</label>
-      <div class="role-option selected" data-role="ceo" onclick="selectRole(this)">
-        <div class="role-icon" style="background:var(--primary-bg);color:var(--primary)">&#128081;</div>
-        <div><div class="role-name">Генеральный директор</div><div class="role-desc">Полный доступ ко всему</div></div>
-      </div>
-      <div class="role-option" data-role="admin" onclick="selectRole(this)">
-        <div class="role-icon" style="background:var(--blue-bg);color:var(--blue)">&#9881;</div>
-        <div><div class="role-name">Администратор</div><div class="role-desc">Всё кроме финансов</div></div>
-      </div>
-      <div class="role-option" data-role="host" onclick="selectRole(this)">
-        <div class="role-icon" style="background:var(--green-bg);color:var(--green)">&#127908;</div>
-        <div><div class="role-name">Ведущий</div><div class="role-desc">Мои события и сценарии</div></div>
-      </div>
-      <div class="role-option" data-role="dj" onclick="selectRole(this)">
-        <div class="role-icon" style="background:var(--purple-bg);color:var(--purple)">&#127911;</div>
-        <div><div class="role-name">Ди-джей</div><div class="role-desc">Мои события и сценарии</div></div>
-      </div>
+    <div class="form-group">
+      <label>Пароль</label>
+      <input id="loginPass" type="password" value="" placeholder="Введите пароль" autocomplete="current-password">
     </div>
+    <div id="loginError" style="color:var(--red);font-size:0.78rem;margin-bottom:0.5rem;display:none"></div>
     <button class="btn btn-primary" style="width:100%;padding:0.7rem;font-size:0.9rem;margin-top:0.5rem" onclick="doLogin()">Войти</button>
   </div>
 </div>
@@ -341,10 +327,12 @@
     <button class="nav-item" data-page="proposal"><span class="icon">&#9889;</span><span>Генератор</span></button>
     <button class="nav-item" data-page="docs"><span class="icon">&#128196;</span><span>Печатные формы</span></button>
     <button class="nav-item" data-page="finance" data-min-role="ceo"><span class="icon">&#128176;</span><span>Финансы</span></button>
+    <button class="nav-item" data-page="users" data-min-role="ceo"><span class="icon">&#128100;</span><span>Юзеры</span></button>
   </nav>
   <div class="sidebar-user">
     <div class="avatar" id="userAvatar">?</div>
     <div class="info"><div class="uname" id="userName">-</div><div class="urole" id="userRole">-</div></div>
+    <button class="logout" onclick="openChangePassword()" title="Сменить пароль" style="font-size:0.85rem">&#128273;</button>
     <button class="logout" onclick="doLogout()" title="Выйти">&#10145;</button>
   </div>
 </aside>
@@ -519,6 +507,15 @@
       </div>
     </div>
 
+    <!-- USERS (CEO only) -->
+    <div class="page" id="page-users">
+      <div class="table-wrap">
+        <div class="table-header"><h3>Управление пользователями</h3></div>
+        <table><thead><tr><th>Имя</th><th>Роль</th><th>Логин</th><th>Пароль</th><th>Привязка</th><th></th></tr></thead>
+        <tbody id="usersTable"></tbody></table>
+      </div>
+    </div>
+
     <!-- FINANCE -->
     <div class="page" id="page-finance">
       <div class="fin-filters">
@@ -566,8 +563,8 @@
 
 <script>
 const API='';
-let currentPage='dashboard', currentRole='ceo', currentUser='';
-let data={leads:[],contests:[],hosts:[],locations:[],equipment:[],inventory:[],scenarios:[],djs:[]};
+let currentPage='dashboard', currentRole='ceo', currentUser='', currentLinkedId='';
+let data={leads:[],contests:[],hosts:[],locations:[],equipment:[],inventory:[],scenarios:[],djs:[],users:[]};
 
 const EV={birthday:'День рождения',kids:'Детский праздник',newyear:'Новый год',corporate:'Корпоратив',wedding:'Свадьба',other:'Другое'};
 const ST={new:'Новая',progress:'В работе',done:'Завершена',cancelled:'Отменена'};
@@ -576,16 +573,17 @@ const ROLES={ceo:'Генеральный директор',admin:'Админис
 const ROLE_LEVELS={dj:1,host:1,admin:2,ceo:3};
 
 // === AUTH ===
-function selectRole(el){
-  document.querySelectorAll('.role-option').forEach(r=>r.classList.remove('selected'));
-  el.classList.add('selected');
-}
-function doLogin(){
-  const name=document.getElementById('loginName').value.trim()||'Пользователь';
-  const roleEl=document.querySelector('.role-option.selected');
-  currentRole=roleEl?roleEl.dataset.role:'host';
-  currentUser=name;
-  localStorage.setItem('crm_user',JSON.stringify({name,role:currentRole}));
+async function doLogin(){
+  const username=document.getElementById('loginUser').value.trim();
+  const pass=document.getElementById('loginPass').value;
+  const errEl=document.getElementById('loginError');
+  if(!username||!pass){errEl.textContent='Введите логин и пароль';errEl.style.display='block';return;}
+  const users=await apiCall('users');
+  const user=users.find(u=>u.username===username&&u.password===pass);
+  if(!user){errEl.textContent='Неверный логин или пароль';errEl.style.display='block';return;}
+  errEl.style.display='none';
+  currentUser=user.name;currentRole=user.role;currentLinkedId=user.linkedId||'';
+  localStorage.setItem('crm_user',JSON.stringify({name:user.name,role:user.role,linkedId:user.linkedId||''}));
   applyAuth();
 }
 function doLogout(){
@@ -637,11 +635,13 @@ function applyAuth(){
 (function(){
   const saved=localStorage.getItem('crm_user');
   if(saved){
-    const{name,role}=JSON.parse(saved);
-    currentUser=name;currentRole=role;
+    const{name,role,linkedId}=JSON.parse(saved);
+    currentUser=name;currentRole=role;currentLinkedId=linkedId||'';
     applyAuth();
   }
 })();
+// Enter on password field
+document.getElementById('loginPass')?.addEventListener('keydown',e=>{if(e.key==='Enter')doLogin();});
 
 // === API ===
 async function apiCall(path,method='GET',body=null){
@@ -651,8 +651,8 @@ async function apiCall(path,method='GET',body=null){
   return res.json();
 }
 async function loadAll(){
-  [data.leads,data.contests,data.hosts,data.locations,data.equipment,data.inventory,data.scenarios,data.djs]=await Promise.all([
-    apiCall('leads'),apiCall('contests'),apiCall('hosts'),apiCall('locations'),apiCall('equipment'),apiCall('inventory'),apiCall('scenarios'),apiCall('djs')
+  [data.leads,data.contests,data.hosts,data.locations,data.equipment,data.inventory,data.scenarios,data.djs,data.users]=await Promise.all([
+    apiCall('leads'),apiCall('contests'),apiCall('hosts'),apiCall('locations'),apiCall('equipment'),apiCall('inventory'),apiCall('scenarios'),apiCall('djs'),apiCall('users')
   ]);
   render();
 }
@@ -672,6 +672,7 @@ const PAGES={
   proposal:{title:'Генератор предложений',btn:null},
   docs:{title:'Печатные формы',btn:null},
   finance:{title:'Финансы',btn:null},
+  users:{title:'Юзеры',btn:{label:'+ Добавить юзера',action:()=>openUserModal()}},
 };
 
 document.querySelectorAll('.nav-item[data-page]').forEach(btn=>{
@@ -698,12 +699,10 @@ function canFinance(){return currentRole==='ceo';}
 // === HELPERS ===
 function getVisibleLeads(){
   if(currentRole==='host'){
-    const me=data.hosts.find(h=>h.name===currentUser);
-    return me?data.leads.filter(l=>l.hostId===me.id):[];
+    return currentLinkedId?data.leads.filter(l=>l.hostId===currentLinkedId):[];
   }
   if(currentRole==='dj'){
-    const me=data.djs.find(d=>d.name===currentUser);
-    return me?data.leads.filter(l=>l.djId===me.id):[];
+    return currentLinkedId?data.leads.filter(l=>l.djId===currentLinkedId):[];
   }
   return data.leads;
 }
@@ -859,6 +858,26 @@ function render(){
         <button class="act-btn del" onclick="deleteItem('inventory','${i.id}')" title="Удалить">&times;</button>
       </div>`:''}</td>
     </tr>`).join(''):'<tr><td colspan="4" class="empty"><div class="empty-icon">&#127922;</div>Добавьте реквизит</td></tr>';
+
+  // Users (CEO only)
+  if(currentRole==='ceo'){
+    document.getElementById('usersTable').innerHTML=data.users.length?data.users.map(u=>{
+      let linked='—';
+      if(u.role==='host'){const h=data.hosts.find(x=>x.id===u.linkedId);linked=h?'&#127908; '+esc(h.name):'<span style="color:var(--red)">не привязан</span>';}
+      if(u.role==='dj'){const d=data.djs.find(x=>x.id===u.linkedId);linked=d?'&#127911; '+esc(d.name):'<span style="color:var(--red)">не привязан</span>';}
+      return`<tr>
+        <td style="color:var(--white);font-weight:500">${esc(u.name)}</td>
+        <td><span style="padding:0.15rem 0.5rem;border-radius:4px;font-size:0.68rem;font-weight:500;background:${u.role==='ceo'?'var(--primary-bg)':u.role==='admin'?'var(--blue-bg)':u.role==='host'?'var(--green-bg)':'var(--purple-bg)'};color:${u.role==='ceo'?'var(--primary)':u.role==='admin'?'var(--blue)':u.role==='host'?'var(--green)':'var(--purple)'}">${ROLES[u.role]||u.role}</span></td>
+        <td><code style="background:var(--bg3);padding:0.2rem 0.5rem;border-radius:4px;font-size:0.78rem">${esc(u.username)}</code></td>
+        <td><code style="background:var(--bg3);padding:0.2rem 0.5rem;border-radius:4px;font-size:0.78rem">${esc(u.password)}</code></td>
+        <td>${linked}</td>
+        <td><div class="actions">
+          <button class="act-btn" onclick="openUserModal('${u.id}')" title="Редактировать">&#9998;</button>
+          <button class="act-btn del" onclick="deleteItem('users','${u.id}')" title="Удалить">&times;</button>
+        </div></td>
+      </tr>`;
+    }).join(''):'<tr><td colspan="6" class="empty"><div class="empty-icon">&#128100;</div>Добавьте пользователей</td></tr>';
+  }
 
   fillLeadSelects();
 }
@@ -1216,6 +1235,96 @@ async function saveInventory(id){
   };
   await apiCall(id?'inventory/'+id:'inventory',id?'PUT':'POST',body);
   closeModal();await loadAll();
+}
+
+// === USER MODAL ===
+function openUserModal(id){
+  const u=id?data.users.find(x=>x.id===id):{};
+  const linkOptions=function(role){
+    if(role==='host')return data.hosts.map(h=>`<option value="${h.id}" ${u.linkedId===h.id?'selected':''}>${h.name}</option>`).join('');
+    if(role==='dj')return data.djs.map(d=>`<option value="${d.id}" ${u.linkedId===d.id?'selected':''}>${d.name}</option>`).join('');
+    return '';
+  };
+  const showLink=u.role==='host'||u.role==='dj';
+  openModal(id?'Редактировать юзера':'Новый юзер',`
+    <div class="form-row">
+      <div class="form-group"><label>Имя</label><input id="fuName" value="${esc(u.name||'')}"></div>
+      <div class="form-group"><label>Роль</label>
+        <select id="fuRole" onchange="updateUserLinkSelect()">
+          <option value="ceo" ${u.role==='ceo'?'selected':''}>Генеральный директор</option>
+          <option value="admin" ${u.role==='admin'?'selected':''}>Администратор</option>
+          <option value="host" ${u.role==='host'?'selected':''}>Ведущий</option>
+          <option value="dj" ${u.role==='dj'?'selected':''}>Ди-джей</option>
+        </select></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>Логин</label><input id="fuUsername" value="${esc(u.username||'')}"></div>
+      <div class="form-group"><label>Пароль</label><input id="fuPassword" value="${esc(u.password||'')}"></div>
+    </div>
+    <div class="form-group" id="fuLinkWrap" style="${showLink?'':'display:none'}">
+      <label>Привязка к <span id="fuLinkLabel">${u.role==='dj'?'ди-джею':'ведущему'}</span></label>
+      <select id="fuLinkedId">
+        <option value="">— Не привязан —</option>
+        ${linkOptions(u.role||'host')}
+      </select>
+    </div>
+  `,`<button class="btn btn-secondary" onclick="closeModal()">Отмена</button>
+    <button class="btn btn-primary" onclick="saveUser('${id||''}')">${id?'Сохранить':'Добавить'}</button>`);
+}
+function updateUserLinkSelect(){
+  const role=document.getElementById('fuRole').value;
+  const wrap=document.getElementById('fuLinkWrap');
+  const sel=document.getElementById('fuLinkedId');
+  const label=document.getElementById('fuLinkLabel');
+  if(role==='host'||role==='dj'){
+    wrap.style.display='';
+    label.textContent=role==='dj'?'ди-джею':'ведущему';
+    const items=role==='host'?data.hosts:data.djs;
+    sel.innerHTML='<option value="">— Не привязан —</option>'+items.map(x=>`<option value="${x.id}">${x.name}</option>`).join('');
+  }else{
+    wrap.style.display='none';sel.value='';
+  }
+}
+async function saveUser(id){
+  const body={
+    name:document.getElementById('fuName').value,
+    role:document.getElementById('fuRole').value,
+    username:document.getElementById('fuUsername').value,
+    password:document.getElementById('fuPassword').value,
+    linkedId:document.getElementById('fuLinkedId').value,
+  };
+  if(!body.username||!body.password){alert('Логин и пароль обязательны');return;}
+  // Check unique username
+  const dup=data.users.find(u=>u.username===body.username&&u.id!==id);
+  if(dup){alert('Такой логин уже существует');return;}
+  await apiCall(id?'users/'+id:'users',id?'PUT':'POST',body);
+  closeModal();await loadAll();
+}
+
+// === CHANGE PASSWORD ===
+function openChangePassword(){
+  const me=data.users.find(u=>u.name===currentUser&&u.role===currentRole);
+  if(!me){alert('Пользователь не найден');return;}
+  openModal('Сменить пароль',`
+    <div class="form-group"><label>Текущий пароль</label><input type="password" id="fpOld" placeholder="Введите текущий пароль"></div>
+    <div class="form-group"><label>Новый пароль</label><input type="password" id="fpNew" placeholder="Введите новый пароль"></div>
+    <div class="form-group"><label>Повторите новый пароль</label><input type="password" id="fpNew2" placeholder="Повторите новый пароль"></div>
+  `,`<button class="btn btn-secondary" onclick="closeModal()">Отмена</button>
+    <button class="btn btn-primary" onclick="saveNewPassword()">Сохранить</button>`);
+}
+async function saveNewPassword(){
+  const me=data.users.find(u=>u.name===currentUser&&u.role===currentRole);
+  if(!me)return;
+  const old=document.getElementById('fpOld').value;
+  const np=document.getElementById('fpNew').value;
+  const np2=document.getElementById('fpNew2').value;
+  if(old!==me.password){alert('Неверный текущий пароль');return;}
+  if(!np||np.length<3){alert('Новый пароль минимум 3 символа');return;}
+  if(np!==np2){alert('Пароли не совпадают');return;}
+  await apiCall('users/'+me.id,'PUT',{password:np});
+  await loadAll();
+  closeModal();
+  alert('Пароль успешно изменён');
 }
 
 // === DELETE ===

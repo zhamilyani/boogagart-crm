@@ -1,1 +1,12 @@
-[]
+[
+  {
+    "name": "Тест ",
+    "phone": "",
+    "city": "Алматы",
+    "rating": 5,
+    "rate": 0,
+    "specialties": "",
+    "id": "mmyzd8eacfvdp",
+    "createdAt": "2026-03-20T14:14:35.461Z"
+  }
+]

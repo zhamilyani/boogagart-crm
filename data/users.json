@@ -1,0 +1,29 @@
+[
+  {
+    "id": "u_ceo",
+    "username": "ceo",
+    "password": "ceo123",
+    "name": "Генеральный директор",
+    "role": "ceo",
+    "linkedId": "",
+    "createdAt": "2026-03-20T00:00:00Z"
+  },
+  {
+    "id": "u_admin",
+    "username": "admin",
+    "password": "admin123",
+    "name": "Администратор",
+    "role": "admin",
+    "linkedId": "",
+    "createdAt": "2026-03-20T00:00:00Z"
+  },
+  {
+    "name": "Тест",
+    "role": "host",
+    "username": "тест",
+    "password": "123",
+    "linkedId": "mmyzd8eacfvdp",
+    "id": "mmz0163wahq1e",
+    "createdAt": "2026-03-20T14:33:12.237Z"
+  }
+]
