@@ -230,4 +230,10 @@ const server = http.createServer(async (req, res) => {
   serveStatic(res, filePath);
 });
 
-server.listen(PORT, () => console.log(`CRM running at http://localhost:${PORT}`));
+server.listen(PORT, '0.0.0.0', () => console.log(`CRM running at http://0.0.0.0:${PORT}`));
+
+// Graceful shutdown for Railway
+process.on('SIGTERM', () => {
+  console.log('SIGTERM received, shutting down gracefully');
+  server.close(() => process.exit(0));
+});
