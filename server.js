@@ -3,7 +3,21 @@ const fs = require('fs');
 const path = require('path');
 
 const PORT = process.env.PORT || 3009;
-const DATA_DIR = path.join(__dirname, 'data');
+const DATA_DIR = process.env.DATA_PATH || path.join(__dirname, 'data');
+const DEFAULT_DATA = path.join(__dirname, 'data');
+
+// On first deploy with volume: copy default JSON files if volume is empty
+if (DATA_DIR !== DEFAULT_DATA) {
+  if (!fs.existsSync(DATA_DIR)) fs.mkdirSync(DATA_DIR, { recursive: true });
+  const defaults = fs.readdirSync(DEFAULT_DATA).filter(f => f.endsWith('.json'));
+  for (const file of defaults) {
+    const dest = path.join(DATA_DIR, file);
+    if (!fs.existsSync(dest)) {
+      fs.copyFileSync(path.join(DEFAULT_DATA, file), dest);
+      console.log(`Initialized ${file} in volume`);
+    }
+  }
+}
 
 const MIME = {
   '.html': 'text/html; charset=utf-8',

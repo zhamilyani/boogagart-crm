@@ -1,1 +1,22 @@
-[]
+[
+  {
+    "name": "София",
+    "phone": "+77077099703",
+    "eventType": "birthday",
+    "guests": "23",
+    "budget": "250000",
+    "eventDate": "2026-04-03",
+    "status": "progress",
+    "comment": "",
+    "source": "",
+    "hostId": "",
+    "djId": "",
+    "locationId": "",
+    "bookedEquipment": [],
+    "bookedInventory": [],
+    "revenue": 250000,
+    "expenses": 0,
+    "id": "mmyxkb684wftu",
+    "createdAt": "2026-03-20T13:24:06.416Z"
+  }
+]
