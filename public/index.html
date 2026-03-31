@@ -292,6 +292,19 @@
       .stats-grid,.fin-grid{grid-template-columns:repeat(2,1fr)}
       .form-row,.form-row-3{grid-template-columns:1fr}
     }
+    @media(max-width:600px){
+      .sidebar{width:0;transform:translateX(-100%);position:fixed;transition:transform 0.3s}
+      .sidebar.open{width:250px;transform:translateX(0)}
+      .main{margin-left:0}
+      .stats-grid,.fin-grid{grid-template-columns:1fr}
+      .page-header{flex-wrap:wrap;gap:0.5rem}
+      .page-header h2{font-size:1.1rem}
+      table{font-size:0.75rem}
+      .act-btn{width:34px;height:34px}
+      .modal{width:95vw;max-height:90vh}
+      .mobile-menu-btn{display:flex !important}
+    }
+    .mobile-menu-btn{display:none;position:fixed;bottom:16px;right:16px;z-index:100;width:48px;height:48px;border-radius:50%;background:var(--primary);color:#fff;border:none;font-size:1.4rem;align-items:center;justify-content:center;cursor:pointer;box-shadow:0 4px 12px rgba(255,107,53,0.4)}
   </style>
 </head>
 <body>
@@ -313,6 +326,9 @@
     <button class="btn btn-primary" style="width:100%;padding:0.7rem;font-size:0.9rem;margin-top:0.5rem" onclick="doLogin()">Войти</button>
   </div>
 </div>
+
+<!-- MOBILE MENU BTN -->
+<button class="mobile-menu-btn" id="mobileMenuBtn" onclick="document.getElementById('sidebar').classList.toggle('open')">&#9776;</button>
 
 <!-- SIDEBAR -->
 <aside class="sidebar" id="sidebar" style="display:none">
@@ -585,20 +601,28 @@ const ROLES={ceo:'Генеральный директор',admin:'Админис
 const ROLE_LEVELS={dj:1,host:1,admin:2,ceo:3};
 
 // === AUTH ===
+let authToken=localStorage.getItem('crm_token')||'';
 async function doLogin(){
   const username=document.getElementById('loginUser').value.trim();
   const pass=document.getElementById('loginPass').value;
   const errEl=document.getElementById('loginError');
   if(!username||!pass){errEl.textContent='Введите логин и пароль';errEl.style.display='block';return;}
-  const users=await apiCall('users');
-  const user=users.find(u=>u.username===username&&u.password===pass);
-  if(!user){errEl.textContent='Неверный логин или пароль';errEl.style.display='block';return;}
-  errEl.style.display='none';
-  currentUser=user.name;currentRole=user.role;currentLinkedId=user.linkedId||'';
-  localStorage.setItem('crm_user',JSON.stringify({name:user.name,role:user.role,linkedId:user.linkedId||''}));
-  applyAuth();
+  try{
+    const res=await fetch(API+'/api/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({username,password:pass})});
+    const result=await res.json();
+    if(!res.ok){errEl.textContent=result.error||'Ошибка входа';errEl.style.display='block';return;}
+    errEl.style.display='none';
+    authToken=result.token;
+    localStorage.setItem('crm_token',authToken);
+    currentUser=result.name;currentRole=result.role;currentLinkedId=result.linkedId||'';
+    localStorage.setItem('crm_user',JSON.stringify({name:result.name,role:result.role,linkedId:result.linkedId||''}));
+    applyAuth();
+  }catch(e){errEl.textContent='Сервер недоступен';errEl.style.display='block';}
 }
-function doLogout(){
+async function doLogout(){
+  try{await fetch(API+'/api/logout',{method:'POST',headers:{'Authorization':'Bearer '+authToken}});}catch{}
+  authToken='';
+  localStorage.removeItem('crm_token');
   localStorage.removeItem('crm_user');
   document.getElementById('loginScreen').style.display='flex';
   document.getElementById('sidebar').style.display='none';
@@ -644,11 +668,16 @@ function applyAuth(){
 }
 
 // Check saved session
-(function(){
+(async function(){
   const saved=localStorage.getItem('crm_user');
-  if(saved){
+  if(saved&&authToken){
     const{name,role,linkedId}=JSON.parse(saved);
     currentUser=name;currentRole=role;currentLinkedId=linkedId||'';
+    // Validate token is still valid
+    try{
+      const res=await fetch(API+'/api/leads',{headers:{'Authorization':'Bearer '+authToken}});
+      if(res.status===401){doLogout();return;}
+    }catch{}
     applyAuth();
   }
 })();
@@ -699,9 +728,11 @@ async function apiCall(path,method='GET',body=null){
   const collection=parts[0];
   const id=parts[1]||null;
   const opts={method,headers:{'Content-Type':'application/json'}};
+  if(authToken)opts.headers['Authorization']='Bearer '+authToken;
   if(body)opts.body=JSON.stringify(body);
   try{
     const res=await fetch(API+'/api/'+path,opts);
+    if(res.status===401){doLogout();throw new Error('Session expired');}
     if(!res.ok) throw new Error('HTTP '+res.status);
     const result=await res.json();
     // Cache GET results
@@ -1285,7 +1316,9 @@ function toggleBooking(el,type){
 }
 async function checkAvailability(date,excludeLeadId){
   if(!date)return;
-  const res=await fetch(API+'/api/availability',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({date,excludeLeadId})});
+  try{
+  const res=await fetch(API+'/api/availability',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+authToken},body:JSON.stringify({date,excludeLeadId})});
+  if(!res.ok)return;
   const av=await res.json();
   const warn=document.getElementById('bookingWarn');
   document.querySelectorAll('#bookingEqGrid .booking-item').forEach(el=>{
@@ -1308,6 +1341,7 @@ async function checkAvailability(date,excludeLeadId){
     warn.classList.add('show');
     warn.innerHTML='&#9888; На эту дату уже есть мероприятия: '+av.sameDateLeads.map(l=>`<strong>${esc(l.name)}</strong> (${EV[l.eventType]||l.eventType})`).join(', ');
   }else{warn.classList.remove('show');warn.innerHTML='';}
+  }catch(e){console.error('Availability check failed:',e);}
 }
 
 // === EQUIPMENT MODAL ===
@@ -1440,9 +1474,14 @@ async function saveNewPassword(){
   const old=document.getElementById('fpOld').value;
   const np=document.getElementById('fpNew').value;
   const np2=document.getElementById('fpNew2').value;
-  if(old!==me.password){alert('Неверный текущий пароль');return;}
+  if(!old){alert('Введите текущий пароль');return;}
   if(!np||np.length<3){alert('Новый пароль минимум 3 символа');return;}
   if(np!==np2){alert('Пароли не совпадают');return;}
+  // Verify old password via login attempt
+  try{
+    const res=await fetch(API+'/api/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({username:me.username,password:old})});
+    if(!res.ok){alert('Неверный текущий пароль');return;}
+  }catch{alert('Ошибка проверки пароля');return;}
   await apiCall('users/'+me.id,'PUT',{password:np});
   await loadAll();
   closeModal();
@@ -1471,7 +1510,9 @@ function fillFromLead(){
 }
 async function generateProposal(){
   const body={guests:document.getElementById('propGuests').value,budget:document.getElementById('propBudget').value,venue:document.getElementById('propVenue').value,duration:document.getElementById('propDuration').value};
-  const res=await fetch(API+'/api/proposal',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
+  try{
+  const res=await fetch(API+'/api/proposal',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+authToken},body:JSON.stringify(body)});
+  if(!res.ok){alert('Ошибка генерации предложения');return;}
   const p=await res.json();
   currentProposal={
     contests:p.contests.map(c=>({id:c.id,name:c.name,duration:c.duration,cost:c.cost,price:Math.round((c.cost||0)*1.8)||Math.round(c.duration*500)})),
@@ -1481,6 +1522,7 @@ async function generateProposal(){
     markup:80,
   };
   renderEditableProposal();
+  }catch(e){console.error('Proposal generation failed:',e);alert('Не удалось сгенерировать предложение');}
 }
 function openProposalForLead(id){
   document.querySelector('[data-page="proposal"]')?.click();
