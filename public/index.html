@@ -6,6 +6,13 @@
   <title>BooGagArt CRM</title>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <style>
+    /* Offline indicator */
+    .offline-bar{position:fixed;top:0;left:0;right:0;z-index:9999;background:#EF4444;color:#fff;text-align:center;padding:6px 16px;font-size:13px;font-weight:600;transform:translateY(-100%);transition:transform 0.3s ease;display:flex;align-items:center;justify-content:center;gap:8px}
+    .offline-bar.visible{transform:translateY(0)}
+    .offline-bar .sync-btn{background:rgba(255,255,255,0.2);border:1px solid rgba(255,255,255,0.4);color:#fff;padding:3px 12px;border-radius:6px;cursor:pointer;font-size:12px;font-weight:600}
+    .offline-bar .sync-btn:hover{background:rgba(255,255,255,0.3)}
+    .offline-bar.syncing{background:#F59E0B}
+    .offline-bar.restored{background:#00C9A7}
     *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
     :root{
       --bg:#0f1117;--bg2:#1a1d27;--bg3:#242736;--bg4:#2e3246;
@@ -553,6 +560,11 @@
   </div>
 </div>
 
+<div class="offline-bar" id="offlineBar">
+  <span id="offlineMsg">⚡ Оффлайн-режим — данные сохраняются локально</span>
+  <button class="sync-btn" id="syncBtn" onclick="syncOfflineQueue()" style="display:none">Синхронизировать</button>
+</div>
+
 <div class="modal-overlay" id="modal">
   <div class="modal">
     <div class="modal-head"><h3 id="modalTitle"></h3><button class="modal-close" onclick="closeModal()">&times;</button></div>
@@ -643,19 +655,129 @@ function applyAuth(){
 // Enter on password field
 document.getElementById('loginPass')?.addEventListener('keydown',e=>{if(e.key==='Enter')doLogin();});
 
+// === OFFLINE SUPPORT ===
+let isOffline=false;
+const CACHE_KEY='crm_cache_';
+const QUEUE_KEY='crm_offline_queue';
+
+function getOfflineQueue(){try{return JSON.parse(localStorage.getItem(QUEUE_KEY)||'[]');}catch{return[];}}
+function saveOfflineQueue(q){localStorage.setItem(QUEUE_KEY,JSON.stringify(q));}
+function getCached(col){try{return JSON.parse(localStorage.getItem(CACHE_KEY+col)||'null');}catch{return null;}}
+function setCache(col,d){localStorage.setItem(CACHE_KEY+col,JSON.stringify(d));}
+
+function showOfflineBar(msg,type){
+  const bar=document.getElementById('offlineBar');
+  const msgEl=document.getElementById('offlineMsg');
+  const syncBtn=document.getElementById('syncBtn');
+  bar.className='offline-bar visible'+(type?' '+type:'');
+  msgEl.textContent=msg;
+  const q=getOfflineQueue();
+  syncBtn.style.display=(!isOffline&&q.length>0)?'inline-block':'none';
+}
+function hideOfflineBar(){document.getElementById('offlineBar').className='offline-bar';}
+
+function applyOfflineOp(col,method,body,id){
+  let items=getCached(col)||[];
+  if(method==='POST'){
+    body.id=body.id||Date.now().toString(36)+Math.random().toString(36).slice(2,7);
+    body.createdAt=body.createdAt||new Date().toISOString();
+    body._offline=true;
+    items.push(body);
+  } else if(method==='PUT'&&id){
+    const idx=items.findIndex(i=>i.id===id);
+    if(idx!==-1) items[idx]={...items[idx],...body,id};
+  } else if(method==='DELETE'&&id){
+    items=items.filter(i=>i.id!==id);
+  }
+  setCache(col,items);
+  return method==='POST'?body:method==='DELETE'?{ok:true}:items.find(i=>i.id===id)||{};
+}
+
 // === API ===
 async function apiCall(path,method='GET',body=null){
+  const parts=path.split('/');
+  const collection=parts[0];
+  const id=parts[1]||null;
   const opts={method,headers:{'Content-Type':'application/json'}};
   if(body)opts.body=JSON.stringify(body);
-  const res=await fetch(API+'/api/'+path,opts);
-  return res.json();
+  try{
+    const res=await fetch(API+'/api/'+path,opts);
+    if(!res.ok) throw new Error('HTTP '+res.status);
+    const result=await res.json();
+    // Cache GET results
+    if(method==='GET'&&!id&&COLLECTIONS_LIST.includes(collection)){
+      setCache(collection,result);
+    }
+    if(isOffline){
+      isOffline=false;
+      const q=getOfflineQueue();
+      if(q.length>0){showOfflineBar('✅ Связь восстановлена — '+q.length+' операций ожидают синхронизации','restored');
+      }else{hideOfflineBar();}
+    }
+    return result;
+  }catch(e){
+    if(!isOffline){isOffline=true;showOfflineBar('⚡ Оффлайн-режим — данные сохраняются локально');}
+    // Offline fallback
+    if(method==='GET'){
+      if(!id&&COLLECTIONS_LIST.includes(collection)){return getCached(collection)||[];}
+      if(id){const items=getCached(collection)||[];return items.find(i=>i.id===id)||{error:'Not found'};}
+      return[];
+    }
+    // Queue write operations
+    const op={collection,method,id,body,ts:Date.now()};
+    const q=getOfflineQueue();q.push(op);saveOfflineQueue(q);
+    return applyOfflineOp(collection,method,body,id);
+  }
 }
+
+const COLLECTIONS_LIST=['leads','contests','hosts','locations','equipment','inventory','scenarios','djs','users'];
+
+async function syncOfflineQueue(){
+  const q=getOfflineQueue();
+  if(q.length===0)return;
+  showOfflineBar('🔄 Синхронизация... 0/'+q.length,'syncing');
+  let ok=0,fail=0;
+  for(let i=0;i<q.length;i++){
+    const op=q[i];
+    const path=op.id?op.collection+'/'+op.id:op.collection;
+    try{
+      const opts={method:op.method,headers:{'Content-Type':'application/json'}};
+      if(op.body)opts.body=JSON.stringify(op.body);
+      const res=await fetch(API+'/api/'+path,opts);
+      if(!res.ok)throw new Error('HTTP '+res.status);
+      ok++;
+      showOfflineBar('🔄 Синхронизация... '+ok+'/'+q.length,'syncing');
+    }catch{fail++;break;}
+  }
+  if(fail===0){
+    saveOfflineQueue([]);
+    showOfflineBar('✅ Синхронизировано: '+ok+' операций','restored');
+    setTimeout(hideOfflineBar,3000);
+    loadAll();
+  }else{
+    saveOfflineQueue(q.slice(ok));
+    showOfflineBar('⚠️ Синхронизировано: '+ok+', не удалось: '+(q.length-ok),'');
+  }
+}
+
 async function loadAll(){
   [data.leads,data.contests,data.hosts,data.locations,data.equipment,data.inventory,data.scenarios,data.djs,data.users]=await Promise.all([
     apiCall('leads'),apiCall('contests'),apiCall('hosts'),apiCall('locations'),apiCall('equipment'),apiCall('inventory'),apiCall('scenarios'),apiCall('djs'),apiCall('users')
   ]);
   render();
 }
+
+// Auto-sync when back online
+window.addEventListener('online',()=>{
+  isOffline=false;
+  const q=getOfflineQueue();
+  if(q.length>0){showOfflineBar('✅ Связь восстановлена — '+q.length+' операций ожидают синхронизации','restored');syncOfflineQueue();}
+  else{hideOfflineBar();loadAll();}
+});
+window.addEventListener('offline',()=>{
+  isOffline=true;
+  showOfflineBar('⚡ Оффлайн-режим — данные сохраняются локально');
+});
 
 // === NAVIGATION ===
 const PAGES={
