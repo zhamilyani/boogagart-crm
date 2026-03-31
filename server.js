@@ -5,7 +5,7 @@ const crypto = require('crypto');
 const { Pool } = require('pg');
 
 const PORT = process.env.PORT || 3009;
-const COLLECTIONS = ['leads', 'contests', 'hosts', 'locations', 'equipment', 'inventory', 'scenarios', 'djs', 'users'];
+const COLLECTIONS = ['leads', 'contests', 'hosts', 'locations', 'equipment', 'inventory', 'scenarios', 'djs', 'users', 'catering'];
 const SESSION_TTL = 24 * 60 * 60 * 1000; // 24h
 const ALLOWED_ORIGINS = [
   'https://boogagart-crm-production-92d9.up.railway.app',

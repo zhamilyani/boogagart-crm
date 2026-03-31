@@ -1,0 +1,18 @@
+[
+  {"id":"cat_01","name":"Бауырсаки","description":"Традиционная пышная выпечка (порция на гостя)","category":"cold","unitPrice":600,"unit":"порция","createdAt":"2026-03-31T00:00:00Z"},
+  {"id":"cat_02","name":"Бутерброды с казы","description":"Деликатесная конина на багете с зеленью","category":"cold","unitPrice":900,"unit":"порция","createdAt":"2026-03-31T00:00:00Z"},
+  {"id":"cat_03","name":"Салат «Цезарь»","description":"Классика с курицей, пармезаном и гренками","category":"cold","unitPrice":1050,"unit":"порция","createdAt":"2026-03-31T00:00:00Z"},
+  {"id":"cat_04","name":"Салат с баклажанами","description":"Хрустящие баклажаны в панировке с томатами","category":"cold","unitPrice":750,"unit":"порция","createdAt":"2026-03-31T00:00:00Z"},
+  {"id":"cat_05","name":"Салат с руколой","description":"Пряная рукола с тигровыми креветками","category":"cold","unitPrice":1250,"unit":"порция","createdAt":"2026-03-31T00:00:00Z"},
+  {"id":"cat_06","name":"Самса с телятиной","description":"Традиционная слоеная самса (рубленое мясо)","category":"pastry","unitPrice":700,"unit":"шт","createdAt":"2026-03-31T00:00:00Z"},
+  {"id":"cat_07","name":"Самса с курицей","description":"Нежная начинка в хрустящем тесте","category":"pastry","unitPrice":600,"unit":"шт","createdAt":"2026-03-31T00:00:00Z"},
+  {"id":"cat_08","name":"Киш в ассортименте","description":"Французский открытый пирог (Семга/Сыр/Курица)","category":"pastry","unitPrice":700,"unit":"шт","createdAt":"2026-03-31T00:00:00Z"},
+  {"id":"cat_09","name":"Сырне","description":"Томленое мясо ягненка с овощами","category":"hot","unitPrice":2000,"unit":"порция","createdAt":"2026-03-31T00:00:00Z"},
+  {"id":"cat_10","name":"Плов","description":"Праздничный плов из отборного риса и говядины","category":"hot","unitPrice":1500,"unit":"порция","createdAt":"2026-03-31T00:00:00Z"},
+  {"id":"cat_11","name":"Мини-шашлык (курица)","description":"Сочное филе на шпажках","category":"hot","unitPrice":1200,"unit":"шт","createdAt":"2026-03-31T00:00:00Z"},
+  {"id":"cat_12","name":"Мини-шашлык (креветка)","description":"Морепродукты, обжаренные на огне","category":"hot","unitPrice":1400,"unit":"шт","createdAt":"2026-03-31T00:00:00Z"},
+  {"id":"cat_13","name":"Чай / Кофе","description":"Черный/зеленый чай, кофе","category":"drinks","unitPrice":500,"unit":"порция","createdAt":"2026-03-31T00:00:00Z"},
+  {"id":"cat_14","name":"Повара","description":"Профессиональное приготовление и подача","category":"service","unitPrice":20000,"unit":"чел","createdAt":"2026-03-31T00:00:00Z"},
+  {"id":"cat_15","name":"Официанты","description":"Сервировка и обслуживание гостей","category":"service","unitPrice":20000,"unit":"чел","createdAt":"2026-03-31T00:00:00Z"},
+  {"id":"cat_16","name":"Аренда и логистика","description":"Оборудование для подогрева, текстиль, посуда","category":"service","unitPrice":80000,"unit":"комплект","createdAt":"2026-03-31T00:00:00Z"}
+]

@@ -346,6 +346,7 @@
     <button class="nav-item" data-page="locations"><span class="icon">&#127968;</span><span>Локации</span></button>
     <button class="nav-item" data-page="equipment"><span class="icon">&#128266;</span><span>Оборудование</span></button>
     <button class="nav-item" data-page="inventory"><span class="icon">&#127922;</span><span>Реквизит</span></button>
+    <button class="nav-item" data-page="catering"><span class="icon">&#127860;</span><span>Кейтеринг</span></button>
     <div class="nav-group">Инструменты</div>
     <button class="nav-item" data-page="proposal"><span class="icon">&#9889;</span><span>Генератор</span></button>
     <button class="nav-item" data-page="docs"><span class="icon">&#128196;</span><span>Печатные формы</span></button>
@@ -478,6 +479,23 @@
       </div>
     </div>
 
+    <!-- CATERING -->
+    <div class="page" id="page-catering">
+      <div class="table-wrap">
+        <div class="table-header"><h3>Кейтеринг-меню</h3></div>
+        <div style="padding:0.8rem 1.2rem;display:flex;gap:0.5rem;flex-wrap:wrap" id="cateringFilters">
+          <button class="btn btn-sm btn-primary" onclick="filterCatering('')">Все</button>
+          <button class="btn btn-sm btn-secondary" onclick="filterCatering('cold')">Холодные закуски</button>
+          <button class="btn btn-sm btn-secondary" onclick="filterCatering('pastry')">Выпечка</button>
+          <button class="btn btn-sm btn-secondary" onclick="filterCatering('hot')">Горячие блюда</button>
+          <button class="btn btn-sm btn-secondary" onclick="filterCatering('drinks')">Напитки</button>
+          <button class="btn btn-sm btn-secondary" onclick="filterCatering('service')">Сервис</button>
+        </div>
+        <table><thead><tr><th>Позиция</th><th>Категория</th><th>Описание</th><th>Цена (₸)</th><th>Ед.</th><th></th></tr></thead>
+        <tbody id="cateringTable"></tbody></table>
+      </div>
+    </div>
+
     <!-- PROPOSAL -->
     <div class="page" id="page-proposal">
       <div class="table-wrap" style="max-width:750px">
@@ -593,7 +611,7 @@
 <script>
 const API='';
 let currentPage='dashboard', currentRole='ceo', currentUser='', currentLinkedId='';
-let data={leads:[],contests:[],hosts:[],locations:[],equipment:[],inventory:[],scenarios:[],djs:[],users:[]};
+let data={leads:[],contests:[],hosts:[],locations:[],equipment:[],inventory:[],scenarios:[],djs:[],users:[],catering:[]};
 
 const EV={birthday:'День рождения',kids:'Детский праздник',newyear:'Новый год',corporate:'Корпоратив',wedding:'Свадьба',other:'Другое'};
 const ST={new:'Новая',progress:'В работе',done:'Завершена',cancelled:'Отменена'};
@@ -762,7 +780,7 @@ async function apiCall(path,method='GET',body=null){
   }
 }
 
-const COLLECTIONS_LIST=['leads','contests','hosts','locations','equipment','inventory','scenarios','djs','users'];
+const COLLECTIONS_LIST=['leads','contests','hosts','locations','equipment','inventory','scenarios','djs','users','catering'];
 
 async function syncOfflineQueue(){
   const q=getOfflineQueue();
@@ -793,8 +811,8 @@ async function syncOfflineQueue(){
 }
 
 async function loadAll(){
-  [data.leads,data.contests,data.hosts,data.locations,data.equipment,data.inventory,data.scenarios,data.djs,data.users]=await Promise.all([
-    apiCall('leads'),apiCall('contests'),apiCall('hosts'),apiCall('locations'),apiCall('equipment'),apiCall('inventory'),apiCall('scenarios'),apiCall('djs'),apiCall('users')
+  [data.leads,data.contests,data.hosts,data.locations,data.equipment,data.inventory,data.scenarios,data.djs,data.users,data.catering]=await Promise.all([
+    apiCall('leads'),apiCall('contests'),apiCall('hosts'),apiCall('locations'),apiCall('equipment'),apiCall('inventory'),apiCall('scenarios'),apiCall('djs'),apiCall('users'),apiCall('catering')
   ]);
   render();
 }
@@ -823,6 +841,7 @@ const PAGES={
   locations:{title:'Локации',btn:{label:'+ Добавить локацию',action:()=>openLocationModal()}},
   equipment:{title:'Оборудование',btn:{label:'+ Добавить оборудование',action:()=>openEquipmentModal()}},
   inventory:{title:'Реквизит',btn:{label:'+ Добавить реквизит',action:()=>openInventoryModal()}},
+  catering:{title:'Кейтеринг',btn:{label:'+ Добавить позицию',action:()=>openCateringModal()}},
   proposal:{title:'Генератор предложений',btn:null},
   docs:{title:'Печатные формы',btn:null},
   finance:{title:'Финансы',btn:null},
@@ -1012,6 +1031,9 @@ function render(){
         <button class="act-btn del" onclick="deleteItem('inventory','${i.id}')" title="Удалить">&times;</button>
       </div>`:''}</td>
     </tr>`).join(''):'<tr><td colspan="4" class="empty"><div class="empty-icon">&#127922;</div>Добавьте реквизит</td></tr>';
+
+  // Catering
+  renderCateringTable();
 
   // Users (CEO only)
   if(currentRole==='ceo'){
@@ -1391,6 +1413,59 @@ async function saveInventory(id){
     quantity:+document.getElementById('fiQty').value,
   };
   await apiCall(id?'inventory/'+id:'inventory',id?'PUT':'POST',body);
+  closeModal();await loadAll();
+}
+
+// === CATERING ===
+const CAT_CATS={cold:'Холодные закуски',pastry:'Выпечка и киши',hot:'Горячие блюда',drinks:'Напитки',service:'Сервис'};
+const CAT_COLORS={cold:'var(--blue)',pastry:'var(--yellow)',hot:'var(--red)',drinks:'var(--green)',service:'var(--purple)'};
+let cateringFilter='';
+function filterCatering(cat){
+  cateringFilter=cat;
+  document.querySelectorAll('#cateringFilters .btn').forEach((b,i)=>{
+    b.className='btn btn-sm '+((!cat&&i===0)||(b.textContent===CAT_CATS[cat])?'btn-primary':'btn-secondary');
+  });
+  renderCateringTable();
+}
+function renderCateringTable(){
+  const items=cateringFilter?data.catering.filter(c=>c.category===cateringFilter):data.catering;
+  document.getElementById('cateringTable').innerHTML=items.length?items.map(c=>`
+    <tr>
+      <td style="color:var(--white);font-weight:500">${esc(c.name)}</td>
+      <td><span style="display:inline-block;padding:2px 8px;border-radius:4px;font-size:0.7rem;font-weight:600;background:${CAT_COLORS[c.category]||'var(--bg4)'};color:#fff">${CAT_CATS[c.category]||c.category}</span></td>
+      <td style="font-size:0.75rem;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${esc(c.description||'')}">${esc(c.description||'-')}</td>
+      <td style="font-weight:600;color:var(--green)">${(c.unitPrice||0).toLocaleString('ru-RU')} ₸</td>
+      <td>${esc(c.unit||'шт')}</td>
+      <td>${canEdit()?`<div class="actions">
+        <button class="act-btn" onclick="openCateringModal('${c.id}')" title="Редактировать">&#9998;</button>
+        <button class="act-btn del" onclick="deleteItem('catering','${c.id}')" title="Удалить">&times;</button>
+      </div>`:''}</td>
+    </tr>`).join(''):'<tr><td colspan="6" class="empty"><div class="empty-icon">&#127860;</div>Добавьте позиции меню</td></tr>';
+}
+function openCateringModal(id){
+  const c=id?data.catering.find(x=>x.id===id):{};
+  openModal(id?'Редактировать позицию':'Новая позиция кейтеринга',`
+    <div class="form-group"><label>Название</label><input id="fcName" value="${esc(c.name||'')}"></div>
+    <div class="form-row-3">
+      <div class="form-group"><label>Категория</label>
+        <select id="fcCat">${Object.entries(CAT_CATS).map(([k,v])=>`<option value="${k}" ${c.category===k?'selected':''}>${v}</option>`).join('')}</select></div>
+      <div class="form-group"><label>Цена за ед. (₸)</label><input type="number" id="fcPrice" value="${c.unitPrice||0}"></div>
+      <div class="form-group"><label>Ед. измерения</label>
+        <select id="fcUnit">${['порция','шт','чел','комплект','л'].map(u=>`<option value="${u}" ${c.unit===u?'selected':''}>${u}</option>`).join('')}</select></div>
+    </div>
+    <div class="form-group"><label>Описание</label><textarea id="fcDesc">${esc(c.description||'')}</textarea></div>
+  `,`<button class="btn btn-secondary" onclick="closeModal()">Отмена</button>
+    <button class="btn btn-primary" onclick="saveCatering('${id||''}')">${id?'Сохранить':'Добавить'}</button>`);
+}
+async function saveCatering(id){
+  const body={
+    name:document.getElementById('fcName').value,
+    category:document.getElementById('fcCat').value,
+    unitPrice:+document.getElementById('fcPrice').value,
+    unit:document.getElementById('fcUnit').value,
+    description:document.getElementById('fcDesc').value,
+  };
+  await apiCall(id?'catering/'+id:'catering',id?'PUT':'POST',body);
   closeModal();await loadAll();
 }
 
