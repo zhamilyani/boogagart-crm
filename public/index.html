@@ -1839,7 +1839,7 @@ function renderCateringResult(){
   const catTitles={cold:'I. Холодные закуски',hot_snack:'II. Горячие закуски',salad:'III. Салаты',pastry:'IV. Выпечка',dessert:'V. Десерты',hot:'VI. Горячие блюда и Гриль',garnish:'VII. Гарниры',drinks:'VIII. Напитки'};
 
   let html='<div style="margin-top:1.2rem;background:var(--bg2);border-radius:var(--radius);padding:1.2rem;border:1px solid var(--border)">';
-  html+='<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;flex-wrap:wrap;gap:0.5rem"><h3 style="color:var(--white)">Предварительное меню на '+m.guests+' персон</h3><div style="display:flex;gap:0.5rem"><button class="btn btn-sm btn-secondary" onclick="printCateringMenu()">&#128424; Печать</button><button class="btn btn-sm btn-primary" onclick="saveCateringToLead()">&#128190; Сохранить в заявку</button></div></div>';
+  html+='<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;flex-wrap:wrap;gap:0.5rem"><h3 style="color:var(--white)">Предварительное меню на '+m.guests+' персон</h3><div style="display:flex;gap:0.5rem"><button class="btn btn-sm btn-secondary" onclick="printCateringMenu(false)">&#128424; Печать</button><button class="btn btn-sm btn-secondary" onclick="printCateringMenu(true)">&#128424; Для сотрудников</button><button class="btn btn-sm btn-primary" onclick="saveCateringToLead()">&#128190; Сохранить в заявку</button></div></div>';
 
   for(const cat of catOrder){
     if(!grouped[cat])continue;
@@ -1969,7 +1969,8 @@ function viewLeadCateringMenu(leadId){
   openModal('Кейтеринг-меню — '+esc(l.name),html,`
     <button class="btn btn-danger" onclick="deleteCateringMenu('${leadId}')">&times; Удалить</button>
     <button class="btn btn-secondary" onclick="closeModal();loadCateringMenuForEdit('${leadId}')">&#9998; Редактировать</button>
-    <button class="btn btn-primary" onclick="printLeadCateringMenu('${leadId}')">&#128424; Печать</button>`);
+    <button class="btn btn-primary" onclick="printLeadCateringMenu('${leadId}',false)">&#128424; Печать</button>
+    <button class="btn btn-secondary" onclick="printLeadCateringMenu('${leadId}',true)">&#128424; Для сотрудников</button>`);
 }
 
 async function deleteCateringMenu(leadId){
@@ -2004,12 +2005,12 @@ function loadCateringMenuForEdit(leadId){
   renderCateringResult();
 }
 
-function printLeadCateringMenu(leadId){
+function printLeadCateringMenu(leadId,staffMode){
   const l=data.leads.find(x=>x.id===leadId);
   if(!l||!l.cateringMenu)return;
   currentCateringMenu=l.cateringMenu;
   currentCateringLeadId=leadId;
-  printCateringMenu();
+  printCateringMenu(staffMode);
 }
 
 function showSavedMenus(){
@@ -2038,12 +2039,13 @@ function hideSavedMenus(){
   document.getElementById('savedMenusWrap').style.display='none';
 }
 
-function printCateringMenu(){
+function printCateringMenu(staffMode){
   if(!currentCateringMenu)return;
   const w=window.open('','_blank');
   const m=currentCateringMenu;
   const lead=data.leads.find(x=>x.id===currentCateringLeadId);
-  let html=`<html><head><title>Кейтеринг-меню</title><style>
+  const sf=!!staffMode;
+  let html=`<html><head><title>Кейтеринг-меню${sf?' (для сотрудников)':''}</title><style>
     body{font-family:Inter,Arial,sans-serif;padding:30px;color:#333;font-size:13px}
     h1{font-size:18px;text-align:center;margin-bottom:5px}
     h2{font-size:14px;color:#FF6B35;margin:15px 0 8px;border-bottom:1px solid #eee;padding-bottom:4px}
@@ -2053,29 +2055,38 @@ function printCateringMenu(){
     .total{text-align:right;font-weight:700;padding:10px;font-size:15px;border-top:2px solid #333;margin-top:15px}
     .per{float:right;color:#00C9A7}
     .meta{text-align:center;color:#888;font-size:12px;margin-bottom:20px}
+    .badge{display:inline-block;background:#f0f0f0;padding:2px 8px;border-radius:4px;font-size:11px;color:#666;margin-left:8px}
     @media print{body{padding:15px}}
   </style></head><body>`;
-  html+=`<h1>КЕЙТЕРИНГ-МЕНЮ НА ${m.guests} ПЕРСОН</h1>`;
+  html+=`<h1>КЕЙТЕРИНГ-МЕНЮ НА ${m.guests} ПЕРСОН${sf?'<span class="badge">для сотрудников</span>':''}</h1>`;
   if(lead)html+=`<div class="meta">${lead.name} — ${EV[lead.eventType]||''} | ${lead.eventDate?fmtDate(lead.eventDate):''}</div>`;
 
   const catTitles={cold:'I. Холодные закуски',hot_snack:'II. Горячие закуски',salad:'III. Салаты',pastry:'IV. Выпечка',dessert:'V. Десерты',hot:'VI. Горячие блюда и Гриль',garnish:'VII. Гарниры',drinks:'VIII. Напитки'};
   const grouped={};
-  m.items.filter(i=>i.qty>0).forEach(i=>{if(!grouped[i.category])grouped[i.category]=[];grouped[i.category].push(i);});
+  m.items.filter(i=>i.qty>0&&i.category!=='service').forEach(i=>{if(!grouped[i.category])grouped[i.category]=[];grouped[i.category].push(i);});
   ['cold','hot_snack','salad','pastry','dessert','hot','garnish','drinks'].forEach(cat=>{
     if(!grouped[cat])return;
     const bt=grouped[cat].reduce((s,i)=>s+i.total,0);
-    html+=`<h2>${catTitles[cat]}</h2><table><tr><th>Позиция</th><th>Описание</th><th>Цена</th><th>Кол-во</th><th>Итого</th></tr>`;
-    grouped[cat].forEach(i=>html+=`<tr><td><strong>${i.name}</strong></td><td>${i.description||''}</td><td>${i.unitPrice.toLocaleString('ru-RU')}</td><td>${i.qty}</td><td>${i.total.toLocaleString('ru-RU')}</td></tr>`);
-    html+=`<tr><td colspan="4" style="text-align:right"><strong>Итого:</strong></td><td><strong>${bt.toLocaleString('ru-RU')} ₸</strong></td></tr></table>`;
+    if(sf){
+      html+=`<h2>${catTitles[cat]}</h2><table><tr><th>Позиция</th><th>Описание</th><th>Кол-во</th></tr>`;
+      grouped[cat].forEach(i=>html+=`<tr><td><strong>${i.name}</strong></td><td>${i.description||''}</td><td>${i.qty}</td></tr>`);
+      html+='</table>';
+    }else{
+      html+=`<h2>${catTitles[cat]}</h2><table><tr><th>Позиция</th><th>Описание</th><th>Цена</th><th>Кол-во</th><th>Итого</th></tr>`;
+      grouped[cat].forEach(i=>html+=`<tr><td><strong>${i.name}</strong></td><td>${i.description||''}</td><td>${i.unitPrice.toLocaleString('ru-RU')}</td><td>${i.qty}</td><td>${i.total.toLocaleString('ru-RU')}</td></tr>`);
+      html+=`<tr><td colspan="4" style="text-align:right"><strong>Итого:</strong></td><td><strong>${bt.toLocaleString('ru-RU')} ₸</strong></td></tr></table>`;
+    }
   });
-  const printSvc=(m.items||[]).filter(i=>i.category==='service'&&i.total>0);
-  if(printSvc.length){
-    const svcT=printSvc.reduce((s,i)=>s+i.total,0);
-    html+=`<h2>Сервис</h2><table><tr><th>Позиция</th><th colspan="2">%</th><th colspan="2">Итого</th></tr>`;
-    printSvc.forEach(i=>html+=`<tr><td><strong>${i.name}</strong></td><td colspan="2">${i.unitPrice}%</td><td colspan="2">${i.total.toLocaleString('ru-RU')} ₸</td></tr>`);
-    html+=`<tr><td colspan="3" style="text-align:right"><strong>Итого:</strong></td><td colspan="2"><strong>${svcT.toLocaleString('ru-RU')} ₸</strong></td></tr></table>`;
+  if(!sf){
+    const printSvc=(m.items||[]).filter(i=>i.category==='service'&&i.total>0);
+    if(printSvc.length){
+      const svcT=printSvc.reduce((s,i)=>s+i.total,0);
+      html+=`<h2>Сервис</h2><table><tr><th>Позиция</th><th colspan="2">%</th><th colspan="2">Итого</th></tr>`;
+      printSvc.forEach(i=>html+=`<tr><td><strong>${i.name}</strong></td><td colspan="2">${i.unitPrice}%</td><td colspan="2">${i.total.toLocaleString('ru-RU')} ₸</td></tr>`);
+      html+=`<tr><td colspan="3" style="text-align:right"><strong>Итого:</strong></td><td colspan="2"><strong>${svcT.toLocaleString('ru-RU')} ₸</strong></td></tr></table>`;
+    }
+    html+=`<div class="total">ОБЩАЯ СУММА: ${m.grandTotal.toLocaleString('ru-RU')} ₸ <span class="per">На 1 персону: ${m.perPerson.toLocaleString('ru-RU')} ₸</span></div>`;
   }
-  html+=`<div class="total">ОБЩАЯ СУММА: ${m.grandTotal.toLocaleString('ru-RU')} ₸ <span class="per">На 1 персону: ${m.perPerson.toLocaleString('ru-RU')} ₸</span></div>`;
   html+='</body></html>';
   w.document.write(html);w.document.close();w.print();
 }
