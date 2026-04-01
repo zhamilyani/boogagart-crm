@@ -640,7 +640,7 @@
     <div class="page" id="page-users">
       <div class="table-wrap">
         <div class="table-header"><h3>Управление пользователями</h3></div>
-        <table><thead><tr><th>Имя</th><th>Роль</th><th>Логин</th><th>Пароль</th><th>Привязка</th><th></th></tr></thead>
+        <table><thead><tr><th>Имя</th><th>Телефон</th><th>Роль</th><th>Логин</th><th>Пароль</th><th>Привязка</th><th></th></tr></thead>
         <tbody id="usersTable"></tbody></table>
       </div>
     </div>
@@ -1252,6 +1252,7 @@ function render(){
       if(u.role==='dj'){const d=data.djs.find(x=>x.id===u.linkedId);linked=d?'&#127911; '+esc(d.name):'<span style="color:var(--red)">не привязан</span>';}
       return`<tr>
         <td style="color:var(--white);font-weight:500">${esc(u.name)}</td>
+        <td>${u.phone?`<a href="https://wa.me/${u.phone.replace(/[^0-9]/g,'')}" target="_blank" title="Написать в WhatsApp" style="color:var(--green);text-decoration:none">${esc(u.phone)} &#128172;</a>`:'—'}</td>
         <td><span style="padding:0.15rem 0.5rem;border-radius:4px;font-size:0.68rem;font-weight:500;background:${u.role==='ceo'?'var(--primary-bg)':u.role==='admin'?'var(--blue-bg)':u.role==='host'?'var(--green-bg)':'var(--purple-bg)'};color:${u.role==='ceo'?'var(--primary)':u.role==='admin'?'var(--blue)':u.role==='host'?'var(--green)':'var(--purple)'}">${ROLES[u.role]||u.role}</span></td>
         <td><code style="background:var(--bg3);padding:0.2rem 0.5rem;border-radius:4px;font-size:0.78rem">${esc(u.username)}</code></td>
         <td><code style="background:var(--bg3);padding:0.2rem 0.5rem;border-radius:4px;font-size:0.78rem">${esc(u.password)}</code></td>
@@ -1261,7 +1262,7 @@ function render(){
           <button class="act-btn del" onclick="deleteItem('users','${u.id}')" title="Удалить">&times;</button>
         </div></td>
       </tr>`;
-    }).join(''):'<tr><td colspan="6" class="empty"><div class="empty-icon">&#128100;</div>Добавьте пользователей</td></tr>';
+    }).join(''):'<tr><td colspan="7" class="empty"><div class="empty-icon">&#128100;</div>Добавьте пользователей</td></tr>';
   }
 
   fillLeadSelects();
@@ -2334,6 +2335,9 @@ function openUserModal(id){
   openModal(id?'Редактировать юзера':'Новый юзер',`
     <div class="form-row">
       <div class="form-group"><label>Имя</label><input id="fuName" value="${esc(u.name||'')}"></div>
+      <div class="form-group"><label>Телефон (WhatsApp)</label><input id="fuPhone" value="${esc(u.phone||'')}" placeholder="+7 777 123 4567"></div>
+    </div>
+    <div class="form-row">
       <div class="form-group"><label>Роль</label>
         <select id="fuRole" onchange="updateUserLinkSelect()">
           <option value="ceo" ${u.role==='ceo'?'selected':''}>Генеральный директор</option>
@@ -2374,6 +2378,7 @@ function updateUserLinkSelect(){
 async function saveUser(id){
   const body={
     name:document.getElementById('fuName').value,
+    phone:document.getElementById('fuPhone').value,
     role:document.getElementById('fuRole').value,
     username:document.getElementById('fuUsername').value,
     password:document.getElementById('fuPassword').value,
@@ -2626,7 +2631,7 @@ function openTodoPanel(){
   html+=sorted.length?sorted.map(t=>`<tr style="${t.done?'opacity:0.5':''}">
     <td><button class="manual-check${t.done?' checked':''}" onclick="toggleTodoDone('${t.id}')" style="width:24px;height:24px">${t.done?'&#10003;':''}</button></td>
     <td style="color:var(--white);font-weight:500;${t.done?'text-decoration:line-through':''}">${esc(t.task||'-')}</td>
-    <td>${esc(t.executor||'—')}</td>
+    <td>${esc(t.executor||'—')}${(()=>{const u=data.users.find(x=>x.name===t.executor);return u&&u.phone?` <a href="https://wa.me/${u.phone.replace(/[^0-9]/g,'')}?text=${encodeURIComponent('Задача: '+t.task)}" target="_blank" title="Написать в WhatsApp" style="color:var(--green);text-decoration:none">&#128172;</a>`:'';})()}</td>
     <td>${t.deadline?fmtDate(t.deadline):'—'}</td>
     <td><div class="actions">
       <button class="act-btn" onclick="closeModal();openTodoModal('${t.id}')" title="Редактировать">&#9998;</button>
