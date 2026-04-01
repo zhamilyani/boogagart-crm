@@ -2237,8 +2237,9 @@ function filterCatering(cat){
 }
 function renderCateringTable(){
   const search=(document.getElementById('cateringSearch')?.value||'').toLowerCase();
-  let items=cateringFilter?data.catering.filter(c=>c.category===cateringFilter):data.catering;
+  let items=cateringFilter?data.catering.filter(c=>c.category===cateringFilter):[...data.catering];
   if(search)items=items.filter(c=>c.name.toLowerCase().includes(search)||(c.description||'').toLowerCase().includes(search));
+  items.sort((a,b)=>a.name.localeCompare(b.name,'ru'));
   const wrap=document.querySelector('#page-catering .table-wrap:last-child');
   if(manualMenuMode)wrap.classList.add('manual-mode');
   else wrap.classList.remove('manual-mode');
