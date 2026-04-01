@@ -1255,6 +1255,8 @@ function render(){
   }
 
   fillLeadSelects();
+  if(currentPage==='other')renderOther();
+  if(currentPage==='finance')renderFinance();
 }
 
 // Filters
