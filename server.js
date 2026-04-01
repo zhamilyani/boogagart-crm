@@ -201,7 +201,7 @@ async function authenticate(req) {
 }
 
 // Role check helper
-const ROLE_LEVELS = { dj: 1, host: 1, admin: 2, ceo: 3 };
+const ROLE_LEVELS = { dj: 1, host: 1, catering: 1, admin: 2, ceo: 3 };
 function requireRole(user, minRole) {
   return (ROLE_LEVELS[user.role] || 0) >= (ROLE_LEVELS[minRole] || 3);
 }

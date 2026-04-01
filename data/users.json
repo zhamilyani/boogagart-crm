@@ -25,5 +25,14 @@
     "linkedId": "mmyzd8eacfvdp",
     "id": "mmz0163wahq1e",
     "createdAt": "2026-03-20T14:33:12.237Z"
+  },
+  {
+    "id": "u_catering",
+    "username": "catering",
+    "password": "catering123",
+    "name": "Кейтеринг-менеджер",
+    "role": "catering",
+    "linkedId": "",
+    "createdAt": "2026-04-01T00:00:00Z"
   }
 ]

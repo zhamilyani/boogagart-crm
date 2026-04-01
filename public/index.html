@@ -548,6 +548,7 @@
       <div style="display:flex;gap:0.8rem;margin-bottom:1.5rem;flex-wrap:wrap">
         <button class="btn btn-primary" onclick="openGeneratorModal()" style="padding:0.7rem 1.5rem;font-size:0.88rem">&#127860; Сгенерировать меню</button>
         <button class="btn btn-secondary" onclick="openManualMenuModal()" style="padding:0.7rem 1.5rem;font-size:0.88rem">&#9998; Составить вручную</button>
+        <button class="btn btn-green" onclick="showSavedMenus()" style="padding:0.7rem 1.5rem;font-size:0.88rem">&#128190; Сохранённые меню</button>
       </div>
       <div id="cateringResult"></div>
       <!-- MENU TABLE -->
@@ -686,8 +687,8 @@ let data={leads:[],contests:[],hosts:[],locations:[],equipment:[],inventory:[],s
 const EV={birthday:'День рождения',kids:'Детский праздник',newyear:'Новый год',corporate:'Корпоратив',wedding:'Свадьба',other:'Другое'};
 const ST={new:'Новая',progress:'В работе',done:'Завершена',cancelled:'Отменена'};
 const VN={indoor:'Помещение',outdoor:'Улица',both:'Любое'};
-const ROLES={ceo:'Генеральный директор',admin:'Администратор',host:'Ведущий',dj:'Ди-джей'};
-const ROLE_LEVELS={dj:1,host:1,admin:2,ceo:3};
+const ROLES={ceo:'Генеральный директор',admin:'Администратор',host:'Ведущий',dj:'Ди-джей',catering:'Кейтеринг'};
+const ROLE_LEVELS={dj:1,host:1,catering:1,admin:2,ceo:3};
 
 // === AUTH ===
 let authToken=localStorage.getItem('crm_token')||'';
@@ -749,9 +750,18 @@ function applyAuth(){
       document.querySelector(`.nav-item[data-page="${p}"]`)?.classList.add('hidden');
     });
   }
-  // Host/DJ: start on calendar
+  // Catering: only catering + calendar
+  if(currentRole==='catering'){
+    ['leads','locations','equipment','inventory','proposal','hosts','djs','contests','docs','dashboard','scenarios'].forEach(p=>{
+      document.querySelector(`.nav-item[data-page="${p}"]`)?.classList.add('hidden');
+    });
+  }
+  // Host/DJ/Catering: start on relevant page
   if(currentRole==='host'||currentRole==='dj'){
     document.querySelector('.nav-item[data-page="calendar"]')?.click();
+  }
+  if(currentRole==='catering'){
+    document.querySelector('.nav-item[data-page="catering"]')?.click();
   }
   loadAll();
 }
@@ -946,6 +956,9 @@ function getVisibleLeads(){
   }
   if(currentRole==='dj'){
     return currentLinkedId?data.leads.filter(l=>l.djId===currentLinkedId):[];
+  }
+  if(currentRole==='catering'){
+    return data.leads.filter(l=>l.cateringMenu);
   }
   return data.leads;
 }
@@ -1899,6 +1912,38 @@ function printLeadCateringMenu(leadId){
   printCateringMenu();
 }
 
+function showSavedMenus(){
+  const leads=data.leads.filter(l=>l.cateringMenu);
+  if(!leads.length){
+    openModal('Сохранённые меню','<div class="empty"><div class="empty-icon">&#128190;</div>Нет сохранённых меню</div>',
+      '<button class="btn btn-secondary" onclick="closeModal()">Закрыть</button>');
+    return;
+  }
+  const catTitles={cold:'Закуски',pastry:'Выпечка',hot:'Горячие',drinks:'Напитки'};
+  let html='<div style="max-height:70vh;overflow-y:auto">';
+  leads.forEach(l=>{
+    const m=l.cateringMenu;
+    const itemCount=(m.items||[]).filter(i=>i.qty>0).length+(m.service||[]).filter(i=>i.qty>0).length;
+    const evDate=l.eventDate?fmtDate(l.eventDate):'—';
+    html+=`<div style="background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius);padding:1rem;margin-bottom:0.8rem;cursor:pointer;transition:border-color 0.2s" onmouseenter="this.style.borderColor='var(--primary)'" onmouseleave="this.style.borderColor='var(--border)'" onclick="closeModal();viewLeadCateringMenu('${l.id}')">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.4rem">
+        <div>
+          <span style="color:var(--white);font-weight:600;font-size:0.88rem">${esc(l.name)}</span>
+          <span style="color:var(--text);font-size:0.75rem;margin-left:0.5rem">${EV[l.eventType]||''}</span>
+        </div>
+        <span style="color:var(--text);font-size:0.75rem">${evDate}</span>
+      </div>
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <span style="color:var(--text);font-size:0.78rem">${m.guests} персон &middot; ${itemCount} позиций</span>
+        <span style="color:var(--green);font-weight:700;font-size:0.88rem">${(m.grandTotal||0).toLocaleString('ru-RU')} ₸</span>
+      </div>
+    </div>`;
+  });
+  html+='</div>';
+  openModal('Сохранённые меню ('+leads.length+')',html,
+    '<button class="btn btn-secondary" onclick="closeModal()">Закрыть</button>');
+}
+
 function printCateringMenu(){
   if(!currentCateringMenu)return;
   const w=window.open('','_blank');
@@ -2028,6 +2073,7 @@ function openUserModal(id){
           <option value="admin" ${u.role==='admin'?'selected':''}>Администратор</option>
           <option value="host" ${u.role==='host'?'selected':''}>Ведущий</option>
           <option value="dj" ${u.role==='dj'?'selected':''}>Ди-джей</option>
+          <option value="catering" ${u.role==='catering'?'selected':''}>Кейтеринг</option>
         </select></div>
     </div>
     <div class="form-row">
