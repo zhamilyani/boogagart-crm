@@ -118,6 +118,8 @@
     .status-cancelled{background:var(--red-bg);color:var(--red)}
     .status-approval{background:var(--purple-bg);color:var(--purple)}
     .status-approved{background:var(--green-bg);color:var(--green)}
+    .status-rework{background:var(--yellow-bg);color:var(--yellow)}
+    .status-rejected{background:var(--red-bg);color:var(--red)}
     .venue-badge{display:inline-block;padding:0.15rem 0.5rem;border-radius:4px;font-size:0.68rem;font-weight:500}
     .venue-indoor{background:var(--blue-bg);color:var(--blue)}
     .venue-outdoor{background:var(--green-bg);color:var(--green)}
@@ -762,7 +764,7 @@ let currentPage='dashboard', currentRole='ceo', currentUser='', currentLinkedId=
 let data={leads:[],contests:[],hosts:[],locations:[],equipment:[],inventory:[],scenarios:[],djs:[],users:[],catering:[],other:[]};
 
 const EV={birthday:'День рождения',kids:'Детский праздник',newyear:'Новый год',corporate:'Корпоратив',wedding:'Свадьба',other:'Другое'};
-const ST={new:'Новая',progress:'В работе',approval:'На согласовании',approved:'Согласована',done:'Завершена',cancelled:'Отменена'};
+const ST={new:'Новая',progress:'В работе',approval:'На согласовании',approved:'Согласована',rework:'На доработке',rejected:'Отказано',done:'Завершена',cancelled:'Отменена'};
 const VN={indoor:'Помещение',outdoor:'Улица',both:'Любое'};
 const ROLES={ceo:'Генеральный директор',admin:'Администратор',host:'Ведущий',dj:'Ди-джей',catering:'Кейтеринг'};
 const ROLE_LEVELS={dj:1,host:1,catering:1,admin:2,ceo:3};
@@ -1102,7 +1104,7 @@ function render(){
       <td>${esc(l.guests||'-')}</td>
       <td>${esc(l.budget||'-')}</td>
       <td>${canEdit()?`<select onchange="updateStatus('${l.id}',this.value)" style="background:var(--bg3);border:1px solid var(--border);color:var(--text2);border-radius:6px;padding:0.2rem 0.4rem;font-size:0.72rem;font-family:inherit">
-        ${['new','progress','approval','approved','done','cancelled'].map(s=>`<option value="${s}" ${(l.status||'new')===s?'selected':''}>${ST[s]}</option>`).join('')}</select>`:`<span class="status status-${l.status||'new'}">${ST[l.status||'new']}</span>`}</td>
+        ${['new','progress','approval','approved','rework','rejected','done','cancelled'].map(s=>`<option value="${s}" ${(l.status||'new')===s?'selected':''}>${ST[s]}</option>`).join('')}</select>`:`<span class="status status-${l.status||'new'}">${ST[l.status||'new']}</span>`}</td>
       <td><div class="actions">
         ${canEdit()?`<button class="act-btn" onclick="openLeadModal('${l.id}')" title="Редактировать">&#9998;</button>
         <button class="act-btn del" onclick="deleteItem('leads','${l.id}')" title="Удалить">&times;</button>`:''}
@@ -1284,6 +1286,8 @@ function viewLead(id){
     <div><span style="color:var(--text)">Расходы:</span> <strong style="color:var(--red)">${fmtMoney(l.expenses||0)}</strong></div>`:''}
   </div>`;
   if(l.comment)html+=`<div style="margin-top:1rem;padding:0.8rem;background:var(--bg3);border-radius:8px;font-size:0.82rem"><span style="color:var(--text)">Комментарий:</span> <span style="color:var(--text2)">${esc(l.comment)}</span></div>`;
+  if(l.reworkReason)html+=`<div style="margin-top:0.5rem;padding:0.6rem 0.8rem;background:var(--yellow-bg);border-radius:8px;font-size:0.8rem"><strong style="color:var(--yellow)">&#8634; На доработке:</strong> <span style="color:var(--text2)">${esc(l.reworkReason)}</span> <span style="color:var(--text);font-size:0.7rem">${l.reworkDate?fmtDate(l.reworkDate):''}</span></div>`;
+  if(l.rejectReason)html+=`<div style="margin-top:0.5rem;padding:0.6rem 0.8rem;background:var(--red-bg);border-radius:8px;font-size:0.8rem"><strong style="color:var(--red)">&times; Отказано:</strong> <span style="color:var(--text2)">${esc(l.rejectReason)}</span> <span style="color:var(--text);font-size:0.7rem">${l.rejectDate?fmtDate(l.rejectDate):''}</span></div>`;
   if(l.bookedEquipment?.length){
     html+=`<div style="margin-top:0.8rem;font-size:0.8rem"><span style="color:var(--text)">Оборудование:</span> <span style="color:var(--text2)">${l.bookedEquipment.map(id=>{const e=data.equipment.find(x=>x.id===id);return e?esc(e.name):id;}).join(', ')}</span></div>`;
   }
@@ -1298,7 +1302,9 @@ function viewLead(id){
   openModal(esc(l.name)+' — '+EV[l.eventType||'other'],html,`
     <button class="btn btn-secondary" onclick="closeModal()">Закрыть</button>
     ${canEdit()&&l.status!=='approved'||currentRole==='ceo'?`<button class="btn btn-primary" onclick="closeModal();openLeadModal('${l.id}')">&#9998; Редактировать</button>`:''}
-    ${l.status==='approval'&&currentRole==='ceo'?`<button class="btn btn-green" onclick="approveLead('${l.id}')">&#10003; Согласовать</button>`:''}`);
+    ${l.status==='approval'&&currentRole==='ceo'?`<button class="btn btn-green" onclick="approveLead('${l.id}')">&#10003; Согласовать</button>
+    <button class="btn btn-secondary" onclick="reworkLead('${l.id}')">&#8634; На доработку</button>
+    <button class="btn btn-danger" onclick="rejectLead('${l.id}')">&times; Отказать</button>`:''}`);
 }
 
 // === LEAD MODAL ===
@@ -1322,7 +1328,7 @@ function openLeadModal(id){
       <div class="form-group"><label>Дата мероприятия</label><input type="date" id="fDate" value="${esc(l.eventDate||l.date||'')}" ${dis}></div>
       <div class="form-group"><label>Бюджет на кейтеринг (₸)</label><input type="number" id="fCateringBudget" value="${l.cateringBudget||0}" ${dis}></div>
       <div class="form-group"><label>Статус</label>
-        <select id="fStatus" ${dis}>${['new','progress','approval','approved','done','cancelled'].map(s=>`<option value="${s}" ${(l.status||'new')===s?'selected':''}>${ST[s]}</option>`).join('')}</select></div>
+        <select id="fStatus" ${dis}>${['new','progress','approval','approved','rework','rejected','done','cancelled'].map(s=>`<option value="${s}" ${(l.status||'new')===s?'selected':''}>${ST[s]}</option>`).join('')}</select></div>
     </div>
     ${canFinance()?`<div class="form-row">
       <div class="form-group"><label>Выручка (тг)</label><input type="number" id="fRevenue" value="${l.revenue||0}" ${dis}></div>
@@ -1372,7 +1378,9 @@ function openLeadModal(id){
     </div>`:''}
   `,`<button class="btn btn-secondary" onclick="closeModal()">${locked?'Закрыть':'Отмена'}</button>
     ${locked?'':`<button class="btn btn-primary" onclick="saveLead('${id||''}')">${id?'Сохранить':'Добавить'}</button>`}
-    ${id&&l.status==='approval'&&currentRole==='ceo'?`<button class="btn btn-green" onclick="approveLead('${id}')">&#10003; Согласовать</button>`:''}`);
+    ${id&&l.status==='approval'&&currentRole==='ceo'?`<button class="btn btn-green" onclick="approveLead('${id}')">&#10003; Согласовать</button>
+    <button class="btn btn-secondary" onclick="reworkLead('${id}')">&#8634; На доработку</button>
+    <button class="btn btn-danger" onclick="rejectLead('${id}')">&times; Отказать</button>`:''}`);
   const dateInput=document.getElementById('fDate');
   if(dateInput.value)checkAvailability(dateInput.value,id||'');
   dateInput.addEventListener('change',()=>checkAvailability(dateInput.value,id||''));
@@ -1407,6 +1415,32 @@ async function saveLead(id){
 async function updateStatus(id,status){await apiCall('leads/'+id,'PUT',{status});await loadAll();}
 async function approveLead(id){
   await apiCall('leads/'+id,'PUT',{status:'approved'});
+  closeModal();await loadAll();
+}
+function reworkLead(id){
+  closeModal();
+  openModal('На доработку — причина',`
+    <div class="form-group"><label>Причина возврата на доработку *</label><textarea id="reworkReason" placeholder="Укажите причину..." style="min-height:80px"></textarea></div>
+  `,`<button class="btn btn-secondary" onclick="closeModal();viewLead('${id}')">Отмена</button>
+    <button class="btn btn-primary" onclick="submitRework('${id}')">Отправить на доработку</button>`);
+}
+async function submitRework(id){
+  const reason=document.getElementById('reworkReason').value.trim();
+  if(!reason){alert('Укажите причину');return;}
+  await apiCall('leads/'+id,'PUT',{status:'rework',reworkReason:reason,reworkDate:new Date().toISOString()});
+  closeModal();await loadAll();
+}
+function rejectLead(id){
+  closeModal();
+  openModal('Отказ — причина',`
+    <div class="form-group"><label>Причина отказа *</label><textarea id="rejectReason" placeholder="Укажите причину..." style="min-height:80px"></textarea></div>
+  `,`<button class="btn btn-secondary" onclick="closeModal();viewLead('${id}')">Отмена</button>
+    <button class="btn btn-danger" onclick="submitReject('${id}')">Отказать</button>`);
+}
+async function submitReject(id){
+  const reason=document.getElementById('rejectReason').value.trim();
+  if(!reason){alert('Укажите причину');return;}
+  await apiCall('leads/'+id,'PUT',{status:'rejected',rejectReason:reason,rejectDate:new Date().toISOString()});
   closeModal();await loadAll();
 }
 
