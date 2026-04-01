@@ -1763,7 +1763,7 @@ function renderCateringResult(){
   const grouped={};
   m.items.forEach(i=>{if(!grouped[i.category])grouped[i.category]=[];grouped[i.category].push(i);});
   const catOrder=['cold','hot_snack','salad','pastry','dessert','hot','garnish','drinks'];
-  const catTitles={cold:'I. Холодные закуски',hot_snack:'II. Горячие закуски',salad:'III. Салаты',pastry:'IV. Выпечка и киши',dessert:'V. Десерты',hot:'VI. Горячие блюда и Гриль',garnish:'VII. Гарниры',drinks:'VIII. Напитки'};
+  const catTitles={cold:'I. Холодные закуски',hot_snack:'II. Горячие закуски',salad:'III. Салаты',pastry:'IV. Выпечка',dessert:'V. Десерты',hot:'VI. Горячие блюда и Гриль',garnish:'VII. Гарниры',drinks:'VIII. Напитки'};
 
   let html='<div style="margin-top:1.2rem;background:var(--bg2);border-radius:var(--radius);padding:1.2rem;border:1px solid var(--border)">';
   html+='<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;flex-wrap:wrap;gap:0.5rem"><h3 style="color:var(--white)">Предварительное меню на '+m.guests+' персон</h3><div style="display:flex;gap:0.5rem"><button class="btn btn-sm btn-secondary" onclick="printCateringMenu()">&#128424; Печать</button><button class="btn btn-sm btn-primary" onclick="saveCateringToLead()">&#128190; Сохранить в заявку</button></div></div>';
@@ -1872,7 +1872,7 @@ function viewLeadCateringMenu(leadId){
   const l=data.leads.find(x=>x.id===leadId);
   if(!l||!l.cateringMenu)return;
   const m=l.cateringMenu;
-  const catTitles={cold:'Холодные закуски',hot_snack:'Горячие закуски',salad:'Салаты',pastry:'Выпечка и киши',dessert:'Десерты',hot:'Горячие блюда',garnish:'Гарниры',drinks:'Напитки'};
+  const catTitles={cold:'Холодные закуски',hot_snack:'Горячие закуски',salad:'Салаты',pastry:'Выпечка',dessert:'Десерты',hot:'Горячие блюда',garnish:'Гарниры',drinks:'Напитки'};
   const grouped={};
   (m.items||[]).filter(i=>i.qty>0).forEach(i=>{if(!grouped[i.category])grouped[i.category]=[];grouped[i.category].push(i);});
   let html='<div style="max-height:60vh;overflow-y:auto">';
@@ -1985,7 +1985,7 @@ function printCateringMenu(){
   html+=`<h1>КЕЙТЕРИНГ-МЕНЮ НА ${m.guests} ПЕРСОН</h1>`;
   if(lead)html+=`<div class="meta">${lead.name} — ${EV[lead.eventType]||''} | ${lead.eventDate?fmtDate(lead.eventDate):''}</div>`;
 
-  const catTitles={cold:'I. Холодные закуски',hot_snack:'II. Горячие закуски',salad:'III. Салаты',pastry:'IV. Выпечка и киши',dessert:'V. Десерты',hot:'VI. Горячие блюда и Гриль',garnish:'VII. Гарниры',drinks:'VIII. Напитки'};
+  const catTitles={cold:'I. Холодные закуски',hot_snack:'II. Горячие закуски',salad:'III. Салаты',pastry:'IV. Выпечка',dessert:'V. Десерты',hot:'VI. Горячие блюда и Гриль',garnish:'VII. Гарниры',drinks:'VIII. Напитки'};
   const grouped={};
   m.items.filter(i=>i.qty>0).forEach(i=>{if(!grouped[i.category])grouped[i.category]=[];grouped[i.category].push(i);});
   ['cold','hot_snack','salad','pastry','dessert','hot','garnish','drinks'].forEach(cat=>{
@@ -2008,7 +2008,7 @@ function printCateringMenu(){
 }
 
 // === CATERING TABLE ===
-const CAT_CATS={cold:'Холодные закуски',hot_snack:'Горячие закуски',salad:'Салаты',pastry:'Выпечка и киши',dessert:'Десерты',hot:'Горячие блюда',garnish:'Гарниры',drinks:'Напитки',service:'Сервис'};
+const CAT_CATS={cold:'Холодные закуски',hot_snack:'Горячие закуски',salad:'Салаты',pastry:'Выпечка',dessert:'Десерты',hot:'Горячие блюда',garnish:'Гарниры',drinks:'Напитки',service:'Сервис'};
 const CAT_COLORS={cold:'var(--blue)',hot_snack:'var(--primary)',salad:'var(--green)',pastry:'var(--yellow)',dessert:'var(--purple)',hot:'var(--red)',garnish:'#d97706',drinks:'#0ea5e9',service:'var(--text)'};
 let cateringFilter='';
 function filterCatering(cat){
