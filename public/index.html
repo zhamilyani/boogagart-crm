@@ -1701,34 +1701,36 @@ function renderCateringResult(){
     if(!grouped[cat])continue;
     const blockTotal=grouped[cat].reduce((s,i)=>s+i.total,0);
     html+=`<h4 style="color:var(--primary);margin:1rem 0 0.5rem;font-size:0.85rem">${catTitles[cat]||cat}</h4>`;
-    html+='<table style="margin-bottom:0.5rem"><thead><tr><th>Позиция</th><th>Описание</th><th>Цена (ед.)</th><th>Кол-во</th><th>Итого (₸)</th></tr></thead><tbody>';
+    html+='<table style="margin-bottom:0.5rem"><thead><tr><th>Позиция</th><th>Описание</th><th>Цена (ед.)</th><th>Кол-во</th><th>Итого (₸)</th><th></th></tr></thead><tbody>';
     grouped[cat].forEach((i,idx)=>{
       html+=`<tr>
-        <td style="color:var(--white);font-weight:500">${esc(i.name)}</td>
-        <td style="font-size:0.75rem">${esc(i.description||'')}</td>
-        <td>${i.unitPrice.toLocaleString('ru-RU')}</td>
-        <td><input type="number" value="${i.qty}" min="0" style="width:60px;background:var(--bg3);border:1px solid var(--border);color:var(--text2);border-radius:4px;padding:2px 6px;font-size:0.8rem;text-align:center" onchange="updateCateringQty('${i.id}',+this.value)"></td>
+        <td><input value="${esc(i.name)}" style="width:100%;background:var(--bg3);border:1px solid var(--border);color:var(--white);border-radius:4px;padding:3px 6px;font-size:0.8rem;font-weight:500;font-family:inherit" onchange="updateMenuItemAttr('items','${i.id}','name',this.value)"></td>
+        <td><input value="${esc(i.description||'')}" style="width:100%;background:var(--bg3);border:1px solid var(--border);color:var(--text2);border-radius:4px;padding:3px 6px;font-size:0.75rem;font-family:inherit" onchange="updateMenuItemAttr('items','${i.id}','description',this.value)"></td>
+        <td><input type="number" value="${i.unitPrice}" min="0" style="width:80px;background:var(--bg3);border:1px solid var(--border);color:var(--text2);border-radius:4px;padding:3px 6px;font-size:0.8rem;text-align:right;font-family:inherit" onchange="updateMenuItemPrice('items','${i.id}',+this.value)"></td>
+        <td><input type="number" value="${i.qty}" min="0" style="width:60px;background:var(--bg3);border:1px solid var(--border);color:var(--text2);border-radius:4px;padding:3px 6px;font-size:0.8rem;text-align:center;font-family:inherit" onchange="updateMenuItemPrice('items','${i.id}',null,+this.value)"></td>
         <td style="font-weight:600">${i.total.toLocaleString('ru-RU')}</td>
+        <td><button class="act-btn del" onclick="removeMenuItem('items','${i.id}')" title="Удалить">&times;</button></td>
       </tr>`;
     });
-    html+=`<tr style="border-top:1px solid var(--border)"><td colspan="4" style="text-align:right;font-weight:600">Итого по блоку:</td><td style="font-weight:700;color:var(--primary)">${blockTotal.toLocaleString('ru-RU')} ₸</td></tr>`;
+    html+=`<tr style="border-top:1px solid var(--border)"><td colspan="4" style="text-align:right;font-weight:600">Итого по блоку:</td><td style="font-weight:700;color:var(--primary)">${blockTotal.toLocaleString('ru-RU')} ₸</td><td></td></tr>`;
     html+='</tbody></table>';
   }
 
   if(m.service.length){
     const servTotal=m.service.reduce((s,i)=>s+i.total,0);
     html+='<h4 style="color:var(--primary);margin:1rem 0 0.5rem;font-size:0.85rem">V. Сервис</h4>';
-    html+='<table style="margin-bottom:0.5rem"><thead><tr><th>Позиция</th><th>Описание</th><th>Цена (ед.)</th><th>Кол-во</th><th>Итого (₸)</th></tr></thead><tbody>';
+    html+='<table style="margin-bottom:0.5rem"><thead><tr><th>Позиция</th><th>Описание</th><th>Цена (ед.)</th><th>Кол-во</th><th>Итого (₸)</th><th></th></tr></thead><tbody>';
     m.service.forEach(i=>{
       html+=`<tr>
-        <td style="color:var(--white);font-weight:500">${esc(i.name)}</td>
-        <td style="font-size:0.75rem">${esc(i.description||'')}</td>
-        <td>${i.unitPrice.toLocaleString('ru-RU')}</td>
-        <td><input type="number" value="${i.qty}" min="0" style="width:60px;background:var(--bg3);border:1px solid var(--border);color:var(--text2);border-radius:4px;padding:2px 6px;font-size:0.8rem;text-align:center" onchange="updateCateringServiceQty('${i.id}',+this.value)"></td>
+        <td><input value="${esc(i.name)}" style="width:100%;background:var(--bg3);border:1px solid var(--border);color:var(--white);border-radius:4px;padding:3px 6px;font-size:0.8rem;font-weight:500;font-family:inherit" onchange="updateMenuItemAttr('service','${i.id}','name',this.value)"></td>
+        <td><input value="${esc(i.description||'')}" style="width:100%;background:var(--bg3);border:1px solid var(--border);color:var(--text2);border-radius:4px;padding:3px 6px;font-size:0.75rem;font-family:inherit" onchange="updateMenuItemAttr('service','${i.id}','description',this.value)"></td>
+        <td><input type="number" value="${i.unitPrice}" min="0" style="width:80px;background:var(--bg3);border:1px solid var(--border);color:var(--text2);border-radius:4px;padding:3px 6px;font-size:0.8rem;text-align:right;font-family:inherit" onchange="updateMenuItemPrice('service','${i.id}',+this.value)"></td>
+        <td><input type="number" value="${i.qty}" min="0" style="width:60px;background:var(--bg3);border:1px solid var(--border);color:var(--text2);border-radius:4px;padding:3px 6px;font-size:0.8rem;text-align:center;font-family:inherit" onchange="updateMenuItemPrice('service','${i.id}',null,+this.value)"></td>
         <td style="font-weight:600">${i.total.toLocaleString('ru-RU')}</td>
+        <td><button class="act-btn del" onclick="removeMenuItem('service','${i.id}')" title="Удалить">&times;</button></td>
       </tr>`;
     });
-    html+=`<tr style="border-top:1px solid var(--border)"><td colspan="4" style="text-align:right;font-weight:600">Итого по блоку:</td><td style="font-weight:700;color:var(--primary)">${servTotal.toLocaleString('ru-RU')} ₸</td></tr>`;
+    html+=`<tr style="border-top:1px solid var(--border)"><td colspan="4" style="text-align:right;font-weight:600">Итого по блоку:</td><td style="font-weight:700;color:var(--primary)">${servTotal.toLocaleString('ru-RU')} ₸</td><td></td></tr>`;
     html+='</tbody></table>';
   }
 
@@ -1740,17 +1742,26 @@ function renderCateringResult(){
   document.getElementById('cateringResult').innerHTML=html;
 }
 
-function updateCateringQty(id,qty){
+function updateMenuItemAttr(type,id,attr,value){
   if(!currentCateringMenu)return;
-  const item=currentCateringMenu.items.find(i=>i.id===id);
-  if(item){item.qty=qty;item.total=item.unitPrice*qty;}
+  const item=currentCateringMenu[type].find(i=>i.id===id);
+  if(item)item[attr]=value;
+}
+function updateMenuItemPrice(type,id,price,qty){
+  if(!currentCateringMenu)return;
+  const item=currentCateringMenu[type].find(i=>i.id===id);
+  if(!item)return;
+  if(price!==null&&price!==undefined)item.unitPrice=price;
+  if(qty!==null&&qty!==undefined)item.qty=qty;
+  item.total=item.unitPrice*item.qty;
   recalcCateringTotals();
 }
-function updateCateringServiceQty(id,qty){
+function removeMenuItem(type,id){
   if(!currentCateringMenu)return;
-  const item=currentCateringMenu.service.find(i=>i.id===id);
-  if(item){item.qty=qty;item.total=item.unitPrice*qty;}
+  currentCateringMenu[type]=currentCateringMenu[type].filter(i=>i.id!==id);
+  if(manualMenuMode)delete manualSelections[id];
   recalcCateringTotals();
+  renderCateringTable();
 }
 function recalcCateringTotals(){
   const m=currentCateringMenu;
