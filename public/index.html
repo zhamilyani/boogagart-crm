@@ -645,6 +645,18 @@
 
     <!-- OTHER ACTIVITIES -->
     <div class="page" id="page-other">
+      <!-- FILTERS -->
+      <div class="fin-filters" style="margin-bottom:1.5rem">
+        <div class="form-group"><label>Дата с</label><input type="date" id="otherDateFrom" onchange="renderOther()"></div>
+        <div class="form-group"><label>Дата по</label><input type="date" id="otherDateTo" onchange="renderOther()"></div>
+        <div class="form-group"><label>Тип</label>
+          <select id="otherTypeFilter" onchange="renderOther()">
+            <option value="">Все</option>
+            <option value="income">Доходы</option>
+            <option value="expense">Расходы</option>
+          </select>
+        </div>
+      </div>
       <!-- DASHBOARD -->
       <div class="fin-grid" style="margin-bottom:1.5rem">
         <div class="fin-card fin-revenue"><div class="fin-label">Доходы</div><div class="fin-value" id="otherDashIncome">0</div></div>
@@ -2569,7 +2581,13 @@ function renderCalendar(){
 // === FINANCE ===
 // === OTHER ACTIVITIES ===
 function renderOther(){
-  const entries=(data.other||[]).filter(o=>o.type==='income'||o.type==='expense');
+  const dateFrom=document.getElementById('otherDateFrom')?.value||'';
+  const dateTo=document.getElementById('otherDateTo')?.value||'';
+  const typeFilter=document.getElementById('otherTypeFilter')?.value||'';
+  let entries=(data.other||[]).filter(o=>o.type==='income'||o.type==='expense');
+  if(dateFrom)entries=entries.filter(e=>(e.date||e.createdAt)>=dateFrom);
+  if(dateTo)entries=entries.filter(e=>(e.date||e.createdAt)<=dateTo);
+  if(typeFilter)entries=entries.filter(e=>e.type===typeFilter);
   const todos=(data.other||[]).filter(o=>o.type==='todo');
 
   // Dashboard cards
