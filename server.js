@@ -351,7 +351,12 @@ const server = http.createServer(async (req, res) => {
       if (!body.name || !body.phone) return json(res, { error: 'Name and phone required' }, 400);
       body.id = genId();
       body.status = 'new';
-      body.source = body.source || 'website';
+      // UTM tracking
+      const utmSource = (body.utm_source || '').toLowerCase();
+      const utmMap = { instagram: 'instagram', google: 'google', facebook: 'facebook', whatsapp: 'whatsapp', telegram: 'telegram', yandex: 'yandex', tiktok: 'tiktok', '2gis': '2gis' };
+      body.source = utmMap[utmSource] || body.source || 'website';
+      body.utm = { source: body.utm_source || '', medium: body.utm_medium || '', campaign: body.utm_campaign || '', term: body.utm_term || '', content: body.utm_content || '' };
+      delete body.utm_source; delete body.utm_medium; delete body.utm_campaign; delete body.utm_term; delete body.utm_content;
       body.createdAt = new Date().toISOString();
       return await withTransaction('leads', async (items, client) => {
         items.push(body);
