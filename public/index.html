@@ -763,6 +763,14 @@
   </div>
 </div>
 
+<div class="modal-overlay" id="dialogOverlay" style="z-index:200">
+  <div class="modal" style="width:400px">
+    <div class="modal-head"><h3 id="dialogTitle"></h3></div>
+    <div class="modal-body" id="dialogBody" style="text-align:center;padding:1.5rem"></div>
+    <div class="modal-foot" id="dialogFoot" style="justify-content:center"></div>
+  </div>
+</div>
+
 <script>
 const API='';
 let currentPage='dashboard', currentRole='ceo', currentUser='', currentLinkedId='';
@@ -1275,6 +1283,35 @@ function openModal(title,body,foot){
   document.getElementById('modal').classList.add('open');
 }
 function closeModal(){document.getElementById('modal').classList.remove('open');}
+
+// === DIALOG (confirm/alert replacement) ===
+let _dialogResolve=null;
+function showDialog(title,msg,buttons){
+  document.getElementById('dialogTitle').textContent=title;
+  document.getElementById('dialogBody').innerHTML=`<div style="font-size:0.88rem;color:var(--text2)">${msg}</div>`;
+  document.getElementById('dialogFoot').innerHTML=buttons;
+  document.getElementById('dialogOverlay').classList.add('open');
+}
+function closeDialog(result){
+  document.getElementById('dialogOverlay').classList.remove('open');
+  if(_dialogResolve){_dialogResolve(result);_dialogResolve=null;}
+}
+function confirmDialog(msg,title){
+  return new Promise(resolve=>{
+    _dialogResolve=resolve;
+    showDialog(title||'Подтверждение',msg,
+      `<button class="btn btn-secondary" onclick="closeDialog(false)">Отмена</button>
+       <button class="btn btn-primary" onclick="closeDialog(true)">Подтвердить</button>`);
+  });
+}
+function alertDialog(msg,title){
+  return new Promise(resolve=>{
+    _dialogResolve=resolve;
+    showDialog(title||'Уведомление',msg,
+      `<button class="btn btn-primary" onclick="closeDialog(true)">OK</button>`);
+  });
+}
+document.getElementById('dialogOverlay').addEventListener('click',e=>{if(e.target===e.currentTarget)closeDialog(false);});
 document.getElementById('modal').addEventListener('click',e=>{if(e.target===e.currentTarget)closeModal();});
 
 // === LEAD VIEW ===
@@ -1440,7 +1477,7 @@ function reworkLead(id){
 }
 async function submitRework(id){
   const reason=document.getElementById('reworkReason').value.trim();
-  if(!reason){alert('Укажите причину');return;}
+  if(!reason){await alertDialog('Укажите причину');return;}
   await apiCall('leads/'+id,'PUT',{status:'rework',reworkReason:reason,reworkDate:new Date().toISOString()});
   closeModal();await loadAll();
 }
@@ -1453,7 +1490,7 @@ function rejectLead(id){
 }
 async function submitReject(id){
   const reason=document.getElementById('rejectReason').value.trim();
-  if(!reason){alert('Укажите причину');return;}
+  if(!reason){await alertDialog('Укажите причину');return;}
   await apiCall('leads/'+id,'PUT',{status:'rejected',rejectReason:reason,rejectDate:new Date().toISOString()});
   closeModal();await loadAll();
 }
@@ -2017,7 +2054,7 @@ function recalcCateringTotals(){
 
 async function saveCateringToLead(){
   const leadId=currentCateringLeadId;
-  if(!leadId){alert('Выберите заявку для сохранения');return;}
+  if(!leadId){await alertDialog('Выберите заявку для сохранения');return;}
   const l=data.leads.find(x=>x.id===leadId);if(!l)return;
   const menu=currentCateringMenu;
   l.cateringMenu={
@@ -2026,7 +2063,7 @@ async function saveCateringToLead(){
   };
   await apiCall('leads/'+leadId,'PUT',{cateringMenu:l.cateringMenu});
   await loadAll();
-  alert('Меню кейтеринга сохранено в заявку «'+l.name+'»');
+  await alertDialog('Меню кейтеринга сохранено в заявку «'+l.name+'»','Сохранено');
 }
 
 function viewLeadCateringMenu(leadId){
@@ -2062,7 +2099,7 @@ function viewLeadCateringMenu(leadId){
 }
 
 async function deleteCateringMenu(leadId){
-  if(!confirm('Удалить кейтеринг-меню из этой заявки?'))return;
+  if(!await confirmDialog('Удалить кейтеринг-меню из этой заявки?','Удаление'))return;
   await apiCall('leads/'+leadId,'PUT',{cateringMenu:null});
   closeModal();
   await loadAll();
@@ -2312,10 +2349,10 @@ async function saveUser(id){
     password:document.getElementById('fuPassword').value,
     linkedId:document.getElementById('fuLinkedId').value,
   };
-  if(!body.username||!body.password){alert('Логин и пароль обязательны');return;}
+  if(!body.username||!body.password){await alertDialog('Логин и пароль обязательны');return;}
   // Check unique username
   const dup=data.users.find(u=>u.username===body.username&&u.id!==id);
-  if(dup){alert('Такой логин уже существует');return;}
+  if(dup){await alertDialog('Такой логин уже существует');return;}
   await apiCall(id?'users/'+id:'users',id?'PUT':'POST',body);
   closeModal();await loadAll();
 }
@@ -2323,7 +2360,7 @@ async function saveUser(id){
 // === CHANGE PASSWORD ===
 function openChangePassword(){
   const me=data.users.find(u=>u.name===currentUser&&u.role===currentRole);
-  if(!me){alert('Пользователь не найден');return;}
+  if(!me){await alertDialog('Пользователь не найден');return;}
   openModal('Сменить пароль',`
     <div class="form-group"><label>Текущий пароль</label><input type="password" id="fpOld" placeholder="Введите текущий пароль"></div>
     <div class="form-group"><label>Новый пароль</label><input type="password" id="fpNew" placeholder="Введите новый пароль"></div>
@@ -2337,22 +2374,22 @@ async function saveNewPassword(){
   const old=document.getElementById('fpOld').value;
   const np=document.getElementById('fpNew').value;
   const np2=document.getElementById('fpNew2').value;
-  if(!old){alert('Введите текущий пароль');return;}
-  if(!np||np.length<3){alert('Новый пароль минимум 3 символа');return;}
-  if(np!==np2){alert('Пароли не совпадают');return;}
+  if(!old){await alertDialog('Введите текущий пароль');return;}
+  if(!np||np.length<3){await alertDialog('Новый пароль минимум 3 символа');return;}
+  if(np!==np2){await alertDialog('Пароли не совпадают');return;}
   // Verify old password via login attempt
   try{
     const res=await fetch(API+'/api/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({username:me.username,password:old})});
-    if(!res.ok){alert('Неверный текущий пароль');return;}
-  }catch{alert('Ошибка проверки пароля');return;}
+    if(!res.ok){await alertDialog('Неверный текущий пароль');return;}
+  }catch{await alertDialog('Ошибка проверки пароля');return;}
   await apiCall('users/'+me.id,'PUT',{password:np});
   await loadAll();
   closeModal();
-  alert('Пароль успешно изменён');
+  await alertDialog('Пароль успешно изменён','Готово');
 }
 
 // === DELETE ===
-async function deleteItem(col,id){if(!confirm('Удалить?'))return;await apiCall(col+'/'+id,'DELETE');await loadAll();}
+async function deleteItem(col,id){if(!await confirmDialog('Вы уверены, что хотите удалить?','Удаление'))return;await apiCall(col+'/'+id,'DELETE');await loadAll();if(currentPage==='other')renderOther();}
 
 // === PROPOSAL ===
 let currentProposal=null;
@@ -2375,7 +2412,7 @@ async function generateProposal(){
   const body={guests:document.getElementById('propGuests').value,budget:document.getElementById('propBudget').value,venue:document.getElementById('propVenue').value,duration:document.getElementById('propDuration').value};
   try{
   const res=await fetch(API+'/api/proposal',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+authToken},body:JSON.stringify(body)});
-  if(!res.ok){alert('Ошибка генерации предложения');return;}
+  if(!res.ok){await alertDialog('Ошибка генерации предложения');return;}
   const p=await res.json();
   currentProposal={
     contests:p.contests.map(c=>({id:c.id,name:c.name,duration:c.duration,cost:c.cost,price:Math.round((c.cost||0)*1.8)||Math.round(c.duration*500)})),
@@ -2385,7 +2422,7 @@ async function generateProposal(){
     markup:80,
   };
   renderEditableProposal();
-  }catch(e){console.error('Proposal generation failed:',e);alert('Не удалось сгенерировать предложение');}
+  }catch(e){console.error('Proposal generation failed:',e);await alertDialog('Не удалось сгенерировать предложение');}
 }
 function openProposalForLead(id){
   document.querySelector('[data-page="proposal"]')?.click();
@@ -2453,7 +2490,7 @@ async function saveProposalToLead(){
   const leadId=document.getElementById('propLead').value;if(!leadId)return;
   await apiCall('leads/'+leadId,'PUT',{proposal:currentProposal});
   await loadAll();
-  alert('Предложение сохранено!');
+  await alertDialog('Предложение сохранено!','Сохранено');
 }
 
 // === CALENDAR ===
@@ -2968,7 +3005,7 @@ function copyDocHTML(){
   const range=document.createRange();range.selectNodeContents(body);
   const sel=window.getSelection();sel.removeAllRanges();sel.addRange(range);
   document.execCommand('copy');sel.removeAllRanges();
-  alert('Скопировано в буфер!');
+  alertDialog('Скопировано в буфер!','Готово');
 }
 
 // === UTILS ===
