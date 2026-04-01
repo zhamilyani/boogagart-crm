@@ -993,9 +993,12 @@ async function syncOfflineQueue(){
 }
 
 async function loadAll(){
-  [data.leads,data.contests,data.hosts,data.locations,data.equipment,data.inventory,data.scenarios,data.djs,data.users,data.catering,data.other]=await Promise.all([
-    apiCall('leads'),apiCall('contests'),apiCall('hosts'),apiCall('locations'),apiCall('equipment'),apiCall('inventory'),apiCall('scenarios'),apiCall('djs'),apiCall('users'),apiCall('catering'),apiCall('other')
-  ]);
+  try{
+    const results=await Promise.all([
+      apiCall('leads'),apiCall('contests'),apiCall('hosts'),apiCall('locations'),apiCall('equipment'),apiCall('inventory'),apiCall('scenarios'),apiCall('djs'),apiCall('users'),apiCall('catering'),apiCall('other')
+    ]);
+    [data.leads,data.contests,data.hosts,data.locations,data.equipment,data.inventory,data.scenarios,data.djs,data.users,data.catering,data.other]=results.map(r=>Array.isArray(r)?r:[]);
+  }catch(e){console.error('loadAll error:',e);}
   render();
 }
 
@@ -1265,8 +1268,8 @@ function render(){
   }
 
   fillLeadSelects();
-  try{renderOther();}catch(e){}
-  try{renderFinance();}catch(e){}
+  try{renderOther();}catch(e){console.error('renderOther:',e);}
+  try{renderFinance();}catch(e){console.error('renderFinance:',e);}
 }
 
 // Filters
@@ -2394,7 +2397,7 @@ async function saveNewPassword(){
 }
 
 // === DELETE ===
-async function deleteItem(col,id){if(!await confirmDialog('Вы уверены, что хотите удалить?','Удаление'))return;await apiCall(col+'/'+id,'DELETE');await loadAll();if(currentPage==='other')renderOther();}
+async function deleteItem(col,id){if(!await confirmDialog('Вы уверены, что хотите удалить?','Удаление'))return;await apiCall(col+'/'+id,'DELETE');if(col==='other'){data.other=await apiCall('other');renderOther();}else{await loadAll();}}
 
 // === PROPOSAL ===
 let currentProposal=null;
@@ -2596,9 +2599,11 @@ async function saveOtherEntry(type,id){
     date:document.getElementById('oeDate').value,
     comment:document.getElementById('oeComment').value,
   };
-  await apiCall(id?'other/'+id:'other',id?'PUT':'POST',body);
   closeModal();
-  await loadAll();
+  await apiCall(id?'other/'+id:'other',id?'PUT':'POST',body);
+  // Перезагрузить только other для скорости
+  data.other=await apiCall('other');
+  renderOther();
 }
 
 function openTodoModal(id){
@@ -2628,13 +2633,16 @@ async function saveTodo(id){
     done:false,
   };
   if(id){const existing=(data.other||[]).find(x=>x.id===id);if(existing)body.done=existing.done;}
+  closeModal();
   await apiCall(id?'other/'+id:'other',id?'PUT':'POST',body);
-  closeModal();await loadAll();
+  data.other=await apiCall('other');
+  renderOther();
 }
 async function toggleTodoDone(id){
   const t=(data.other||[]).find(x=>x.id===id);if(!t)return;
   await apiCall('other/'+id,'PUT',{done:!t.done});
-  await loadAll();
+  data.other=await apiCall('other');
+  renderOther();
 }
 
 function renderFinance(){
