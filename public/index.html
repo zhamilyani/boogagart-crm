@@ -1240,7 +1240,7 @@ function render(){
       if(u.role==='dj'){const d=data.djs.find(x=>x.id===u.linkedId);linked=d?'&#127911; '+esc(d.name):'<span style="color:var(--red)">не привязан</span>';}
       return`<tr>
         <td style="color:var(--white);font-weight:500">${esc(u.name)}</td>
-        <td>${u.phone?`<a href="https://wa.me/${u.phone.replace(/[^0-9]/g,'')}" target="_blank" title="Написать в WhatsApp" style="color:var(--green);text-decoration:none">${esc(u.phone)} &#128172;</a>`:'—'}</td>
+        <td>${u.phone?`${esc(u.phone)} <a href="https://wa.me/${u.phone.replace(/[^0-9]/g,'')}" target="_blank" title="Написать в WhatsApp" style="display:inline-block;background:#25D366;color:#fff;font-size:0.6rem;font-weight:700;padding:2px 5px;border-radius:4px;text-decoration:none;vertical-align:middle">WA</a>`:'—'}</td>
         <td><span style="padding:0.15rem 0.5rem;border-radius:4px;font-size:0.68rem;font-weight:500;background:${u.role==='ceo'?'var(--primary-bg)':u.role==='admin'?'var(--blue-bg)':u.role==='host'?'var(--green-bg)':'var(--purple-bg)'};color:${u.role==='ceo'?'var(--primary)':u.role==='admin'?'var(--blue)':u.role==='host'?'var(--green)':'var(--purple)'}">${ROLES[u.role]||u.role}</span></td>
         <td><code style="background:var(--bg3);padding:0.2rem 0.5rem;border-radius:4px;font-size:0.78rem">${esc(u.username)}</code></td>
         <td><code style="background:var(--bg3);padding:0.2rem 0.5rem;border-radius:4px;font-size:0.78rem">${esc(u.password)}</code></td>
@@ -2620,7 +2620,7 @@ function openTodoPanel(){
   html+=sorted.length?sorted.map(t=>`<tr style="${t.done?'opacity:0.5':''}">
     <td><button class="manual-check${t.done?' checked':''}" onclick="toggleTodoDone('${t.id}')" style="width:24px;height:24px">${t.done?'&#10003;':''}</button></td>
     <td style="color:var(--white);font-weight:500;${t.done?'text-decoration:line-through':''}">${esc(t.task||'-')}</td>
-    <td>${esc(t.executor||'—')}${(()=>{const u=data.users.find(x=>x.name===t.executor);if(!u||!u.phone)return'';const msg=['Задача: '+t.task,t.deadline?'Срок: '+fmtDate(t.deadline):'',t.comment?'Комментарий: '+t.comment:''].filter(Boolean).join('\n');return` <a href="https://wa.me/${u.phone.replace(/[^0-9]/g,'')}?text=${encodeURIComponent(msg)}" target="_blank" title="Написать в WhatsApp" style="color:#25D366;font-size:1.1rem;text-decoration:none;vertical-align:middle">&#128172;</a>`;})()}</td>
+    <td>${esc(t.executor||'—')}${(()=>{const u=data.users.find(x=>x.name===t.executor);if(!u||!u.phone)return'';const msg=['Задача: '+t.task,t.deadline?'Срок: '+fmtDate(t.deadline):'',t.comment?'Комментарий: '+t.comment:''].filter(Boolean).join('\n');return` <a href="https://wa.me/${u.phone.replace(/[^0-9]/g,'')}?text=${encodeURIComponent(msg)}" target="_blank" title="Написать в WhatsApp" style="display:inline-block;background:#25D366;color:#fff;font-size:0.6rem;font-weight:700;padding:2px 5px;border-radius:4px;text-decoration:none;vertical-align:middle">WA</a>`;})()}</td>
     <td>${t.deadline?fmtDate(t.deadline):'—'}</td>
     <td><div class="actions">
       <button class="act-btn" onclick="closeModal();openTodoModal('${t.id}')" title="Редактировать">&#9998;</button>
