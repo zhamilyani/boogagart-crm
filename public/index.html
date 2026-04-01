@@ -643,6 +643,13 @@
 
     <!-- OTHER ACTIVITIES -->
     <div class="page" id="page-other">
+      <!-- DASHBOARD -->
+      <div class="fin-grid" style="margin-bottom:1.5rem">
+        <div class="fin-card fin-revenue"><div class="fin-label">Доходы</div><div class="fin-value" id="otherDashIncome">0</div></div>
+        <div class="fin-card fin-expenses"><div class="fin-label">Расходы</div><div class="fin-value" id="otherDashExpense">0</div></div>
+        <div class="fin-card fin-profit"><div class="fin-label">Баланс</div><div class="fin-value" id="otherDashBalance">0</div></div>
+        <div class="fin-card fin-avg"><div class="fin-label">Задач открыто</div><div class="fin-value" id="otherDashTodo">0</div></div>
+      </div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.5rem">
         <!-- INCOME/EXPENSES -->
         <div>
@@ -825,6 +832,12 @@ function applyAuth(){
   // DJ: only calendar + scenarios
   else if(currentRole==='dj'){
     ['leads','locations','equipment','inventory','proposal','hosts','djs','contests','docs','dashboard'].forEach(p=>{
+      document.querySelector(`.nav-item[data-page="${p}"]`)?.classList.add('hidden');
+    });
+  }
+  // Admin: hide finance and catering
+  if(currentRole==='admin'){
+    ['finance','catering'].forEach(p=>{
       document.querySelector(`.nav-item[data-page="${p}"]`)?.classList.add('hidden');
     });
   }
@@ -2484,6 +2497,15 @@ function renderCalendar(){
 function renderOther(){
   const entries=(data.other||[]).filter(o=>o.type==='income'||o.type==='expense');
   const todos=(data.other||[]).filter(o=>o.type==='todo');
+
+  // Dashboard cards
+  const totalIncome=entries.filter(e=>e.type==='income').reduce((s,e)=>s+(e.amount||0),0);
+  const totalExpense=entries.filter(e=>e.type==='expense').reduce((s,e)=>s+(e.amount||0),0);
+  const openTodos=todos.filter(t=>!t.done).length;
+  document.getElementById('otherDashIncome').textContent=fmtMoney(totalIncome);
+  document.getElementById('otherDashExpense').textContent=fmtMoney(totalExpense);
+  document.getElementById('otherDashBalance').textContent=fmtMoney(totalIncome-totalExpense);
+  document.getElementById('otherDashTodo').textContent=openTodos;
 
   document.getElementById('otherEntriesTable').innerHTML=entries.length?
     [...entries].sort((a,b)=>new Date(b.date||b.createdAt)-new Date(a.date||a.createdAt)).map(e=>`<tr>
