@@ -2430,7 +2430,9 @@ function fillLeadSelects(){
   const sel1=document.getElementById('propLead');
   const sel2=document.getElementById('docLead');
   const visible=getVisibleLeads();
-  [sel1,sel2].forEach(sel=>{if(!sel)return;const v=sel.value;sel.innerHTML='<option value="">— Выберите заявку —</option>'+visible.map(l=>`<option value="${l.id}">${esc(l.name)} — ${EV[l.eventType]||''} (${fmtDate(l.eventDate)})</option>`).join('');sel.value=v;});
+  const all=data.leads;
+  if(sel1){const v=sel1.value;sel1.innerHTML='<option value="">— Выберите заявку —</option>'+visible.map(l=>`<option value="${l.id}">${esc(l.name)} — ${EV[l.eventType]||''} (${fmtDate(l.eventDate)})</option>`).join('');sel1.value=v;}
+  if(sel2){const v=sel2.value;sel2.innerHTML='<option value="">— Выберите заявку —</option>'+all.map(l=>`<option value="${l.id}">${esc(l.name)} — ${EV[l.eventType]||''} (${fmtDate(l.eventDate)})</option>`).join('');sel2.value=v;}
 }
 function fillFromLead(){
   const id=document.getElementById('propLead').value;
