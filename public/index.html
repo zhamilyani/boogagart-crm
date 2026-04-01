@@ -1224,7 +1224,13 @@ function openLeadModal(id){
       <div class="conflict-list" id="conflictList"></div>
     </div>
     ${l.cateringMenu?`<div class="catering-in-lead">
-      <h5>&#127860; Кейтеринг-меню (${l.cateringMenu.guests} персон)</h5>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.4rem">
+        <h5 style="margin:0">&#127860; Кейтеринг-меню (${l.cateringMenu.guests} персон)</h5>
+        <div style="display:flex;gap:0.3rem">
+          <button class="btn btn-sm btn-secondary" onclick="closeModal();loadCateringMenuForEdit('${l.id}')" title="Редактировать в кейтеринге">&#9998; Редактировать</button>
+          <button class="btn btn-sm btn-danger" onclick="deleteCateringMenu('${l.id}')" title="Удалить меню">&times; Удалить</button>
+        </div>
+      </div>
       ${(l.cateringMenu.items||[]).filter(i=>i.qty>0).map(i=>`<div class="cil-row"><span>${esc(i.name)} ×${i.qty}</span><span>${(i.total||0).toLocaleString('ru-RU')} ₸</span></div>`).join('')}
       ${(l.cateringMenu.service||[]).filter(i=>i.qty>0).map(i=>`<div class="cil-row"><span>${esc(i.name)} ×${i.qty}</span><span>${(i.total||0).toLocaleString('ru-RU')} ₸</span></div>`).join('')}
       <div class="cil-total">Итого: ${(l.cateringMenu.grandTotal||0).toLocaleString('ru-RU')} ₸</div>
@@ -1850,9 +1856,16 @@ function viewLeadCateringMenu(leadId){
   html+=`<div style="display:flex;justify-content:space-between;padding:0.8rem 0.5rem;margin-top:0.5rem;font-weight:700;font-size:0.95rem;color:var(--white);border-top:2px solid var(--primary)"><span>ИТОГО</span><span>${(m.grandTotal||0).toLocaleString('ru-RU')} ₸</span></div>`;
   html+='</div>';
   openModal('Кейтеринг-меню — '+esc(l.name),html,`
-    <button class="btn btn-secondary" onclick="closeModal()">Закрыть</button>
-    <button class="btn btn-secondary" onclick="loadCateringMenuForEdit('${leadId}')">&#9998; Редактировать</button>
+    <button class="btn btn-danger" onclick="deleteCateringMenu('${leadId}')">&times; Удалить</button>
+    <button class="btn btn-secondary" onclick="closeModal();loadCateringMenuForEdit('${leadId}')">&#9998; Редактировать</button>
     <button class="btn btn-primary" onclick="printLeadCateringMenu('${leadId}')">&#128424; Печать</button>`);
+}
+
+async function deleteCateringMenu(leadId){
+  if(!confirm('Удалить кейтеринг-меню из этой заявки?'))return;
+  await apiCall('leads/'+leadId,'PUT',{cateringMenu:null});
+  closeModal();
+  await loadAll();
 }
 
 function loadCateringMenuForEdit(leadId){
