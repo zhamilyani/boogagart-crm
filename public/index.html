@@ -576,7 +576,7 @@
           <button class="btn btn-sm btn-secondary" onclick="filterCatering('drinks')">Напитки</button>
           <button class="btn btn-sm btn-secondary" onclick="filterCatering('service')">Сервис</button>
         </div>
-        <table><thead><tr><th>Позиция</th><th>Категория</th><th>Описание</th><th>Цена (₸)</th><th>Ед.</th><th></th></tr></thead>
+        <table><thead><tr><th>Позиция</th><th>Категория</th><th>Описание</th><th>Цена (₸)</th><th>Себест. (₸)</th><th>Ед.</th><th></th></tr></thead>
         <tbody id="cateringTable"></tbody></table>
       </div>
     </div>
@@ -674,6 +674,23 @@
         <div class="table-header"><h3>Финансовая история</h3></div>
         <table><thead><tr><th>Дата</th><th>Клиент</th><th>Тип</th><th>Выручка</th><th>Расходы</th><th>Прибыль</th></tr></thead>
         <tbody id="finTable"></tbody></table>
+      </div>
+
+      <h3 style="color:var(--white);margin:2rem 0 1rem;font-size:1rem">&#127860; Кейтеринг</h3>
+      <div class="fin-grid">
+        <div class="fin-card fin-revenue"><div class="fin-label">Выручка кейтеринг</div><div class="fin-value" id="finCatRevenue">0</div><div class="fin-sub" style="color:var(--green)">меню в заявках</div></div>
+        <div class="fin-card fin-expenses"><div class="fin-label">Себестоимость</div><div class="fin-value" id="finCatCost">0</div><div class="fin-sub" style="color:var(--red)">на основе себест. позиций</div></div>
+        <div class="fin-card fin-profit"><div class="fin-label">Прибыль кейтеринг</div><div class="fin-value" id="finCatProfit">0</div><div class="fin-sub" style="color:var(--primary)">выручка − себестоимость</div></div>
+        <div class="fin-card fin-avg"><div class="fin-label">Средний чек</div><div class="fin-value" id="finCatAvg">0</div><div class="fin-sub" style="color:var(--blue)">на заказ</div></div>
+      </div>
+      <div class="fin-chart">
+        <h4>Кейтеринг по типам мероприятий</h4>
+        <div id="finCatByType"></div>
+      </div>
+      <div class="table-wrap">
+        <div class="table-header"><h3>Кейтеринг — детализация</h3></div>
+        <table><thead><tr><th>Дата</th><th>Клиент</th><th>Тип</th><th>Персон</th><th>Выручка</th><th>Себестоимость</th><th>Прибыль</th></tr></thead>
+        <tbody id="finCatTable"></tbody></table>
       </div>
     </div>
 
@@ -2033,6 +2050,7 @@ function renderCateringTable(){
       <td><span style="display:inline-block;padding:2px 8px;border-radius:4px;font-size:0.7rem;font-weight:600;background:${CAT_COLORS[c.category]||'var(--bg4)'};color:#fff">${CAT_CATS[c.category]||c.category}</span></td>
       <td style="font-size:0.75rem;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${esc(c.description||'')}">${esc(c.description||'-')}</td>
       <td style="font-weight:600;color:var(--green)">${c.category==='service'?(c.unitPrice||0)+'%':(c.unitPrice||0).toLocaleString('ru-RU')+' ₸'}</td>
+      <td style="color:var(--text)">${c.category==='service'?'—':(c.costPrice||0).toLocaleString('ru-RU')+' ₸'}</td>
       <td>${c.category==='service'?'%':esc(c.unit||'шт')}</td>
       <td><div style="display:flex;align-items:center;gap:0.3rem">
         <div class="manual-col">
@@ -2049,7 +2067,7 @@ function renderCateringTable(){
         </div>`:''}
       </div></td>
     </tr>`;
-  }).join(''):'<tr><td colspan="6" class="empty"><div class="empty-icon">&#127860;</div>Добавьте позиции меню</td></tr>';
+  }).join(''):'<tr><td colspan="7" class="empty"><div class="empty-icon">&#127860;</div>Добавьте позиции меню</td></tr>';
 }
 function openCateringModal(id){
   const c=id?data.catering.find(x=>x.id===id):{};
@@ -2059,6 +2077,9 @@ function openCateringModal(id){
       <div class="form-group"><label>Категория</label>
         <select id="fcCat">${Object.entries(CAT_CATS).map(([k,v])=>`<option value="${k}" ${c.category===k?'selected':''}>${v}</option>`).join('')}</select></div>
       <div class="form-group"><label>Цена за ед. (₸)</label><input type="number" id="fcPrice" value="${c.unitPrice||0}"></div>
+      <div class="form-group"><label>Себестоимость (₸)</label><input type="number" id="fcCostPrice" value="${c.costPrice||0}"></div>
+    </div>
+    <div class="form-row">
       <div class="form-group"><label>Ед. измерения</label>
         <select id="fcUnit">${['порция','шт','чел','комплект','л'].map(u=>`<option value="${u}" ${c.unit===u?'selected':''}>${u}</option>`).join('')}</select></div>
     </div>
@@ -2071,6 +2092,7 @@ async function saveCatering(id){
     name:document.getElementById('fcName').value,
     category:document.getElementById('fcCat').value,
     unitPrice:+document.getElementById('fcPrice').value,
+    costPrice:+document.getElementById('fcCostPrice').value||0,
     unit:document.getElementById('fcUnit').value,
     description:document.getElementById('fcDesc').value,
   };
@@ -2364,6 +2386,58 @@ function renderFinance(){
       <td style="color:${p>=0?'var(--primary)':'var(--red)'};font-weight:600">${fmtMoney(p)}</td>
     </tr>`;
   }).join(''):'<tr><td colspan="6" class="empty">Нет финансовых данных</td></tr>';
+
+  // === CATERING FINANCE ===
+  const costMap={};
+  data.catering.forEach(c=>{costMap[c.id]=c.costPrice||0;});
+  let catLeads=data.leads.filter(l=>l.cateringMenu&&(l.status==='done'||l.cateringMenu.grandTotal>0));
+  if(dateFrom)catLeads=catLeads.filter(l=>(l.eventDate||l.createdAt)>=dateFrom);
+  if(dateTo)catLeads=catLeads.filter(l=>(l.eventDate||l.createdAt)<=dateTo);
+  if(typeFilter)catLeads=catLeads.filter(l=>l.eventType===typeFilter);
+
+  let catRevenue=0,catCost=0;
+  const catDetails=catLeads.map(l=>{
+    const m=l.cateringMenu;
+    const rev=m.grandTotal||0;
+    let cost=0;
+    (m.items||[]).filter(i=>i.qty>0&&i.category!=='service').forEach(i=>{
+      cost+=(costMap[i.id]||0)*i.qty;
+    });
+    catRevenue+=rev;catCost+=cost;
+    return{lead:l,rev,cost,profit:rev-cost};
+  });
+  const catProfit=catRevenue-catCost;
+  const catAvg=catDetails.length?Math.round(catRevenue/catDetails.length):0;
+
+  document.getElementById('finCatRevenue').textContent=fmtMoney(catRevenue);
+  document.getElementById('finCatCost').textContent=fmtMoney(catCost);
+  document.getElementById('finCatProfit').textContent=fmtMoney(catProfit);
+  document.getElementById('finCatAvg').textContent=fmtMoney(catAvg);
+
+  const catByType={};
+  catDetails.forEach(d=>{
+    const t=d.lead.eventType||'other';
+    if(!catByType[t])catByType[t]={revenue:0,count:0};
+    catByType[t].revenue+=d.rev;catByType[t].count++;
+  });
+  const catMaxRev=Math.max(...Object.values(catByType).map(v=>v.revenue),1);
+  document.getElementById('finCatByType').innerHTML=Object.entries(catByType).map(([t,v])=>`
+    <div class="fin-bar-row">
+      <div class="fin-bar-label">${EV[t]||t}</div>
+      <div class="fin-bar-track"><div class="fin-bar-fill" style="width:${(v.revenue/catMaxRev*100).toFixed(1)}%;background:${colors[t]||'var(--text)'}">${v.count} шт</div></div>
+      <div class="fin-bar-val">${fmtMoney(v.revenue)}</div>
+    </div>`).join('')||'<p style="color:var(--text);text-align:center;padding:1rem">Нет данных по кейтерингу</p>';
+
+  document.getElementById('finCatTable').innerHTML=catDetails.length?[...catDetails].sort((a,b)=>new Date(b.lead.eventDate||b.lead.createdAt)-new Date(a.lead.eventDate||a.lead.createdAt)).map(d=>`
+    <tr>
+      <td>${fmtDate(d.lead.eventDate||d.lead.createdAt)}</td>
+      <td style="color:var(--white);font-weight:500">${esc(d.lead.name)}</td>
+      <td>${EV[d.lead.eventType]||'-'}</td>
+      <td>${d.lead.cateringMenu.guests||'-'}</td>
+      <td style="color:var(--green)">${fmtMoney(d.rev)}</td>
+      <td style="color:var(--red)">${fmtMoney(d.cost)}</td>
+      <td style="color:${d.profit>=0?'var(--primary)':'var(--red)'};font-weight:600">${fmtMoney(d.profit)}</td>
+    </tr>`).join(''):'<tr><td colspan="7" class="empty">Нет данных по кейтерингу</td></tr>';
 }
 
 // === DOCS ===
