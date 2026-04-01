@@ -116,6 +116,8 @@
     .status-progress{background:var(--yellow-bg);color:var(--yellow)}
     .status-done{background:var(--green-bg);color:var(--green)}
     .status-cancelled{background:var(--red-bg);color:var(--red)}
+    .status-approval{background:var(--purple-bg);color:var(--purple)}
+    .status-approved{background:var(--green-bg);color:var(--green)}
     .venue-badge{display:inline-block;padding:0.15rem 0.5rem;border-radius:4px;font-size:0.68rem;font-weight:500}
     .venue-indoor{background:var(--blue-bg);color:var(--blue)}
     .venue-outdoor{background:var(--green-bg);color:var(--green)}
@@ -393,6 +395,8 @@
     <button class="nav-item" data-page="equipment"><span class="icon">&#128266;</span><span>Оборудование</span></button>
     <button class="nav-item" data-page="inventory"><span class="icon">&#127922;</span><span>Реквизит</span></button>
     <button class="nav-item" data-page="catering"><span class="icon">&#127860;</span><span>Кейтеринг</span></button>
+    <div class="nav-group">Прочее</div>
+    <button class="nav-item" data-page="other" data-min-role="admin"><span class="icon">&#128221;</span><span>Прочая деят-ть</span></button>
     <div class="nav-group">Инструменты</div>
     <button class="nav-item" data-page="proposal"><span class="icon">&#9889;</span><span>Генератор</span></button>
     <button class="nav-item" data-page="docs"><span class="icon">&#128196;</span><span>Печатные формы</span></button>
@@ -643,6 +647,35 @@
       </div>
     </div>
 
+    <!-- OTHER ACTIVITIES -->
+    <div class="page" id="page-other">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.5rem">
+        <!-- INCOME/EXPENSES -->
+        <div>
+          <div class="table-wrap">
+            <div class="table-header"><h3>Доходы и расходы</h3></div>
+            <div style="padding:0.8rem 1.2rem;display:flex;gap:0.5rem">
+              <button class="btn btn-sm btn-primary" onclick="openOtherEntryModal('income')">+ Доход</button>
+              <button class="btn btn-sm btn-danger" onclick="openOtherEntryModal('expense')">+ Расход</button>
+            </div>
+            <table><thead><tr><th>Дата</th><th>Описание</th><th>Тип</th><th>Сумма</th><th></th></tr></thead>
+            <tbody id="otherEntriesTable"></tbody></table>
+          </div>
+        </div>
+        <!-- TODO LIST -->
+        <div>
+          <div class="table-wrap">
+            <div class="table-header"><h3>To-Do лист</h3></div>
+            <div style="padding:0.8rem 1.2rem">
+              <button class="btn btn-sm btn-primary" onclick="openTodoModal()">+ Задача</button>
+            </div>
+            <table><thead><tr><th></th><th>Задача</th><th>Исполнитель</th><th>Срок</th><th></th></tr></thead>
+            <tbody id="otherTodoTable"></tbody></table>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <!-- FINANCE -->
     <div class="page" id="page-finance">
       <div class="fin-filters">
@@ -692,6 +725,19 @@
         <table><thead><tr><th>Дата</th><th>Клиент</th><th>Тип</th><th>Персон</th><th>Выручка</th><th>Себестоимость</th><th>Прибыль</th></tr></thead>
         <tbody id="finCatTable"></tbody></table>
       </div>
+
+      <h3 style="color:var(--white);margin:2rem 0 1rem;font-size:1rem">&#128221; Прочая деятельность</h3>
+      <div class="fin-grid">
+        <div class="fin-card fin-revenue"><div class="fin-label">Доходы (прочее)</div><div class="fin-value" id="finOtherIncome">0</div></div>
+        <div class="fin-card fin-expenses"><div class="fin-label">Расходы (прочее)</div><div class="fin-value" id="finOtherExpense">0</div></div>
+        <div class="fin-card fin-profit"><div class="fin-label">Баланс (прочее)</div><div class="fin-value" id="finOtherBalance">0</div></div>
+        <div class="fin-card fin-avg"><div class="fin-label">Записей</div><div class="fin-value" id="finOtherCount">0</div></div>
+      </div>
+      <div class="table-wrap">
+        <div class="table-header"><h3>Прочее — детализация</h3></div>
+        <table><thead><tr><th>Дата</th><th>Описание</th><th>Тип</th><th>Сумма</th></tr></thead>
+        <tbody id="finOtherTable"></tbody></table>
+      </div>
     </div>
 
   </div>
@@ -713,10 +759,10 @@
 <script>
 const API='';
 let currentPage='dashboard', currentRole='ceo', currentUser='', currentLinkedId='';
-let data={leads:[],contests:[],hosts:[],locations:[],equipment:[],inventory:[],scenarios:[],djs:[],users:[],catering:[]};
+let data={leads:[],contests:[],hosts:[],locations:[],equipment:[],inventory:[],scenarios:[],djs:[],users:[],catering:[],other:[]};
 
 const EV={birthday:'День рождения',kids:'Детский праздник',newyear:'Новый год',corporate:'Корпоратив',wedding:'Свадьба',other:'Другое'};
-const ST={new:'Новая',progress:'В работе',done:'Завершена',cancelled:'Отменена'};
+const ST={new:'Новая',progress:'В работе',approval:'На согласовании',approved:'Согласована',done:'Завершена',cancelled:'Отменена'};
 const VN={indoor:'Помещение',outdoor:'Улица',both:'Любое'};
 const ROLES={ceo:'Генеральный директор',admin:'Администратор',host:'Ведущий',dj:'Ди-джей',catering:'Кейтеринг'};
 const ROLE_LEVELS={dj:1,host:1,catering:1,admin:2,ceo:3};
@@ -922,8 +968,8 @@ async function syncOfflineQueue(){
 }
 
 async function loadAll(){
-  [data.leads,data.contests,data.hosts,data.locations,data.equipment,data.inventory,data.scenarios,data.djs,data.users,data.catering]=await Promise.all([
-    apiCall('leads'),apiCall('contests'),apiCall('hosts'),apiCall('locations'),apiCall('equipment'),apiCall('inventory'),apiCall('scenarios'),apiCall('djs'),apiCall('users'),apiCall('catering')
+  [data.leads,data.contests,data.hosts,data.locations,data.equipment,data.inventory,data.scenarios,data.djs,data.users,data.catering,data.other]=await Promise.all([
+    apiCall('leads'),apiCall('contests'),apiCall('hosts'),apiCall('locations'),apiCall('equipment'),apiCall('inventory'),apiCall('scenarios'),apiCall('djs'),apiCall('users'),apiCall('catering'),apiCall('other')
   ]);
   render();
 }
@@ -955,6 +1001,7 @@ const PAGES={
   catering:{title:'Кейтеринг',btn:{label:'+ Добавить позицию',action:()=>openCateringModal()}},
   proposal:{title:'Генератор предложений',btn:null},
   docs:{title:'Печатные формы',btn:null},
+  other:{title:'Прочая деятельность',btn:null},
   finance:{title:'Финансы',btn:null},
   users:{title:'Юзеры',btn:{label:'+ Добавить юзера',action:()=>openUserModal()}},
 };
@@ -973,6 +1020,7 @@ document.querySelectorAll('.nav-item[data-page]').forEach(btn=>{
     if(cfg&&canEdit()){const b=document.createElement('button');b.className='btn btn-primary';b.textContent=cfg.label;b.onclick=cfg.action;ta.appendChild(b);}
     if(currentPage==='calendar')renderCalendar();
     if(currentPage==='finance')renderFinance();
+    if(currentPage==='other')renderOther();
     render();
   });
 });
@@ -1054,7 +1102,7 @@ function render(){
       <td>${esc(l.guests||'-')}</td>
       <td>${esc(l.budget||'-')}</td>
       <td>${canEdit()?`<select onchange="updateStatus('${l.id}',this.value)" style="background:var(--bg3);border:1px solid var(--border);color:var(--text2);border-radius:6px;padding:0.2rem 0.4rem;font-size:0.72rem;font-family:inherit">
-        ${['new','progress','done','cancelled'].map(s=>`<option value="${s}" ${(l.status||'new')===s?'selected':''}>${ST[s]}</option>`).join('')}</select>`:`<span class="status status-${l.status||'new'}">${ST[l.status||'new']}</span>`}</td>
+        ${['new','progress','approval','approved','done','cancelled'].map(s=>`<option value="${s}" ${(l.status||'new')===s?'selected':''}>${ST[s]}</option>`).join('')}</select>`:`<span class="status status-${l.status||'new'}">${ST[l.status||'new']}</span>`}</td>
       <td><div class="actions">
         ${canEdit()?`<button class="act-btn" onclick="openLeadModal('${l.id}')" title="Редактировать">&#9998;</button>
         <button class="act-btn del" onclick="deleteItem('leads','${l.id}')" title="Удалить">&times;</button>`:''}
@@ -1216,37 +1264,40 @@ document.getElementById('modal').addEventListener('click',e=>{if(e.target===e.cu
 // === LEAD MODAL ===
 function openLeadModal(id){
   const l=id?data.leads.find(x=>x.id===id):{};
-  openModal(id?'Редактировать заявку':'Новая заявка',`
+  const locked=l.status==='approved'&&currentRole!=='ceo';
+  const dis=locked?'disabled':'';
+  openModal(id?(locked?'Просмотр заявки (согласована)':'Редактировать заявку'):'Новая заявка',`
+    ${locked?'<div style="background:var(--green-bg);color:var(--green);padding:0.5rem 0.8rem;border-radius:8px;font-size:0.78rem;margin-bottom:1rem;font-weight:600">&#128274; Заявка согласована генеральным директором и не подлежит редактированию</div>':''}
     <div class="form-row">
-      <div class="form-group"><label>Имя</label><input id="fName" value="${esc(l.name||'')}"></div>
-      <div class="form-group"><label>Телефон</label><input id="fPhone" value="${esc(l.phone||'')}"></div>
+      <div class="form-group"><label>Имя</label><input id="fName" value="${esc(l.name||'')}" ${dis}></div>
+      <div class="form-group"><label>Телефон</label><input id="fPhone" value="${esc(l.phone||'')}" ${dis}></div>
     </div>
     <div class="form-row-3">
       <div class="form-group"><label>Тип мероприятия</label>
-        <select id="fType">${Object.entries(EV).map(([k,v])=>`<option value="${k}" ${l.eventType===k?'selected':''}>${v}</option>`).join('')}</select></div>
-      <div class="form-group"><label>Кол-во гостей</label><input id="fGuests" value="${esc(l.guests||'')}"></div>
-      <div class="form-group"><label>Бюджет</label><input id="fBudget" value="${esc(l.budget||'')}"></div>
+        <select id="fType" ${dis}>${Object.entries(EV).map(([k,v])=>`<option value="${k}" ${l.eventType===k?'selected':''}>${v}</option>`).join('')}</select></div>
+      <div class="form-group"><label>Кол-во гостей</label><input id="fGuests" value="${esc(l.guests||'')}" ${dis}></div>
+      <div class="form-group"><label>Бюджет</label><input id="fBudget" value="${esc(l.budget||'')}" ${dis}></div>
     </div>
     <div class="form-row-3">
-      <div class="form-group"><label>Дата мероприятия</label><input type="date" id="fDate" value="${esc(l.eventDate||l.date||'')}"></div>
-      <div class="form-group"><label>Бюджет на кейтеринг (₸)</label><input type="number" id="fCateringBudget" value="${l.cateringBudget||0}"></div>
+      <div class="form-group"><label>Дата мероприятия</label><input type="date" id="fDate" value="${esc(l.eventDate||l.date||'')}" ${dis}></div>
+      <div class="form-group"><label>Бюджет на кейтеринг (₸)</label><input type="number" id="fCateringBudget" value="${l.cateringBudget||0}" ${dis}></div>
       <div class="form-group"><label>Статус</label>
-        <select id="fStatus">${['new','progress','done','cancelled'].map(s=>`<option value="${s}" ${(l.status||'new')===s?'selected':''}>${ST[s]}</option>`).join('')}</select></div>
+        <select id="fStatus" ${dis}>${['new','progress','approval','approved','done','cancelled'].map(s=>`<option value="${s}" ${(l.status||'new')===s?'selected':''}>${ST[s]}</option>`).join('')}</select></div>
     </div>
     ${canFinance()?`<div class="form-row">
-      <div class="form-group"><label>Выручка (тг)</label><input type="number" id="fRevenue" value="${l.revenue||0}"></div>
-      <div class="form-group"><label>Расходы (тг)</label><input type="number" id="fExpenses" value="${l.expenses||0}"></div>
+      <div class="form-group"><label>Выручка (тг)</label><input type="number" id="fRevenue" value="${l.revenue||0}" ${dis}></div>
+      <div class="form-group"><label>Расходы (тг)</label><input type="number" id="fExpenses" value="${l.expenses||0}" ${dis}></div>
     </div>`:''}
     <div class="form-row-3">
       <div class="form-group"><label>Ведущий</label>
-        <select id="fHost"><option value="">— Не назначен —</option>${data.hosts.map(h=>`<option value="${h.id}" ${l.hostId===h.id?'selected':''}>${h.name}</option>`).join('')}</select></div>
+        <select id="fHost" ${dis}><option value="">— Не назначен —</option>${data.hosts.map(h=>`<option value="${h.id}" ${l.hostId===h.id?'selected':''}>${h.name}</option>`).join('')}</select></div>
       <div class="form-group"><label>Ди-джей</label>
-        <select id="fDj"><option value="">— Не назначен —</option>${data.djs.map(d=>`<option value="${d.id}" ${l.djId===d.id?'selected':''}>${d.name}</option>`).join('')}</select></div>
+        <select id="fDj" ${dis}><option value="">— Не назначен —</option>${data.djs.map(d=>`<option value="${d.id}" ${l.djId===d.id?'selected':''}>${d.name}</option>`).join('')}</select></div>
       <div class="form-group"><label>Локация</label>
-        <select id="fLocation"><option value="">— Не выбрана —</option>${data.locations.map(x=>`<option value="${x.id}" ${l.locationId===x.id?'selected':''}>${x.name}</option>`).join('')}</select></div>
+        <select id="fLocation" ${dis}><option value="">— Не выбрана —</option>${data.locations.map(x=>`<option value="${x.id}" ${l.locationId===x.id?'selected':''}>${x.name}</option>`).join('')}</select></div>
     </div>
-    <div class="form-group"><label>Комментарий</label><textarea id="fComment">${esc(l.comment||'')}</textarea></div>
-    <div class="form-group"><label>Источник</label><input id="fSource" value="${esc(l.source||'')}"></div>
+    <div class="form-group"><label>Комментарий</label><textarea id="fComment" ${dis}>${esc(l.comment||'')}</textarea></div>
+    <div class="form-group"><label>Источник</label><input id="fSource" value="${esc(l.source||'')}" ${dis}></div>
     <div class="booking-section">
       <h4>&#128274; Бронирование оборудования</h4>
       <div class="booking-date-warn" id="bookingWarn"></div>
@@ -1279,8 +1330,9 @@ function openLeadModal(id){
       ${(l.cateringMenu.items||[]).filter(i=>i.category==='service'&&i.total>0).map(i=>`<div class="cil-row"><span>${esc(i.name)} (${i.unitPrice}%)</span><span>${(i.total||0).toLocaleString('ru-RU')} ₸</span></div>`).join('')}
       <div class="cil-total">Итого: ${(l.cateringMenu.grandTotal||0).toLocaleString('ru-RU')} ₸</div>
     </div>`:''}
-  `,`<button class="btn btn-secondary" onclick="closeModal()">Отмена</button>
-    <button class="btn btn-primary" onclick="saveLead('${id||''}')">${id?'Сохранить':'Добавить'}</button>`);
+  `,`<button class="btn btn-secondary" onclick="closeModal()">${locked?'Закрыть':'Отмена'}</button>
+    ${locked?'':`<button class="btn btn-primary" onclick="saveLead('${id||''}')">${id?'Сохранить':'Добавить'}</button>`}
+    ${id&&l.status==='approval'&&currentRole==='ceo'?`<button class="btn btn-green" onclick="approveLead('${id}')">&#10003; Согласовать</button>`:''}`);
   const dateInput=document.getElementById('fDate');
   if(dateInput.value)checkAvailability(dateInput.value,id||'');
   dateInput.addEventListener('change',()=>checkAvailability(dateInput.value,id||''));
@@ -1313,6 +1365,10 @@ async function saveLead(id){
   closeModal();await loadAll();
 }
 async function updateStatus(id,status){await apiCall('leads/'+id,'PUT',{status});await loadAll();}
+async function approveLead(id){
+  await apiCall('leads/'+id,'PUT',{status:'approved'});
+  closeModal();await loadAll();
+}
 
 // === CONTEST MODAL ===
 function openContestModal(id){
@@ -2340,6 +2396,96 @@ function renderCalendar(){
 }
 
 // === FINANCE ===
+// === OTHER ACTIVITIES ===
+function renderOther(){
+  const entries=(data.other||[]).filter(o=>o.type==='income'||o.type==='expense');
+  const todos=(data.other||[]).filter(o=>o.type==='todo');
+
+  document.getElementById('otherEntriesTable').innerHTML=entries.length?
+    [...entries].sort((a,b)=>new Date(b.date||b.createdAt)-new Date(a.date||a.createdAt)).map(e=>`<tr>
+      <td>${fmtDate(e.date||e.createdAt)}</td>
+      <td style="color:var(--white);font-weight:500">${esc(e.description||'-')}</td>
+      <td><span class="status ${e.type==='income'?'status-done':'status-cancelled'}">${e.type==='income'?'Доход':'Расход'}</span></td>
+      <td style="font-weight:600;color:${e.type==='income'?'var(--green)':'var(--red)'}">${e.type==='income'?'+':'−'}${(e.amount||0).toLocaleString('ru-RU')} ₸</td>
+      <td>${canEdit()?`<div class="actions">
+        <button class="act-btn" onclick="openOtherEntryModal('${e.type}','${e.id}')" title="Редактировать">&#9998;</button>
+        <button class="act-btn del" onclick="deleteItem('other','${e.id}')" title="Удалить">&times;</button>
+      </div>`:''}</td>
+    </tr>`).join(''):'<tr><td colspan="5" class="empty">Нет записей</td></tr>';
+
+  document.getElementById('otherTodoTable').innerHTML=todos.length?
+    [...todos].sort((a,b)=>(a.done?1:0)-(b.done?1:0)||(new Date(a.deadline||'9999')-new Date(b.deadline||'9999'))).map(t=>`<tr style="${t.done?'opacity:0.5':''}">
+      <td><button class="manual-check${t.done?' checked':''}" onclick="toggleTodoDone('${t.id}')" style="width:24px;height:24px">${t.done?'&#10003;':''}</button></td>
+      <td style="color:var(--white);font-weight:500;${t.done?'text-decoration:line-through':''}">${esc(t.task||'-')}</td>
+      <td>${esc(t.executor||'—')}</td>
+      <td>${t.deadline?fmtDate(t.deadline):'—'}</td>
+      <td>${canEdit()?`<div class="actions">
+        <button class="act-btn" onclick="openTodoModal('${t.id}')" title="Редактировать">&#9998;</button>
+        <button class="act-btn del" onclick="deleteItem('other','${t.id}')" title="Удалить">&times;</button>
+      </div>`:''}</td>
+    </tr>`).join(''):'<tr><td colspan="5" class="empty">Нет задач</td></tr>';
+}
+
+function openOtherEntryModal(type,id){
+  const e=id?(data.other||[]).find(x=>x.id===id):{};
+  openModal(type==='income'?'Доход':'Расход',`
+    <div class="form-group"><label>Описание</label><input id="oeDesc" value="${esc(e.description||'')}"></div>
+    <div class="form-row">
+      <div class="form-group"><label>Сумма (₸)</label><input type="number" id="oeAmount" value="${e.amount||0}"></div>
+      <div class="form-group"><label>Дата</label><input type="date" id="oeDate" value="${e.date||new Date().toISOString().slice(0,10)}"></div>
+    </div>
+    <div class="form-group"><label>Комментарий</label><textarea id="oeComment">${esc(e.comment||'')}</textarea></div>
+  `,`<button class="btn btn-secondary" onclick="closeModal()">Отмена</button>
+    <button class="btn btn-primary" onclick="saveOtherEntry('${type}','${id||''}')">${id?'Сохранить':'Добавить'}</button>`);
+}
+async function saveOtherEntry(type,id){
+  const body={
+    type,
+    description:document.getElementById('oeDesc').value,
+    amount:+document.getElementById('oeAmount').value,
+    date:document.getElementById('oeDate').value,
+    comment:document.getElementById('oeComment').value,
+  };
+  await apiCall(id?'other/'+id:'other',id?'PUT':'POST',body);
+  closeModal();await loadAll();
+}
+
+function openTodoModal(id){
+  const t=id?(data.other||[]).find(x=>x.id===id):{};
+  const users=data.users||[];
+  openModal(id?'Редактировать задачу':'Новая задача',`
+    <div class="form-group"><label>Задача</label><input id="otTask" value="${esc(t.task||'')}"></div>
+    <div class="form-row">
+      <div class="form-group"><label>Исполнитель</label>
+        <select id="otExecutor">
+          <option value="">— Не назначен —</option>
+          ${users.map(u=>`<option value="${esc(u.name)}" ${t.executor===u.name?'selected':''}>${esc(u.name)} (${ROLES[u.role]||u.role})</option>`).join('')}
+        </select></div>
+      <div class="form-group"><label>Срок</label><input type="date" id="otDeadline" value="${t.deadline||''}"></div>
+    </div>
+    <div class="form-group"><label>Комментарий</label><textarea id="otComment">${esc(t.comment||'')}</textarea></div>
+  `,`<button class="btn btn-secondary" onclick="closeModal()">Отмена</button>
+    <button class="btn btn-primary" onclick="saveTodo('${id||''}')">${id?'Сохранить':'Добавить'}</button>`);
+}
+async function saveTodo(id){
+  const body={
+    type:'todo',
+    task:document.getElementById('otTask').value,
+    executor:document.getElementById('otExecutor').value,
+    deadline:document.getElementById('otDeadline').value,
+    comment:document.getElementById('otComment').value,
+    done:false,
+  };
+  if(id){const existing=(data.other||[]).find(x=>x.id===id);if(existing)body.done=existing.done;}
+  await apiCall(id?'other/'+id:'other',id?'PUT':'POST',body);
+  closeModal();await loadAll();
+}
+async function toggleTodoDone(id){
+  const t=(data.other||[]).find(x=>x.id===id);if(!t)return;
+  await apiCall('other/'+id,'PUT',{done:!t.done});
+  await loadAll();
+}
+
 function renderFinance(){
   const dateFrom=document.getElementById('finDateFrom')?.value||'';
   const dateTo=document.getElementById('finDateTo')?.value||'';
@@ -2438,6 +2584,24 @@ function renderFinance(){
       <td style="color:var(--red)">${fmtMoney(d.cost)}</td>
       <td style="color:${d.profit>=0?'var(--primary)':'var(--red)'};font-weight:600">${fmtMoney(d.profit)}</td>
     </tr>`).join(''):'<tr><td colspan="7" class="empty">Нет данных по кейтерингу</td></tr>';
+
+  // === OTHER FINANCE ===
+  let otherEntries=(data.other||[]).filter(o=>o.type==='income'||o.type==='expense');
+  if(dateFrom)otherEntries=otherEntries.filter(o=>(o.date||o.createdAt)>=dateFrom);
+  if(dateTo)otherEntries=otherEntries.filter(o=>(o.date||o.createdAt)<=dateTo);
+  const otherIncome=otherEntries.filter(o=>o.type==='income').reduce((s,o)=>s+(o.amount||0),0);
+  const otherExpense=otherEntries.filter(o=>o.type==='expense').reduce((s,o)=>s+(o.amount||0),0);
+  document.getElementById('finOtherIncome').textContent=fmtMoney(otherIncome);
+  document.getElementById('finOtherExpense').textContent=fmtMoney(otherExpense);
+  document.getElementById('finOtherBalance').textContent=fmtMoney(otherIncome-otherExpense);
+  document.getElementById('finOtherCount').textContent=otherEntries.length;
+  document.getElementById('finOtherTable').innerHTML=otherEntries.length?
+    [...otherEntries].sort((a,b)=>new Date(b.date||b.createdAt)-new Date(a.date||a.createdAt)).map(e=>`<tr>
+      <td>${fmtDate(e.date||e.createdAt)}</td>
+      <td style="color:var(--white);font-weight:500">${esc(e.description||'-')}</td>
+      <td><span class="status ${e.type==='income'?'status-done':'status-cancelled'}">${e.type==='income'?'Доход':'Расход'}</span></td>
+      <td style="font-weight:600;color:${e.type==='income'?'var(--green)':'var(--red)'}">${e.type==='income'?'+':'−'}${fmtMoney(e.amount||0)}</td>
+    </tr>`).join(''):'<tr><td colspan="4" class="empty">Нет записей</td></tr>';
 }
 
 // === DOCS ===
