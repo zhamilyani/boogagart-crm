@@ -1355,9 +1355,6 @@ function viewLead(id){
   if(l.bookedEquipment?.length){
     html+=`<div style="margin-top:0.8rem;font-size:0.8rem"><span style="color:var(--text)">Оборудование:</span> <span style="color:var(--text2)">${l.bookedEquipment.map(id=>{const e=data.equipment.find(x=>x.id===id);return e?esc(e.name):id;}).join(', ')}</span></div>`;
   }
-  if(l.bookedInventory?.length){
-    html+=`<div style="margin-top:0.4rem;font-size:0.8rem"><span style="color:var(--text)">Реквизит:</span> <span style="color:var(--text2)">${l.bookedInventory.map(id=>{const i=data.inventory.find(x=>x.id===id);return i?esc(i.name):id;}).join(', ')}</span></div>`;
-  }
   if(l.cateringMenu){
     const m=l.cateringMenu;
     const cnt=(m.items||[]).filter(i=>i.qty>0&&i.category!=='service').length;
@@ -1431,14 +1428,6 @@ function openLeadModal(id){
           <span class="bk-check">${(l.bookedEquipment||[]).includes(e.id)?'&#10003;':''}</span>
           <span class="bk-name">${esc(e.name)}${e.description?`<br><span style="font-size:0.65rem;color:var(--text);font-weight:400">${esc(e.description)}</span>`:''}</span>
           <span class="bk-avail ok">${e.quantity} шт</span>
-        </div>`).join('')}
-      </div>
-      <h4 style="margin-top:1rem">&#127922; Бронирование реквизита</h4>
-      <div class="booking-grid" id="bookingInvGrid">
-        ${data.inventory.map(i=>`<div class="booking-item${(l.bookedInventory||[]).includes(i.id)?' selected':''}" data-id="${i.id}" onclick="toggleBooking(this,'inv')">
-          <span class="bk-check">${(l.bookedInventory||[]).includes(i.id)?'&#10003;':''}</span>
-          <span class="bk-name">${esc(i.name)}${i.description?`<br><span style="font-size:0.65rem;color:var(--text);font-weight:400">${esc(i.description)}</span>`:''}</span>
-          <span class="bk-avail ok">${i.quantity} шт</span>
         </div>`).join('')}
       </div>
       <div class="conflict-list" id="conflictList"></div>
