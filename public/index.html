@@ -395,7 +395,6 @@
     <button class="nav-item" data-page="djs"><span class="icon">&#127911;</span><span>Ди-джеи</span></button>
     <button class="nav-item" data-page="locations"><span class="icon">&#127968;</span><span>Локации</span></button>
     <button class="nav-item" data-page="equipment"><span class="icon">&#128266;</span><span>Оборудование</span></button>
-    <button class="nav-item" data-page="inventory"><span class="icon">&#127922;</span><span>Реквизит</span></button>
     <button class="nav-item" data-page="catering"><span class="icon">&#127860;</span><span>Кейтеринг</span></button>
     <div class="nav-group">Прочее</div>
     <button class="nav-item" data-page="other" data-min-role="admin"><span class="icon">&#128221;</span><span>Прочая деят-ть</span></button>
@@ -536,15 +535,6 @@
         <div class="table-header"><h3>Оборудование (техника)</h3></div>
         <table><thead><tr><th>Название</th><th>Категория</th><th>Кол-во</th><th>Описание</th><th></th></tr></thead>
         <tbody id="equipmentTable"></tbody></table>
-      </div>
-    </div>
-
-    <!-- INVENTORY -->
-    <div class="page" id="page-inventory">
-      <div class="table-wrap">
-        <div class="table-header"><h3>Реквизит и инвентарь</h3></div>
-        <table><thead><tr><th>Название</th><th>Категория</th><th>Кол-во</th><th></th></tr></thead>
-        <tbody id="inventoryTable"></tbody></table>
       </div>
     </div>
 
@@ -999,7 +989,6 @@ const PAGES={
   djs:{title:'Ди-джеи',btn:{label:'+ Добавить ди-джея',action:()=>openDjModal()}},
   locations:{title:'Локации',btn:{label:'+ Добавить локацию',action:()=>openLocationModal()}},
   equipment:{title:'Оборудование',btn:{label:'+ Добавить оборудование',action:()=>openEquipmentModal()}},
-  inventory:{title:'Реквизит',btn:{label:'+ Добавить реквизит',action:()=>openInventoryModal()}},
   catering:{title:'Кейтеринг',btn:{label:'+ Добавить позицию',action:()=>openCateringModal()}},
   proposal:{title:'Генератор предложений',btn:null},
   docs:{title:'Печатные формы',btn:null},
