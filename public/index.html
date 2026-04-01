@@ -1229,18 +1229,6 @@ function render(){
       </div>`:''}</td>
     </tr>`).join(''):'<tr><td colspan="5" class="empty"><div class="empty-icon">&#128266;</div>Добавьте оборудование</td></tr>';
 
-  // Inventory
-  document.getElementById('inventoryTable').innerHTML=data.inventory.length?data.inventory.map(i=>`
-    <tr>
-      <td style="color:var(--white);font-weight:500">${esc(i.name)}</td>
-      <td><span class="inv-cat inv-cat-${i.category||''}">${esc(i.category||'-')}</span></td>
-      <td>${i.quantity||1} шт</td>
-      <td>${canEdit()?`<div class="actions">
-        <button class="act-btn" onclick="openInventoryModal('${i.id}')" title="Редактировать">&#9998;</button>
-        <button class="act-btn del" onclick="deleteItem('inventory','${i.id}')" title="Удалить">&times;</button>
-      </div>`:''}</td>
-    </tr>`).join(''):'<tr><td colspan="4" class="empty"><div class="empty-icon">&#127922;</div>Добавьте реквизит</td></tr>';
-
   // Catering
   renderCateringTable();
 
