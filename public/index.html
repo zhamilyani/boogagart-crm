@@ -421,6 +421,7 @@
   <div class="topbar">
     <h1 id="pageTitle">Дашборд</h1>
     <div class="topbar-actions" id="topbarActions">
+      <button class="theme-btn" onclick="openTodoPanel()" title="To-Do лист" id="todoBtnTop" style="position:relative">&#9745;<span id="todoBadge" style="display:none;position:absolute;top:-4px;right:-4px;background:var(--red);color:#fff;font-size:0.55rem;font-weight:700;min-width:16px;height:16px;border-radius:8px;display:none;align-items:center;justify-content:center"></span></button>
       <button class="theme-btn" onclick="toggleTheme()" title="Сменить тему"><span class="tb-dark">&#127769;</span><span class="tb-light">&#9728;&#65039;</span></button>
     </div>
   </div>
@@ -668,30 +669,14 @@
         <h4>Расходы по категориям</h4>
         <div id="otherExpByCategory"></div>
       </div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.5rem">
-        <!-- INCOME/EXPENSES -->
-        <div>
-          <div class="table-wrap">
-            <div class="table-header"><h3>Доходы и расходы</h3></div>
-            <div style="padding:0.8rem 1.2rem;display:flex;gap:0.5rem">
-              <button class="btn btn-sm btn-primary" onclick="openOtherEntryModal('income')">+ Доход</button>
-              <button class="btn btn-sm btn-danger" onclick="openOtherEntryModal('expense')">+ Расход</button>
-            </div>
-            <table><thead><tr><th>Дата</th><th>Описание</th><th>Тип</th><th>Категория</th><th>Сумма</th><th></th></tr></thead>
-            <tbody id="otherEntriesTable"></tbody></table>
-          </div>
+      <div class="table-wrap">
+        <div class="table-header"><h3>Доходы и расходы</h3></div>
+        <div style="padding:0.8rem 1.2rem;display:flex;gap:0.5rem">
+          <button class="btn btn-sm btn-primary" onclick="openOtherEntryModal('income')">+ Доход</button>
+          <button class="btn btn-sm btn-danger" onclick="openOtherEntryModal('expense')">+ Расход</button>
         </div>
-        <!-- TODO LIST -->
-        <div>
-          <div class="table-wrap">
-            <div class="table-header"><h3>To-Do лист</h3></div>
-            <div style="padding:0.8rem 1.2rem">
-              <button class="btn btn-sm btn-primary" onclick="openTodoModal()">+ Задача</button>
-            </div>
-            <table><thead><tr><th></th><th>Задача</th><th>Исполнитель</th><th>Срок</th><th></th></tr></thead>
-            <tbody id="otherTodoTable"></tbody></table>
-          </div>
-        </div>
+        <table><thead><tr><th>Дата</th><th>Описание</th><th>Тип</th><th>Категория</th><th>Сумма</th><th></th></tr></thead>
+        <tbody id="otherEntriesTable"></tbody></table>
       </div>
     </div>
 
@@ -2628,17 +2613,36 @@ function renderOther(){
       </div>`:''}</td>
     </tr>`).join(''):'<tr><td colspan="6" class="empty">Нет записей</td></tr>';
 
-  document.getElementById('otherTodoTable').innerHTML=todos.length?
-    [...todos].sort((a,b)=>(a.done?1:0)-(b.done?1:0)||(new Date(a.deadline||'9999')-new Date(b.deadline||'9999'))).map(t=>`<tr style="${t.done?'opacity:0.5':''}">
-      <td><button class="manual-check${t.done?' checked':''}" onclick="toggleTodoDone('${t.id}')" style="width:24px;height:24px">${t.done?'&#10003;':''}</button></td>
-      <td style="color:var(--white);font-weight:500;${t.done?'text-decoration:line-through':''}">${esc(t.task||'-')}</td>
-      <td>${esc(t.executor||'—')}</td>
-      <td>${t.deadline?fmtDate(t.deadline):'—'}</td>
-      <td>${canEdit()?`<div class="actions">
-        <button class="act-btn" onclick="openTodoModal('${t.id}')" title="Редактировать">&#9998;</button>
-        <button class="act-btn del" onclick="deleteItem('other','${t.id}')" title="Удалить">&times;</button>
-      </div>`:''}</td>
-    </tr>`).join(''):'<tr><td colspan="5" class="empty">Нет задач</td></tr>';
+  // Update todo badge
+  const openTodos2=todos.filter(t=>!t.done).length;
+  const badge=document.getElementById('todoBadge');
+  if(badge){badge.style.display=openTodos2>0?'flex':'none';badge.textContent=openTodos2;}
+}
+
+function openTodoPanel(){
+  const todos=(data.other||[]).filter(o=>o.type==='todo');
+  const sorted=[...todos].sort((a,b)=>(a.done?1:0)-(b.done?1:0)||(new Date(a.deadline||'9999')-new Date(b.deadline||'9999')));
+  let html='<div style="margin-bottom:0.8rem"><button class="btn btn-sm btn-primary" onclick="closeModal();openTodoModal()">+ Новая задача</button></div>';
+  html+='<table style="width:100%"><thead><tr><th></th><th>Задача</th><th>Исполнитель</th><th>Срок</th><th></th></tr></thead><tbody>';
+  html+=sorted.length?sorted.map(t=>`<tr style="${t.done?'opacity:0.5':''}">
+    <td><button class="manual-check${t.done?' checked':''}" onclick="toggleTodoDone('${t.id}')" style="width:24px;height:24px">${t.done?'&#10003;':''}</button></td>
+    <td style="color:var(--white);font-weight:500;${t.done?'text-decoration:line-through':''}">${esc(t.task||'-')}</td>
+    <td>${esc(t.executor||'—')}</td>
+    <td>${t.deadline?fmtDate(t.deadline):'—'}</td>
+    <td><div class="actions">
+      <button class="act-btn" onclick="closeModal();openTodoModal('${t.id}')" title="Редактировать">&#9998;</button>
+      <button class="act-btn del" onclick="deleteTodoFromPanel('${t.id}')" title="Удалить">&times;</button>
+    </div></td>
+  </tr>`).join(''):'<tr><td colspan="5" class="empty">Нет задач</td></tr>';
+  html+='</tbody></table>';
+  openModal('&#9745; To-Do лист',html,'<button class="btn btn-secondary" onclick="closeModal()">Закрыть</button>');
+}
+async function deleteTodoFromPanel(id){
+  if(!await confirmDialog('Удалить задачу?','Удаление'))return;
+  await apiCall('other/'+id,'DELETE');
+  data.other=await apiCall('other');
+  renderOther();
+  openTodoPanel();
 }
 
 const EXPENSE_CATS={representative:'Представительские',rent:'Аренда',purchase:'Покупка',household:'Хозяйственные',other_exp:'Прочее'};
@@ -2704,12 +2708,14 @@ async function saveTodo(id){
   await apiCall(id?'other/'+id:'other',id?'PUT':'POST',body);
   data.other=await apiCall('other');
   renderOther();
+  openTodoPanel();
 }
 async function toggleTodoDone(id){
   const t=(data.other||[]).find(x=>x.id===id);if(!t)return;
   await apiCall('other/'+id,'PUT',{done:!t.done});
   data.other=await apiCall('other');
   renderOther();
+  if(document.getElementById('modal').classList.contains('open'))openTodoPanel();
 }
 
 function renderFinance(){
