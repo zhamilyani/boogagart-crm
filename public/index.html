@@ -661,7 +661,7 @@
               <button class="btn btn-sm btn-primary" onclick="openOtherEntryModal('income')">+ Доход</button>
               <button class="btn btn-sm btn-danger" onclick="openOtherEntryModal('expense')">+ Расход</button>
             </div>
-            <table><thead><tr><th>Дата</th><th>Описание</th><th>Тип</th><th>Сумма</th><th></th></tr></thead>
+            <table><thead><tr><th>Дата</th><th>Описание</th><th>Тип</th><th>Категория</th><th>Сумма</th><th></th></tr></thead>
             <tbody id="otherEntriesTable"></tbody></table>
           </div>
         </div>
@@ -2560,12 +2560,13 @@ function renderOther(){
       <td>${fmtDate(e.date||e.createdAt)}</td>
       <td style="color:var(--white);font-weight:500">${esc(e.description||'-')}</td>
       <td><span class="status ${e.type==='income'?'status-done':'status-cancelled'}">${e.type==='income'?'Доход':'Расход'}</span></td>
+      <td style="font-size:0.75rem">${e.expenseCategory?EXPENSE_CATS[e.expenseCategory]||e.expenseCategory:'—'}</td>
       <td style="font-weight:600;color:${e.type==='income'?'var(--green)':'var(--red)'}">${e.type==='income'?'+':'−'}${(e.amount||0).toLocaleString('ru-RU')} ₸</td>
       <td>${canEdit()?`<div class="actions">
         <button class="act-btn" onclick="openOtherEntryModal('${e.type}','${e.id}')" title="Редактировать">&#9998;</button>
         <button class="act-btn del" onclick="deleteItem('other','${e.id}')" title="Удалить">&times;</button>
       </div>`:''}</td>
-    </tr>`).join(''):'<tr><td colspan="5" class="empty">Нет записей</td></tr>';
+    </tr>`).join(''):'<tr><td colspan="6" class="empty">Нет записей</td></tr>';
 
   document.getElementById('otherTodoTable').innerHTML=todos.length?
     [...todos].sort((a,b)=>(a.done?1:0)-(b.done?1:0)||(new Date(a.deadline||'9999')-new Date(b.deadline||'9999'))).map(t=>`<tr style="${t.done?'opacity:0.5':''}">
@@ -2580,6 +2581,7 @@ function renderOther(){
     </tr>`).join(''):'<tr><td colspan="5" class="empty">Нет задач</td></tr>';
 }
 
+const EXPENSE_CATS={representative:'Представительские',rent:'Аренда',purchase:'Покупка',household:'Хозяйственные',other_exp:'Прочее'};
 function openOtherEntryModal(type,id){
   const e=id?(data.other||[]).find(x=>x.id===id):{};
   openModal(type==='income'?'Доход':'Расход',`
@@ -2588,6 +2590,9 @@ function openOtherEntryModal(type,id){
       <div class="form-group"><label>Сумма (₸)</label><input type="number" id="oeAmount" value="${e.amount||0}"></div>
       <div class="form-group"><label>Дата</label><input type="date" id="oeDate" value="${e.date||new Date().toISOString().slice(0,10)}"></div>
     </div>
+    ${type==='expense'?`<div class="form-group"><label>Категория</label>
+      <select id="oeCat">${Object.entries(EXPENSE_CATS).map(([k,v])=>`<option value="${k}" ${e.expenseCategory===k?'selected':''}>${v}</option>`).join('')}</select>
+    </div>`:''}
     <div class="form-group"><label>Комментарий</label><textarea id="oeComment">${esc(e.comment||'')}</textarea></div>
   `,`<button class="btn btn-secondary" onclick="closeModal()">Отмена</button>
     <button class="btn btn-primary" onclick="saveOtherEntry('${type}','${id||''}')">${id?'Сохранить':'Добавить'}</button>`);
@@ -2599,6 +2604,7 @@ async function saveOtherEntry(type,id){
     amount:+document.getElementById('oeAmount').value,
     date:document.getElementById('oeDate').value,
     comment:document.getElementById('oeComment').value,
+    expenseCategory:document.getElementById('oeCat')?.value||'',
   };
   closeModal();
   await apiCall(id?'other/'+id:'other',id?'PUT':'POST',body);
