@@ -1259,7 +1259,7 @@ function openLeadModal(id){
         </div>
       </div>
       ${(l.cateringMenu.items||[]).filter(i=>i.qty>0).map(i=>`<div class="cil-row"><span>${esc(i.name)} ×${i.qty}</span><span>${(i.total||0).toLocaleString('ru-RU')} ₸</span></div>`).join('')}
-      ${l.cateringMenu.servicePercent?`<div class="cil-row"><span>Сервис (${l.cateringMenu.servicePercent}%)</span><span>${(l.cateringMenu.serviceTotal||0).toLocaleString('ru-RU')} ₸</span></div>`:''}
+      ${(l.cateringMenu.items||[]).filter(i=>i.category==='service'&&i.total>0).map(i=>`<div class="cil-row"><span>${esc(i.name)} (${i.unitPrice}%)</span><span>${(i.total||0).toLocaleString('ru-RU')} ₸</span></div>`).join('')}
       <div class="cil-total">Итого: ${(l.cateringMenu.grandTotal||0).toLocaleString('ru-RU')} ₸</div>
     </div>`:''}
   `,`<button class="btn btn-secondary" onclick="closeModal()">Отмена</button>
@@ -1641,10 +1641,6 @@ function generateCateringMenu(){
     else pool=pool.concat(hotItems);
   }
 
-  let svcPct=0;
-  if(service==='full') svcPct=15;
-  else if(service==='staff') svcPct=10;
-
   const foodBudget=budget;
   const catGroups={};
   pool.forEach(c=>{if(!catGroups[c.category])catGroups[c.category]=[];catGroups[c.category].push(c);});
@@ -1677,11 +1673,17 @@ function generateCateringMenu(){
     }
   }
 
+  // Add service items from catalog
+  let svcItems=[];
+  if(service==='full') svcItems=data.catering.filter(c=>c.category==='service');
+  else if(service==='staff') svcItems=data.catering.filter(c=>c.category==='service').slice(0,1);
   const foodBaseForSvc=selected.filter(i=>i.category!=='drinks').reduce((s,i)=>s+i.total,0);
-  const svcTotal=Math.round(foodBaseForSvc*svcPct/100);
-  const grandTotal=totalFoodCost+svcTotal;
+  svcItems.forEach(c=>{
+    selected.push({...c,qty:1,total:Math.round(foodBaseForSvc*c.unitPrice/100)});
+  });
+  const grandTotal=selected.reduce((s,i)=>s+i.total,0);
   const perPerson=Math.round(grandTotal/guests);
-  currentCateringMenu={items:selected,service:[],servicePercent:svcPct,serviceTotal:svcTotal,guests,grandTotal,perPerson};
+  currentCateringMenu={items:selected,service:[],guests,grandTotal,perPerson};
   manualMenuMode=false;
   renderCateringTable();
   renderCateringResult();
@@ -1738,16 +1740,20 @@ function setManualQty(id,val){
 
 function rebuildManualMenu(){
   const guests=(currentCateringMenu&&currentCateringMenu.guests)||50;
-  const svcPct=(currentCateringMenu&&currentCateringMenu.servicePercent)||0;
   const items=[];
   for(const [id,qty] of Object.entries(manualSelections)){
     const c=data.catering.find(x=>x.id===id);if(!c)continue;
-    items.push({...c,qty,total:c.unitPrice*qty});
+    if(c.category==='service'){
+      items.push({...c,qty:1,total:0}); // total recalculated below
+    } else {
+      items.push({...c,qty,total:c.unitPrice*qty});
+    }
   }
-  const foodBase=items.filter(i=>i.category!=='drinks').reduce((s,i)=>s+i.total,0);
-  const svcTotal=Math.round(foodBase*svcPct/100);
-  const grandTotal=items.reduce((s,i)=>s+i.total,0)+svcTotal;
-  currentCateringMenu={items,service:[],servicePercent:svcPct,serviceTotal:svcTotal,guests,grandTotal,perPerson:Math.round(grandTotal/guests)};
+  // Calc service totals
+  const foodBase=items.filter(i=>i.category!=='drinks'&&i.category!=='service').reduce((s,i)=>s+i.total,0);
+  items.filter(i=>i.category==='service').forEach(i=>{i.total=Math.round(foodBase*i.unitPrice/100);});
+  const grandTotal=items.reduce((s,i)=>s+i.total,0);
+  currentCateringMenu={items,service:[],guests,grandTotal,perPerson:Math.round(grandTotal/guests)};
   renderCateringResult();
 }
 
@@ -1781,18 +1787,26 @@ function renderCateringResult(){
     html+='</tbody></table>';
   }
 
-  // Service as % of food total (excluding drinks and service)
-  const foodBase=m.items.filter(i=>i.category!=='drinks').reduce((s,i)=>s+i.total,0);
-  const svcPct=m.servicePercent||0;
-  const svcTotal=Math.round(foodBase*svcPct/100);
-  html+='<h4 style="color:var(--primary);margin:1rem 0 0.5rem;font-size:0.85rem">Сервис</h4>';
-  html+=`<div style="display:flex;align-items:center;gap:1rem;padding:0.6rem 0.8rem;background:var(--bg3);border-radius:8px;margin-bottom:0.5rem">
-    <span style="color:var(--text2);font-size:0.82rem;white-space:nowrap">Сервис (% от стоимости блюд):</span>
-    <input type="number" value="${svcPct}" min="0" max="100" step="1" style="width:70px;background:var(--bg);border:1px solid var(--border);color:var(--white);border-radius:4px;padding:4px 8px;font-size:0.9rem;text-align:center;font-family:inherit;font-weight:600" onchange="updateServicePercent(+this.value)">
-    <span style="color:var(--text);font-size:0.82rem">%</span>
-    <span style="margin-left:auto;color:var(--text);font-size:0.78rem">База: ${foodBase.toLocaleString('ru-RU')} ₸</span>
-    <span style="font-weight:700;color:var(--primary);font-size:0.9rem">${svcTotal.toLocaleString('ru-RU')} ₸</span>
-  </div>`;
+  // Service items (% based)
+  const foodBase=m.items.filter(i=>i.category!=='drinks'&&i.category!=='service').reduce((s,i)=>s+i.total,0);
+  const svcItems=m.items.filter(i=>i.category==='service');
+  if(svcItems.length){
+    const svcTotal=svcItems.reduce((s,i)=>s+i.total,0);
+    html+='<h4 style="color:var(--primary);margin:1rem 0 0.5rem;font-size:0.85rem">Сервис</h4>';
+    html+='<table style="margin-bottom:0.5rem"><thead><tr><th>Позиция</th><th>Описание</th><th>%</th><th>База (₸)</th><th>Итого (₸)</th><th></th></tr></thead><tbody>';
+    svcItems.forEach(i=>{
+      html+=`<tr>
+        <td><input value="${esc(i.name)}" style="width:100%;background:var(--bg3);border:1px solid var(--border);color:var(--white);border-radius:4px;padding:3px 6px;font-size:0.8rem;font-weight:500;font-family:inherit" onchange="updateMenuItemAttr('items','${i.id}','name',this.value)"></td>
+        <td><input value="${esc(i.description||'')}" style="width:100%;background:var(--bg3);border:1px solid var(--border);color:var(--text2);border-radius:4px;padding:3px 6px;font-size:0.75rem;font-family:inherit" onchange="updateMenuItemAttr('items','${i.id}','description',this.value)"></td>
+        <td><input type="number" value="${i.unitPrice}" min="0" max="100" step="1" style="width:65px;background:var(--bg3);border:1px solid var(--border);color:var(--white);border-radius:4px;padding:3px 6px;font-size:0.85rem;text-align:center;font-family:inherit;font-weight:600" onchange="updateServiceItemPct('${i.id}',+this.value)">%</td>
+        <td style="color:var(--text);font-size:0.78rem">${foodBase.toLocaleString('ru-RU')}</td>
+        <td style="font-weight:600">${i.total.toLocaleString('ru-RU')}</td>
+        <td><button class="act-btn del" onclick="removeMenuItem('items','${i.id}')" title="Удалить">&times;</button></td>
+      </tr>`;
+    });
+    html+=`<tr style="border-top:1px solid var(--border)"><td colspan="4" style="text-align:right;font-weight:600">Итого сервис:</td><td style="font-weight:700;color:var(--primary)">${svcTotal.toLocaleString('ru-RU')} ₸</td><td></td></tr>`;
+    html+='</tbody></table>';
+  }
 
   html+=`<div style="display:flex;justify-content:space-between;align-items:center;padding:1rem;background:var(--bg3);border-radius:var(--radius);margin-top:1rem">
     <div><span style="font-size:1.1rem;font-weight:700;color:var(--white)">ИТОГО: ${m.grandTotal.toLocaleString('ru-RU')} ₸</span></div>
@@ -1813,7 +1827,7 @@ function updateMenuItemPrice(type,id,price,qty){
   if(!item)return;
   if(price!==null&&price!==undefined)item.unitPrice=price;
   if(qty!==null&&qty!==undefined)item.qty=qty;
-  item.total=item.unitPrice*item.qty;
+  if(item.category!=='service')item.total=item.unitPrice*item.qty;
   recalcCateringTotals();
 }
 function removeMenuItem(type,id){
@@ -1823,17 +1837,19 @@ function removeMenuItem(type,id){
   recalcCateringTotals();
   renderCateringTable();
 }
-function updateServicePercent(pct){
+function updateServiceItemPct(id,pct){
   if(!currentCateringMenu)return;
-  currentCateringMenu.servicePercent=pct;
+  const item=currentCateringMenu.items.find(i=>i.id===id);
+  if(item){item.unitPrice=pct;}
   recalcCateringTotals();
 }
 function recalcCateringTotals(){
   const m=currentCateringMenu;
-  const foodBase=m.items.filter(i=>i.category!=='drinks').reduce((s,i)=>s+i.total,0);
-  const svcTotal=Math.round(foodBase*(m.servicePercent||0)/100);
-  m.serviceTotal=svcTotal;
-  m.grandTotal=m.items.reduce((s,i)=>s+i.total,0)+svcTotal;
+  // Food base = all items except drinks and service
+  const foodBase=m.items.filter(i=>i.category!=='drinks'&&i.category!=='service').reduce((s,i)=>s+i.total,0);
+  // Recalc service items: total = foodBase * unitPrice(%) / 100
+  m.items.filter(i=>i.category==='service').forEach(i=>{i.total=Math.round(foodBase*i.unitPrice/100);});
+  m.grandTotal=m.items.reduce((s,i)=>s+i.total,0);
   m.perPerson=Math.round(m.grandTotal/m.guests);
   renderCateringResult();
 }
@@ -1845,7 +1861,6 @@ async function saveCateringToLead(){
   const menu=currentCateringMenu;
   l.cateringMenu={
     items:menu.items.map(i=>({id:i.id,name:i.name,category:i.category,unitPrice:i.unitPrice,qty:i.qty,total:i.total})),
-    servicePercent:menu.servicePercent||0,serviceTotal:menu.serviceTotal||0,
     guests:menu.guests,grandTotal:menu.grandTotal,perPerson:menu.perPerson
   };
   await apiCall('leads/'+leadId,'PUT',{cateringMenu:l.cateringMenu});
@@ -1869,8 +1884,12 @@ function viewLeadCateringMenu(leadId){
       html+=`<div style="display:flex;justify-content:space-between;padding:0.3rem 0.5rem;border-bottom:1px solid var(--border);font-size:0.8rem"><span style="color:var(--text2)">${esc(i.name)} <span style="color:var(--text);font-size:0.7rem">×${i.qty}</span></span><span style="font-weight:600">${i.total.toLocaleString('ru-RU')} ₸</span></div>`;
     });
   }
-  if(m.servicePercent){
-    html+=`<div style="display:flex;justify-content:space-between;padding:0.4rem 0.5rem;margin-top:0.5rem;font-size:0.82rem;border-top:1px solid var(--border)"><span style="color:var(--text2)">Сервис (${m.servicePercent}%)</span><span style="font-weight:600">${(m.serviceTotal||0).toLocaleString('ru-RU')} ₸</span></div>`;
+  const svcView=(m.items||[]).filter(i=>i.category==='service'&&i.total>0);
+  if(svcView.length){
+    html+='<h4 style="color:var(--primary);font-size:0.8rem;margin:0.8rem 0 0.4rem">Сервис</h4>';
+    svcView.forEach(i=>{
+      html+=`<div style="display:flex;justify-content:space-between;padding:0.3rem 0.5rem;border-bottom:1px solid var(--border);font-size:0.8rem"><span style="color:var(--text2)">${esc(i.name)} <span style="color:var(--text);font-size:0.7rem">${i.unitPrice}%</span></span><span style="font-weight:600">${i.total.toLocaleString('ru-RU')} ₸</span></div>`;
+    });
   }
   html+=`<div style="display:flex;justify-content:space-between;padding:0.8rem 0.5rem;margin-top:0.5rem;font-weight:700;font-size:0.95rem;color:var(--white);border-top:2px solid var(--primary)"><span>ИТОГО</span><span>${(m.grandTotal||0).toLocaleString('ru-RU')} ₸</span></div>`;
   html+='</div>';
@@ -1902,7 +1921,10 @@ function loadCateringMenuForEdit(leadId){
   // Load into manual mode
   manualMenuMode=true;
   manualSelections={};
-  (l.cateringMenu.items||[]).forEach(i=>{if(i.qty>0)manualSelections[i.id]=i.qty;});
+  (l.cateringMenu.items||[]).forEach(i=>{
+    if(i.category==='service')manualSelections[i.id]=1;
+    else if(i.qty>0)manualSelections[i.id]=i.qty;
+  });
   currentCateringMenu={...l.cateringMenu,service:[]};
   rebuildManualMenu();
   renderCateringTable();
@@ -1973,9 +1995,12 @@ function printCateringMenu(){
     grouped[cat].forEach(i=>html+=`<tr><td><strong>${i.name}</strong></td><td>${i.description||''}</td><td>${i.unitPrice.toLocaleString('ru-RU')}</td><td>${i.qty}</td><td>${i.total.toLocaleString('ru-RU')}</td></tr>`);
     html+=`<tr><td colspan="4" style="text-align:right"><strong>Итого:</strong></td><td><strong>${bt.toLocaleString('ru-RU')} ₸</strong></td></tr></table>`;
   });
-  if(m.servicePercent){
-    const svcTotal=m.serviceTotal||Math.round((m.items||[]).filter(i=>i.category!=='drinks').reduce((s,i)=>s+(i.qty>0?i.total:0),0)*m.servicePercent/100);
-    html+=`<h2>Сервис</h2><table><tr><td>Обслуживание (${m.servicePercent}%)</td><td colspan="3"></td><td><strong>${svcTotal.toLocaleString('ru-RU')} ₸</strong></td></tr></table>`;
+  const printSvc=(m.items||[]).filter(i=>i.category==='service'&&i.total>0);
+  if(printSvc.length){
+    const svcT=printSvc.reduce((s,i)=>s+i.total,0);
+    html+=`<h2>Сервис</h2><table><tr><th>Позиция</th><th colspan="2">%</th><th colspan="2">Итого</th></tr>`;
+    printSvc.forEach(i=>html+=`<tr><td><strong>${i.name}</strong></td><td colspan="2">${i.unitPrice}%</td><td colspan="2">${i.total.toLocaleString('ru-RU')} ₸</td></tr>`);
+    html+=`<tr><td colspan="3" style="text-align:right"><strong>Итого:</strong></td><td colspan="2"><strong>${svcT.toLocaleString('ru-RU')} ₸</strong></td></tr></table>`;
   }
   html+=`<div class="total">ОБЩАЯ СУММА: ${m.grandTotal.toLocaleString('ru-RU')} ₸ <span class="per">На 1 персону: ${m.perPerson.toLocaleString('ru-RU')} ₸</span></div>`;
   html+='</body></html>';
@@ -2007,12 +2032,12 @@ function renderCateringTable(){
       <td style="color:var(--white);font-weight:500">${esc(c.name)}</td>
       <td><span style="display:inline-block;padding:2px 8px;border-radius:4px;font-size:0.7rem;font-weight:600;background:${CAT_COLORS[c.category]||'var(--bg4)'};color:#fff">${CAT_CATS[c.category]||c.category}</span></td>
       <td style="font-size:0.75rem;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${esc(c.description||'')}">${esc(c.description||'-')}</td>
-      <td style="font-weight:600;color:var(--green)">${(c.unitPrice||0).toLocaleString('ru-RU')} ₸</td>
-      <td>${esc(c.unit||'шт')}</td>
+      <td style="font-weight:600;color:var(--green)">${c.category==='service'?(c.unitPrice||0)+'%':(c.unitPrice||0).toLocaleString('ru-RU')+' ₸'}</td>
+      <td>${c.category==='service'?'%':esc(c.unit||'шт')}</td>
       <td><div style="display:flex;align-items:center;gap:0.3rem">
         <div class="manual-col">
           <button class="manual-check${sel?' checked':''}" onclick="toggleManualItem('${c.id}')">${sel?'&#10003;':''}</button>
-          ${sel?`<div class="qty-wrap">
+          ${sel&&c.category!=='service'?`<div class="qty-wrap">
             <button class="qty-btn" onclick="changeManualQty('${c.id}',-1)">−</button>
             <input class="qty-val" type="number" value="${qty}" onchange="setManualQty('${c.id}',this.value)">
             <button class="qty-btn" onclick="changeManualQty('${c.id}',1)">+</button>
