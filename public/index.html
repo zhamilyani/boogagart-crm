@@ -530,25 +530,11 @@
     <!-- CATERING -->
     <div class="page" id="page-catering">
       <!-- CONTROLS -->
-      <div class="table-wrap" style="max-width:800px;margin-bottom:1.5rem">
-        <div class="table-header"><h3>Составление меню</h3></div>
-        <div style="padding:1.2rem">
-          <div class="form-group"><label>Привязать к заявке</label>
-            <select id="catLead" style="background:var(--bg3);border:1px solid var(--border);color:var(--text2);border-radius:6px;padding:0.4rem;font-size:0.8rem;font-family:inherit;width:100%" onchange="fillCateringFromLead()">
-              <option value="">— Без привязки —</option>
-            </select>
-          </div>
-          <div class="form-row">
-            <div class="form-group"><label>Кол-во гостей</label><input type="number" id="catGuests" value="50"></div>
-            <div class="form-group"><label>Бюджет на кейтеринг (₸)</label><input type="number" id="catBudget" value="850000"></div>
-          </div>
-          <div style="display:flex;gap:0.5rem;flex-wrap:wrap">
-            <button class="btn btn-primary" onclick="openGeneratorModal()">&#127860; Сгенерировать меню</button>
-            <button class="btn btn-secondary" onclick="startManualMenu()">&#9998; Составить вручную</button>
-          </div>
-          <div id="cateringResult"></div>
-        </div>
+      <div style="display:flex;gap:0.8rem;margin-bottom:1.5rem;flex-wrap:wrap">
+        <button class="btn btn-primary" onclick="openGeneratorModal()" style="padding:0.7rem 1.5rem;font-size:0.88rem">&#127860; Сгенерировать меню</button>
+        <button class="btn btn-secondary" onclick="openManualMenuModal()" style="padding:0.7rem 1.5rem;font-size:0.88rem">&#9998; Составить вручную</button>
       </div>
+      <div id="cateringResult"></div>
       <!-- MENU TABLE -->
       <div class="table-wrap">
         <div class="table-header"><h3>Кейтеринг-меню (справочник)</h3></div>
@@ -1126,7 +1112,6 @@ function render(){
   }
 
   fillLeadSelects();
-  fillCateringLeadSelect();
 }
 
 // Filters
@@ -1495,34 +1480,33 @@ async function saveInventory(id){
 
 // === CATERING GENERATOR ===
 let currentCateringMenu=null;
+let currentCateringLeadId='';
 
-function fillCateringLeadSelect(){
-  const sel=document.getElementById('catLead');
-  if(!sel)return;
-  const visible=getVisibleLeads();
-  const v=sel.value;
-  sel.innerHTML='<option value="">— Без привязки —</option>'+visible.map(l=>`<option value="${l.id}">${esc(l.name)} — ${EV[l.eventType]||''} (${fmtDate(l.eventDate)})</option>`).join('');
-  sel.value=v;
-}
 function fillCateringFromLead(){
-  const id=document.getElementById('catLead').value;
+  const id=document.getElementById('catLead')?.value||'';
+  currentCateringLeadId=id;
   const l=data.leads.find(x=>x.id===id);if(!l)return;
   const gMap={'5-10':8,'10-25':18,'25-50':38,'50+':60};
-  document.getElementById('catGuests').value=gMap[l.guests]||parseInt(l.guests)||50;
-  // Load existing menu if present
-  if(l.cateringMenu){
-    manualMenuMode=true;
-    manualSelections={};
-    (l.cateringMenu.items||[]).forEach(i=>{if(i.qty>0)manualSelections[i.id]=i.qty;});
-    (l.cateringMenu.service||[]).forEach(i=>{if(i.qty>0)manualSelections[i.id]=i.qty;});
-    rebuildManualMenu();
-    renderCateringTable();
-  }
+  const guestsEl=document.getElementById('catGuests');
+  if(guestsEl)guestsEl.value=gMap[l.guests]||parseInt(l.guests)||50;
 }
 
-// Open generator modal with format/pref/service options
+function buildLeadOptions(){
+  const visible=getVisibleLeads().filter(l=>l.status!=='cancelled');
+  return '<option value="">— Без привязки —</option>'+visible.map(l=>`<option value="${l.id}">${esc(l.name)} — ${EV[l.eventType]||''} (${fmtDate(l.eventDate)})</option>`).join('');
+}
+
+// Open generator modal with all fields
 function openGeneratorModal(){
   openModal('Сгенерировать меню',`
+    <div class="form-group"><label>Привязать к заявке</label>
+      <select id="catLead" style="background:var(--bg3);border:1px solid var(--border);color:var(--text2);border-radius:6px;padding:0.4rem;font-size:0.8rem;font-family:inherit;width:100%" onchange="fillCateringFromLead()">
+        ${buildLeadOptions()}
+      </select></div>
+    <div class="form-row">
+      <div class="form-group"><label>Кол-во гостей</label><input type="number" id="catGuests" value="50"></div>
+      <div class="form-group"><label>Бюджет на кейтеринг (₸)</label><input type="number" id="catBudget" value="850000"></div>
+    </div>
     <div class="form-row-3">
       <div class="form-group"><label>Формат</label>
         <select id="catFormat">
@@ -1547,7 +1531,23 @@ function openGeneratorModal(){
     <button class="btn btn-primary" onclick="generateCateringMenu();closeModal()">&#127860; Сгенерировать</button>`);
 }
 
+function openManualMenuModal(){
+  openModal('Составить меню вручную',`
+    <div class="form-group"><label>Привязать к заявке</label>
+      <select id="catLead" style="background:var(--bg3);border:1px solid var(--border);color:var(--text2);border-radius:6px;padding:0.4rem;font-size:0.8rem;font-family:inherit;width:100%" onchange="fillCateringFromLead()">
+        ${buildLeadOptions()}
+      </select></div>
+    <div class="form-row">
+      <div class="form-group"><label>Кол-во гостей</label><input type="number" id="catGuests" value="50"></div>
+      <div class="form-group"><label>Бюджет на кейтеринг (₸)</label><input type="number" id="catBudget" value="850000"></div>
+    </div>
+    <p style="color:var(--text);font-size:0.8rem;margin-top:0.5rem">После нажатия «Начать» выберите блюда из справочника с помощью галочек</p>
+  `,`<button class="btn btn-secondary" onclick="closeModal()">Отмена</button>
+    <button class="btn btn-primary" onclick="startManualMenu();closeModal()">&#9998; Начать</button>`);
+}
+
 function generateCateringMenu(){
+  currentCateringLeadId=document.getElementById('catLead')?.value||'';
   const guests=parseInt(document.getElementById('catGuests').value)||50;
   const budget=parseInt(document.getElementById('catBudget').value)||999999;
   const format=document.getElementById('catFormat').value;
@@ -1628,10 +1628,20 @@ let manualMenuMode=false;
 let manualSelections={};// id -> qty
 
 function startManualMenu(){
-  const guests=parseInt(document.getElementById('catGuests').value)||50;
+  currentCateringLeadId=document.getElementById('catLead')?.value||currentCateringLeadId;
+  const guests=parseInt(document.getElementById('catGuests')?.value)||50;
   manualMenuMode=true;
   manualSelections={};
+  // If lead has existing menu, pre-fill
+  if(currentCateringLeadId){
+    const l=data.leads.find(x=>x.id===currentCateringLeadId);
+    if(l&&l.cateringMenu){
+      (l.cateringMenu.items||[]).forEach(i=>{if(i.qty>0)manualSelections[i.id]=i.qty;});
+      (l.cateringMenu.service||[]).forEach(i=>{if(i.qty>0)manualSelections[i.id]=i.qty;});
+    }
+  }
   currentCateringMenu={items:[],service:[],guests,grandTotal:0,perPerson:0};
+  rebuildManualMenu();
   renderCateringTable();
   renderCateringResult();
 }
@@ -1640,7 +1650,7 @@ function toggleManualItem(id){
   if(manualSelections[id]){
     delete manualSelections[id];
   }else{
-    const guests=parseInt(document.getElementById('catGuests').value)||50;
+    const guests=(currentCateringMenu&&currentCateringMenu.guests)||50;
     manualSelections[id]=guests;
   }
   rebuildManualMenu();
@@ -1663,7 +1673,7 @@ function setManualQty(id,val){
 }
 
 function rebuildManualMenu(){
-  const guests=parseInt(document.getElementById('catGuests').value)||50;
+  const guests=(currentCateringMenu&&currentCateringMenu.guests)||50;
   const items=[];const service=[];
   for(const [id,qty] of Object.entries(manualSelections)){
     const c=data.catering.find(x=>x.id===id);if(!c)continue;
@@ -1750,7 +1760,7 @@ function recalcCateringTotals(){
 }
 
 async function saveCateringToLead(){
-  const leadId=document.getElementById('catLead').value;
+  const leadId=currentCateringLeadId;
   if(!leadId){alert('Выберите заявку для сохранения');return;}
   const l=data.leads.find(x=>x.id===leadId);if(!l)return;
   const menu=currentCateringMenu;
@@ -1806,22 +1816,23 @@ function loadCateringMenuForEdit(leadId){
   document.getElementById('page-catering').classList.add('active');
   document.getElementById('pageTitle').textContent='Кейтеринг';
   // Set lead
-  document.getElementById('catLead').value=leadId;
-  document.getElementById('catGuests').value=l.cateringMenu.guests||50;
+  currentCateringLeadId=leadId;
   // Load into manual mode
   manualMenuMode=true;
   manualSelections={};
   (l.cateringMenu.items||[]).forEach(i=>{if(i.qty>0)manualSelections[i.id]=i.qty;});
   (l.cateringMenu.service||[]).forEach(i=>{if(i.qty>0)manualSelections[i.id]=i.qty;});
+  currentCateringMenu={...l.cateringMenu};
   rebuildManualMenu();
   renderCateringTable();
+  renderCateringResult();
 }
 
 function printLeadCateringMenu(leadId){
   const l=data.leads.find(x=>x.id===leadId);
   if(!l||!l.cateringMenu)return;
   currentCateringMenu=l.cateringMenu;
-  document.getElementById('catLead').value=leadId;
+  currentCateringLeadId=leadId;
   printCateringMenu();
 }
 
@@ -1829,7 +1840,7 @@ function printCateringMenu(){
   if(!currentCateringMenu)return;
   const w=window.open('','_blank');
   const m=currentCateringMenu;
-  const lead=data.leads.find(x=>x.id===document.getElementById('catLead')?.value);
+  const lead=data.leads.find(x=>x.id===currentCateringLeadId);
   let html=`<html><head><title>Кейтеринг-меню</title><style>
     body{font-family:Inter,Arial,sans-serif;padding:30px;color:#333;font-size:13px}
     h1{font-size:18px;text-align:center;margin-bottom:5px}
