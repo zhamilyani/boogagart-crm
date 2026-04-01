@@ -550,16 +550,16 @@
       </div>
       <div id="cateringResult"></div>
       <!-- SAVED MENUS TABLE -->
-      <div class="table-wrap" id="savedMenusWrap" style="display:none;margin-bottom:1.5rem">
+      <div class="table-wrap" id="savedMenusWrap" style="display:none">
         <div class="table-header">
           <h3>Сохранённые меню</h3>
-          <button class="btn btn-sm btn-secondary" onclick="hideSavedMenus()">&#10005; Закрыть</button>
+          <button class="btn btn-sm btn-secondary" onclick="hideSavedMenus()">&#8592; К справочнику</button>
         </div>
         <table><thead><tr><th>Клиент</th><th>Тип</th><th>Дата</th><th>Персон</th><th>Позиций</th><th>Сумма (₸)</th><th></th></tr></thead>
         <tbody id="savedMenusTable"></tbody></table>
       </div>
       <!-- MENU TABLE -->
-      <div class="table-wrap">
+      <div class="table-wrap" id="cateringCatalogWrap">
         <div class="table-header"><h3>Кейтеринг-меню (справочник)</h3></div>
         <div style="padding:0.8rem 1.2rem;display:flex;gap:0.5rem;flex-wrap:wrap;align-items:center" id="cateringFilters">
           <input id="cateringSearch" placeholder="Поиск по названию..." oninput="renderCateringTable()" style="background:var(--bg3);border:1px solid var(--border);color:var(--text2);border-radius:6px;padding:0.3rem 0.7rem;font-size:0.78rem;font-family:inherit;width:180px;outline:none;margin-right:0.3rem">
@@ -2139,8 +2139,9 @@ function printLeadCateringMenu(leadId,staffMode){
 }
 
 function showSavedMenus(){
-  const wrap=document.getElementById('savedMenusWrap');
-  wrap.style.display='block';
+  document.getElementById('savedMenusWrap').style.display='block';
+  document.getElementById('cateringCatalogWrap').style.display='none';
+  document.getElementById('cateringResult').style.display='none';
   const leads=data.leads.filter(l=>l.cateringMenu);
   document.getElementById('savedMenusTable').innerHTML=leads.length?leads.map(l=>{
     const m=l.cateringMenu;
@@ -2162,6 +2163,8 @@ function showSavedMenus(){
 }
 function hideSavedMenus(){
   document.getElementById('savedMenusWrap').style.display='none';
+  document.getElementById('cateringCatalogWrap').style.display='';
+  document.getElementById('cateringResult').style.display='';
 }
 
 function printCateringMenu(staffMode){
