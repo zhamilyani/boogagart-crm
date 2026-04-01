@@ -420,8 +420,9 @@
 <div class="main" id="mainArea" style="display:none">
   <div class="topbar">
     <h1 id="pageTitle">Дашборд</h1>
-    <div class="topbar-actions" id="topbarActions">
-      <button class="theme-btn" onclick="openTodoPanel()" title="To-Do лист" id="todoBtnTop" style="position:relative">&#9745;<span id="todoBadge" style="display:none;position:absolute;top:-4px;right:-4px;background:var(--red);color:#fff;font-size:0.55rem;font-weight:700;min-width:16px;height:16px;border-radius:8px;display:none;align-items:center;justify-content:center"></span></button>
+    <div style="display:flex;gap:0.7rem;align-items:center">
+      <div class="topbar-actions" id="topbarActions"></div>
+      <button class="theme-btn" onclick="openTodoPanel()" title="To-Do лист" id="todoBtnTop" style="position:relative">&#128203;<span id="todoBadge" style="position:absolute;top:-4px;right:-4px;background:var(--red);color:#fff;font-size:0.55rem;font-weight:700;min-width:16px;height:16px;border-radius:8px;display:none;align-items:center;justify-content:center"></span></button>
       <button class="theme-btn" onclick="toggleTheme()" title="Сменить тему"><span class="tb-dark">&#127769;</span><span class="tb-light">&#9728;&#65039;</span></button>
     </div>
   </div>
@@ -2628,7 +2629,7 @@ function openTodoPanel(){
     </div></td>
   </tr>`).join(''):'<tr><td colspan="5" class="empty">Нет задач</td></tr>';
   html+='</tbody></table>';
-  openModal('&#9745; To-Do лист',html,'<button class="btn btn-secondary" onclick="closeModal()">Закрыть</button>');
+  openModal('To-Do лист',html,'<button class="btn btn-secondary" onclick="closeModal()">Закрыть</button>');
 }
 async function deleteTodoFromPanel(id){
   if(!await confirmDialog('Удалить задачу?','Удаление'))return;
