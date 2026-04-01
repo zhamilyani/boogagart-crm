@@ -251,8 +251,9 @@ async function handleCRUD(collection, req, res, idParam, user) {
 
   if (req.method === 'PUT' && idParam) {
     const body = await parseBody(req);
-    if (collection === 'users' && body.password) {
-      body.password = hashPassword(body.password);
+    if (collection === 'users') {
+      if (body.password) body.password = hashPassword(body.password);
+      else delete body.password; // don't overwrite with empty
     }
     return await withTransaction(collection, async (items, client) => {
       const idx = items.findIndex(i => i.id === idParam);

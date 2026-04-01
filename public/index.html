@@ -2337,7 +2337,7 @@ function openUserModal(id){
     </div>
     <div class="form-row">
       <div class="form-group"><label>Логин</label><input id="fuUsername" value="${esc(u.username||'')}"></div>
-      <div class="form-group"><label>Пароль</label><input id="fuPassword" value="${esc(u.password||'')}"></div>
+      <div class="form-group"><label>Пароль ${id?'(оставьте пустым чтобы не менять)':''}</label><input id="fuPassword" value="" placeholder="${id?'не изменять':'введите пароль'}"></div>
     </div>
     <div class="form-group" id="fuLinkWrap" style="${showLink?'':'display:none'}">
       <label>Привязка к <span id="fuLinkLabel">${u.role==='dj'?'ди-джею':'ведущему'}</span></label>
@@ -2364,15 +2364,16 @@ function updateUserLinkSelect(){
   }
 }
 async function saveUser(id){
+  const pw=document.getElementById('fuPassword').value;
   const body={
     name:document.getElementById('fuName').value,
     phone:document.getElementById('fuPhone').value,
     role:document.getElementById('fuRole').value,
     username:document.getElementById('fuUsername').value,
-    password:document.getElementById('fuPassword').value,
     linkedId:document.getElementById('fuLinkedId').value,
   };
-  if(!body.username||!body.password){await alertDialog('Логин и пароль обязательны');return;}
+  if(pw)body.password=pw;
+  if(!body.username||(!id&&!pw)){await alertDialog('Логин и пароль обязательны');return;}
   // Check unique username
   const dup=data.users.find(u=>u.username===body.username&&u.id!==id);
   if(dup){await alertDialog('Такой логин уже существует');return;}
