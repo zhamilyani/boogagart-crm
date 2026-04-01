@@ -1345,6 +1345,10 @@ function viewLead(id){
     ${canFinance()?`<div><span style="color:var(--text)">Выручка:</span> <strong style="color:var(--green)">${fmtMoney(l.revenue||0)}</strong></div>
     <div><span style="color:var(--text)">Расходы:</span> <strong style="color:var(--red)">${fmtMoney(l.expenses||0)}</strong></div>`:''}
   </div>`;
+  if(canFinance()&&l.expenses>0){
+    const expItems=[['Фотограф',l.expPhoto],['Мобилограф',l.expMobile],['Свет',l.expLight],['Доп. оборудование',l.expEquip],['Шоу программа',l.expShow],['Прочее',l.expOther]].filter(([,v])=>v>0);
+    if(expItems.length)html+=`<div style="margin-top:0.8rem;padding:0.6rem 0.8rem;background:var(--bg3);border-radius:8px;font-size:0.8rem"><strong style="color:var(--text2);margin-bottom:0.3rem;display:block">Детализация расходов:</strong>${expItems.map(([n,v])=>`<div style="display:flex;justify-content:space-between;padding:0.15rem 0"><span style="color:var(--text)">${n}</span><span style="color:var(--red)">${fmtMoney(v)}</span></div>`).join('')}</div>`;
+  }
   if(l.comment)html+=`<div style="margin-top:1rem;padding:0.8rem;background:var(--bg3);border-radius:8px;font-size:0.82rem"><span style="color:var(--text)">Комментарий:</span> <span style="color:var(--text2)">${esc(l.comment)}</span></div>`;
   if(l.reworkReason)html+=`<div style="margin-top:0.5rem;padding:0.6rem 0.8rem;background:var(--yellow-bg);border-radius:8px;font-size:0.8rem"><strong style="color:var(--yellow)">&#8634; На доработке:</strong> <span style="color:var(--text2)">${esc(l.reworkReason)}</span> <span style="color:var(--text);font-size:0.7rem">${l.reworkDate?fmtDate(l.reworkDate):''}</span></div>`;
   if(l.rejectReason)html+=`<div style="margin-top:0.5rem;padding:0.6rem 0.8rem;background:var(--red-bg);border-radius:8px;font-size:0.8rem"><strong style="color:var(--red)">&times; Отказано:</strong> <span style="color:var(--text2)">${esc(l.rejectReason)}</span> <span style="color:var(--text);font-size:0.7rem">${l.rejectDate?fmtDate(l.rejectDate):''}</span></div>`;
@@ -1390,9 +1394,24 @@ function openLeadModal(id){
       <div class="form-group"><label>Статус</label>
         <select id="fStatus" ${dis}>${['new','progress','approval','approved','rework','rejected','done','cancelled'].map(s=>`<option value="${s}" ${(l.status||'new')===s?'selected':''}>${ST[s]}</option>`).join('')}</select></div>
     </div>
-    ${canFinance()?`<div class="form-row">
-      <div class="form-group"><label>Выручка (тг)</label><input type="number" id="fRevenue" value="${l.revenue||0}" ${dis}></div>
-      <div class="form-group"><label>Расходы (тг)</label><input type="number" id="fExpenses" value="${l.expenses||0}" ${dis}></div>
+    ${canFinance()?`<div class="form-group"><label>Выручка (тг)</label><input type="number" id="fRevenue" value="${l.revenue||0}" ${dis}></div>
+    <div class="booking-section">
+      <h4>&#128176; Детализация расходов</h4>
+      <div class="form-row-3">
+        <div class="form-group"><label>Фотограф</label><input type="number" id="fExpPhoto" value="${l.expPhoto||0}" ${dis} oninput="calcLeadExpenses()"></div>
+        <div class="form-group"><label>Мобилограф</label><input type="number" id="fExpMobile" value="${l.expMobile||0}" ${dis} oninput="calcLeadExpenses()"></div>
+        <div class="form-group"><label>Свет</label><input type="number" id="fExpLight" value="${l.expLight||0}" ${dis} oninput="calcLeadExpenses()"></div>
+      </div>
+      <div class="form-row-3">
+        <div class="form-group"><label>Доп. оборудование</label><input type="number" id="fExpEquip" value="${l.expEquip||0}" ${dis} oninput="calcLeadExpenses()"></div>
+        <div class="form-group"><label>Шоу программа</label><input type="number" id="fExpShow" value="${l.expShow||0}" ${dis} oninput="calcLeadExpenses()"></div>
+        <div class="form-group"><label>Прочее</label><input type="number" id="fExpOther" value="${l.expOther||0}" ${dis} oninput="calcLeadExpenses()"></div>
+      </div>
+      <div style="display:flex;justify-content:flex-end;align-items:center;gap:0.8rem;margin-top:0.5rem;padding:0.6rem 0.8rem;background:var(--bg3);border-radius:8px">
+        <span style="color:var(--text);font-size:0.82rem">Итого расходы:</span>
+        <strong style="color:var(--red);font-size:1rem" id="fExpensesTotal">${fmtMoney(l.expenses||0)}</strong>
+        <input type="hidden" id="fExpenses" value="${l.expenses||0}">
+      </div>
     </div>`:''}
     <div class="form-row-3">
       <div class="form-group"><label>Ведущий</label>
@@ -1445,6 +1464,12 @@ function openLeadModal(id){
   if(dateInput.value)checkAvailability(dateInput.value,id||'');
   dateInput.addEventListener('change',()=>checkAvailability(dateInput.value,id||''));
 }
+function calcLeadExpenses(){
+  const fields=['fExpPhoto','fExpMobile','fExpLight','fExpEquip','fExpShow','fExpOther'];
+  const total=fields.reduce((s,f)=>s+(+document.getElementById(f)?.value||0),0);
+  document.getElementById('fExpenses').value=total;
+  document.getElementById('fExpensesTotal').textContent=fmtMoney(total);
+}
 async function saveLead(id){
   const bookedEquipment=[],bookedInventory=[];
   document.querySelectorAll('#bookingEqGrid .booking-item.selected').forEach(el=>bookedEquipment.push(el.dataset.id));
@@ -1467,7 +1492,13 @@ async function saveLead(id){
   };
   if(canFinance()){
     body.revenue=+document.getElementById('fRevenue').value;
-    body.expenses=+document.getElementById('fExpenses').value;
+    body.expPhoto=+document.getElementById('fExpPhoto')?.value||0;
+    body.expMobile=+document.getElementById('fExpMobile')?.value||0;
+    body.expLight=+document.getElementById('fExpLight')?.value||0;
+    body.expEquip=+document.getElementById('fExpEquip')?.value||0;
+    body.expShow=+document.getElementById('fExpShow')?.value||0;
+    body.expOther=+document.getElementById('fExpOther')?.value||0;
+    body.expenses=body.expPhoto+body.expMobile+body.expLight+body.expEquip+body.expShow+body.expOther;
   }
   await apiCall(id?'leads/'+id:'leads',id?'PUT':'POST',body);
   closeModal();await loadAll();
