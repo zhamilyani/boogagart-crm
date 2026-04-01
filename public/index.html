@@ -1078,7 +1078,7 @@ function render(){
   document.getElementById('dashLeads').innerHTML=dashList.length?dashList.map(l=>`
     <tr>
       <td>${fmtDate(l.createdAt)}</td>
-      <td style="color:var(--white);font-weight:500">${esc(l.name||'-')}</td>
+      <td><a href="#" onclick="event.preventDefault();viewLead('${l.id}')" style="color:var(--white);font-weight:500;text-decoration:none;border-bottom:1px dashed var(--text);cursor:pointer">${esc(l.name||'-')}</a></td>
       <td>${esc(l.phone||'-')}</td>
       <td>${EV[l.eventType]||l.eventType||'-'}</td>
       <td>${esc(l.guests||'-')}</td>
@@ -1096,7 +1096,7 @@ function render(){
   document.getElementById('leadsTable').innerHTML=filtered.length?[...filtered].sort((a,b)=>new Date(b.createdAt)-new Date(a.createdAt)).map(l=>`
     <tr>
       <td>${fmtDate(l.createdAt)}</td>
-      <td style="color:var(--white);font-weight:500">${esc(l.name||'-')}</td>
+      <td><a href="#" onclick="event.preventDefault();viewLead('${l.id}')" style="color:var(--white);font-weight:500;text-decoration:none;border-bottom:1px dashed var(--text);cursor:pointer">${esc(l.name||'-')}</a></td>
       <td>${esc(l.phone||'-')}</td>
       <td>${EV[l.eventType]||l.eventType||'-'}</td>
       <td>${esc(l.guests||'-')}</td>
@@ -1260,6 +1260,46 @@ function openModal(title,body,foot){
 }
 function closeModal(){document.getElementById('modal').classList.remove('open');}
 document.getElementById('modal').addEventListener('click',e=>{if(e.target===e.currentTarget)closeModal();});
+
+// === LEAD VIEW ===
+function viewLead(id){
+  const l=data.leads.find(x=>x.id===id);if(!l)return;
+  const host=data.hosts.find(h=>h.id===l.hostId);
+  const dj=data.djs.find(d=>d.id===l.djId);
+  const loc=data.locations.find(x=>x.id===l.locationId);
+  let html=`<div style="display:grid;grid-template-columns:1fr 1fr;gap:0.8rem 1.5rem;font-size:0.84rem">
+    <div><span style="color:var(--text)">Имя:</span> <strong style="color:var(--white)">${esc(l.name||'—')}</strong></div>
+    <div><span style="color:var(--text)">Телефон:</span> <strong style="color:var(--white)">${esc(l.phone||'—')}</strong></div>
+    <div><span style="color:var(--text)">Тип:</span> <strong style="color:var(--white)">${EV[l.eventType]||'—'}</strong></div>
+    <div><span style="color:var(--text)">Гости:</span> <strong style="color:var(--white)">${esc(l.guests||'—')}</strong></div>
+    <div><span style="color:var(--text)">Бюджет:</span> <strong style="color:var(--white)">${esc(l.budget||'—')}</strong></div>
+    <div><span style="color:var(--text)">Дата:</span> <strong style="color:var(--white)">${l.eventDate?fmtDate(l.eventDate):'—'}</strong></div>
+    <div><span style="color:var(--text)">Статус:</span> <span class="status status-${l.status||'new'}">${ST[l.status||'new']}</span></div>
+    <div><span style="color:var(--text)">Источник:</span> <strong style="color:var(--white)">${esc(l.source||'—')}</strong></div>
+    <div><span style="color:var(--text)">Ведущий:</span> <strong style="color:var(--white)">${host?esc(host.name):'—'}</strong></div>
+    <div><span style="color:var(--text)">Ди-джей:</span> <strong style="color:var(--white)">${dj?esc(dj.name):'—'}</strong></div>
+    <div><span style="color:var(--text)">Локация:</span> <strong style="color:var(--white)">${loc?esc(loc.name):'—'}</strong></div>
+    <div><span style="color:var(--text)">Кейтеринг бюджет:</span> <strong style="color:var(--white)">${(l.cateringBudget||0).toLocaleString('ru-RU')} ₸</strong></div>
+    ${canFinance()?`<div><span style="color:var(--text)">Выручка:</span> <strong style="color:var(--green)">${fmtMoney(l.revenue||0)}</strong></div>
+    <div><span style="color:var(--text)">Расходы:</span> <strong style="color:var(--red)">${fmtMoney(l.expenses||0)}</strong></div>`:''}
+  </div>`;
+  if(l.comment)html+=`<div style="margin-top:1rem;padding:0.8rem;background:var(--bg3);border-radius:8px;font-size:0.82rem"><span style="color:var(--text)">Комментарий:</span> <span style="color:var(--text2)">${esc(l.comment)}</span></div>`;
+  if(l.bookedEquipment?.length){
+    html+=`<div style="margin-top:0.8rem;font-size:0.8rem"><span style="color:var(--text)">Оборудование:</span> <span style="color:var(--text2)">${l.bookedEquipment.map(id=>{const e=data.equipment.find(x=>x.id===id);return e?esc(e.name):id;}).join(', ')}</span></div>`;
+  }
+  if(l.bookedInventory?.length){
+    html+=`<div style="margin-top:0.4rem;font-size:0.8rem"><span style="color:var(--text)">Реквизит:</span> <span style="color:var(--text2)">${l.bookedInventory.map(id=>{const i=data.inventory.find(x=>x.id===id);return i?esc(i.name):id;}).join(', ')}</span></div>`;
+  }
+  if(l.cateringMenu){
+    const m=l.cateringMenu;
+    const cnt=(m.items||[]).filter(i=>i.qty>0&&i.category!=='service').length;
+    html+=`<div style="margin-top:0.8rem;padding:0.6rem 0.8rem;background:var(--green-bg);border-radius:8px;font-size:0.8rem;cursor:pointer" onclick="closeModal();viewLeadCateringMenu('${l.id}')">&#127860; <strong style="color:var(--green)">Кейтеринг-меню</strong>: ${m.guests} персон, ${cnt} позиций — <strong>${(m.grandTotal||0).toLocaleString('ru-RU')} ₸</strong></div>`;
+  }
+  openModal(esc(l.name)+' — '+EV[l.eventType||'other'],html,`
+    <button class="btn btn-secondary" onclick="closeModal()">Закрыть</button>
+    ${canEdit()&&l.status!=='approved'||currentRole==='ceo'?`<button class="btn btn-primary" onclick="closeModal();openLeadModal('${l.id}')">&#9998; Редактировать</button>`:''}
+    ${l.status==='approval'&&currentRole==='ceo'?`<button class="btn btn-green" onclick="approveLead('${l.id}')">&#10003; Согласовать</button>`:''}`);
+}
 
 // === LEAD MODAL ===
 function openLeadModal(id){
