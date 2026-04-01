@@ -652,6 +652,10 @@
         <div class="fin-card fin-profit"><div class="fin-label">Баланс</div><div class="fin-value" id="otherDashBalance">0</div></div>
         <div class="fin-card fin-avg"><div class="fin-label">Задач открыто</div><div class="fin-value" id="otherDashTodo">0</div></div>
       </div>
+      <div class="fin-chart" style="margin-bottom:1.5rem">
+        <h4>Расходы по категориям</h4>
+        <div id="otherExpByCategory"></div>
+      </div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.5rem">
         <!-- INCOME/EXPENSES -->
         <div>
@@ -2554,6 +2558,22 @@ function renderOther(){
   document.getElementById('otherDashExpense').textContent=fmtMoney(totalExpense);
   document.getElementById('otherDashBalance').textContent=fmtMoney(totalIncome-totalExpense);
   document.getElementById('otherDashTodo').textContent=openTodos;
+
+  // Expense by category chart
+  const expByCat={};
+  const catColors={representative:'var(--blue)',rent:'var(--purple)',purchase:'var(--primary)',household:'var(--yellow)',other_exp:'var(--text)'};
+  entries.filter(e=>e.type==='expense').forEach(e=>{
+    const cat=e.expenseCategory||'other_exp';
+    expByCat[cat]=(expByCat[cat]||0)+(e.amount||0);
+  });
+  const maxExp=Math.max(...Object.values(expByCat),1);
+  document.getElementById('otherExpByCategory').innerHTML=Object.keys(expByCat).length?
+    Object.entries(expByCat).sort((a,b)=>b[1]-a[1]).map(([cat,amount])=>`
+      <div class="fin-bar-row">
+        <div class="fin-bar-label">${EXPENSE_CATS[cat]||cat}</div>
+        <div class="fin-bar-track"><div class="fin-bar-fill" style="width:${(amount/maxExp*100).toFixed(1)}%;background:${catColors[cat]||'var(--text)'}">${Math.round(amount/totalExpense*100)}%</div></div>
+        <div class="fin-bar-val">${fmtMoney(amount)}</div>
+      </div>`).join(''):'<p style="color:var(--text);text-align:center;padding:1rem">Нет расходов</p>';
 
   document.getElementById('otherEntriesTable').innerHTML=entries.length?
     [...entries].sort((a,b)=>new Date(b.date||b.createdAt)-new Date(a.date||a.createdAt)).map(e=>`<tr>
