@@ -145,9 +145,9 @@ function genId() {
 
 function parseBody(req) {
   return new Promise((resolve, reject) => {
-    let body = '';
-    req.on('data', c => { body += c; if (body.length > 1e6) req.destroy(); });
-    req.on('end', () => { try { resolve(JSON.parse(body)); } catch { resolve({}); } });
+    const chunks = [];
+    req.on('data', c => { chunks.push(c); if (Buffer.byteLength(Buffer.concat(chunks)) > 1e6) req.destroy(); });
+    req.on('end', () => { try { resolve(JSON.parse(Buffer.concat(chunks).toString('utf8'))); } catch { resolve({}); } });
     req.on('error', reject);
   });
 }
