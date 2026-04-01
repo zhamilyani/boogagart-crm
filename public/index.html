@@ -952,7 +952,7 @@ async function apiCall(path,method='GET',body=null){
   }
 }
 
-const COLLECTIONS_LIST=['leads','contests','hosts','locations','equipment','inventory','scenarios','djs','users','catering'];
+const COLLECTIONS_LIST=['leads','contests','hosts','locations','equipment','inventory','scenarios','djs','users','catering','other'];
 
 async function syncOfflineQueue(){
   const q=getOfflineQueue();
@@ -2555,7 +2555,7 @@ async function saveOtherEntry(type,id){
     comment:document.getElementById('oeComment').value,
   };
   await apiCall(id?'other/'+id:'other',id?'PUT':'POST',body);
-  closeModal();await loadAll();
+  closeModal();await loadAll();renderOther();
 }
 
 function openTodoModal(id){
@@ -2586,12 +2586,12 @@ async function saveTodo(id){
   };
   if(id){const existing=(data.other||[]).find(x=>x.id===id);if(existing)body.done=existing.done;}
   await apiCall(id?'other/'+id:'other',id?'PUT':'POST',body);
-  closeModal();await loadAll();
+  closeModal();await loadAll();renderOther();
 }
 async function toggleTodoDone(id){
   const t=(data.other||[]).find(x=>x.id===id);if(!t)return;
   await apiCall('other/'+id,'PUT',{done:!t.done});
-  await loadAll();
+  await loadAll();renderOther();
 }
 
 function renderFinance(){
