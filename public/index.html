@@ -326,6 +326,8 @@
     .catering-in-lead .cil-row:last-child{border:none}
     .catering-in-lead .cil-total{font-weight:700;color:var(--white);margin-top:0.4rem;text-align:right}
 
+    body.hide-cost .cost-col{display:none}
+
     .empty{text-align:center;padding:3rem;color:var(--text)}
     .empty-icon{font-size:2.5rem;margin-bottom:0.8rem;opacity:0.5}
     .page{display:none}.page.active{display:block}
@@ -572,7 +574,7 @@
           <button class="btn btn-sm btn-secondary" onclick="filterCatering('drinks')">Напитки</button>
           <button class="btn btn-sm btn-secondary" onclick="filterCatering('service')">Сервис</button>
         </div>
-        <table><thead><tr><th>Позиция</th><th>Категория</th><th>Описание</th><th>Цена (₸)</th><th>Себест. (₸)</th><th>Ед.</th><th></th></tr></thead>
+        <table><thead><tr><th>Позиция</th><th>Категория</th><th>Описание</th><th>Цена (₸)</th><th class="cost-col">Себест. (₸)</th><th>Ед.</th><th></th></tr></thead>
         <tbody id="cateringTable"></tbody></table>
       </div>
     </div>
@@ -670,6 +672,7 @@
 
     <!-- FINANCE -->
     <div class="page" id="page-finance">
+      <div id="finMainBlock">
       <div class="fin-filters">
         <div class="form-group"><label>Дата с</label><input type="date" id="finDateFrom" onchange="renderFinance()"></div>
         <div class="form-group"><label>Дата по</label><input type="date" id="finDateTo" onchange="renderFinance()"></div>
@@ -700,7 +703,9 @@
         <table><thead><tr><th>Дата</th><th>Клиент</th><th>Тип</th><th>Выручка</th><th>Расходы</th><th>Прибыль</th></tr></thead>
         <tbody id="finTable"></tbody></table>
       </div>
+      </div>
 
+      <div id="finCateringBlock">
       <h3 style="color:var(--white);margin:2rem 0 1rem;font-size:1rem">&#127860; Кейтеринг</h3>
       <div class="fin-grid">
         <div class="fin-card fin-revenue"><div class="fin-label">Выручка кейтеринг</div><div class="fin-value" id="finCatRevenue">0</div><div class="fin-sub" style="color:var(--green)">меню в заявках</div></div>
@@ -717,7 +722,9 @@
         <table><thead><tr><th>Дата</th><th>Клиент</th><th>Тип</th><th>Персон</th><th>Выручка</th><th>Себестоимость</th><th>Прибыль</th></tr></thead>
         <tbody id="finCatTable"></tbody></table>
       </div>
+      </div>
 
+      <div id="finOtherBlock">
       <h3 style="color:var(--white);margin:2rem 0 1rem;font-size:1rem">&#128221; Прочая деятельность</h3>
       <div class="fin-grid">
         <div class="fin-card fin-revenue"><div class="fin-label">Доходы (прочее)</div><div class="fin-value" id="finOtherIncome">0</div></div>
@@ -729,6 +736,7 @@
         <div class="table-header"><h3>Прочее — детализация</h3></div>
         <table><thead><tr><th>Дата</th><th>Описание</th><th>Тип</th><th>Сумма</th></tr></thead>
         <tbody id="finOtherTable"></tbody></table>
+      </div>
       </div>
     </div>
 
@@ -794,6 +802,7 @@ function applyAuth(){
   document.getElementById('userName').textContent=currentUser;
   document.getElementById('userRole').textContent=ROLES[currentRole];
   document.getElementById('userAvatar').textContent=currentUser.charAt(0).toUpperCase();
+  document.body.classList.toggle('hide-cost',currentRole==='ceo');
   const lvl=ROLE_LEVELS[currentRole];
   // Finance: CEO only
   document.querySelectorAll('.nav-item[data-min-role]').forEach(el=>{
@@ -819,11 +828,12 @@ function applyAuth(){
       document.querySelector(`.nav-item[data-page="${p}"]`)?.classList.add('hidden');
     });
   }
-  // Catering: only catering + calendar
+  // Catering: catering + calendar + finance
   if(currentRole==='catering'){
-    ['leads','locations','equipment','inventory','proposal','hosts','djs','contests','docs','dashboard','scenarios'].forEach(p=>{
+    ['leads','locations','equipment','inventory','proposal','hosts','djs','contests','docs','dashboard','scenarios','users','other'].forEach(p=>{
       document.querySelector(`.nav-item[data-page="${p}"]`)?.classList.add('hidden');
     });
+    document.querySelector('.nav-item[data-page="finance"]')?.classList.remove('hidden');
   }
   // Host/DJ/Catering: start on relevant page
   if(currentRole==='host'||currentRole==='dj'){
@@ -2180,7 +2190,7 @@ function renderCateringTable(){
       <td><span style="display:inline-block;padding:2px 8px;border-radius:4px;font-size:0.7rem;font-weight:600;background:${CAT_COLORS[c.category]||'var(--bg4)'};color:#fff">${CAT_CATS[c.category]||c.category}</span></td>
       <td style="font-size:0.75rem;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${esc(c.description||'')}">${esc(c.description||'-')}</td>
       <td style="font-weight:600;color:var(--green)">${c.category==='service'?(c.unitPrice||0)+'%':(c.unitPrice||0).toLocaleString('ru-RU')+' ₸'}</td>
-      <td style="color:var(--text)">${c.category==='service'?'—':(c.costPrice||0).toLocaleString('ru-RU')+' ₸'}</td>
+      <td class="cost-col" style="color:var(--text)">${c.category==='service'?'—':(c.costPrice||0).toLocaleString('ru-RU')+' ₸'}</td>
       <td>${c.category==='service'?'%':esc(c.unit||'шт')}</td>
       <td><div style="display:flex;align-items:center;gap:0.3rem">
         <div class="manual-col">
@@ -2207,7 +2217,7 @@ function openCateringModal(id){
       <div class="form-group"><label>Категория</label>
         <select id="fcCat">${Object.entries(CAT_CATS).map(([k,v])=>`<option value="${k}" ${c.category===k?'selected':''}>${v}</option>`).join('')}</select></div>
       <div class="form-group"><label>Цена за ед. (₸)</label><input type="number" id="fcPrice" value="${c.unitPrice||0}"></div>
-      <div class="form-group"><label>Себестоимость (₸)</label><input type="number" id="fcCostPrice" value="${c.costPrice||0}"></div>
+      <div class="form-group cost-col"><label>Себестоимость (₸)</label><input type="number" id="fcCostPrice" value="${c.costPrice||0}"></div>
     </div>
     <div class="form-row">
       <div class="form-group"><label>Ед. измерения</label>
@@ -2561,6 +2571,13 @@ async function toggleTodoDone(id){
 }
 
 function renderFinance(){
+  // Visibility by role
+  const isCatering=currentRole==='catering';
+  const isCeo=currentRole==='ceo';
+  document.getElementById('finMainBlock').style.display=isCatering?'none':'';
+  document.getElementById('finCateringBlock').style.display=isCeo?'none':'';
+  document.getElementById('finOtherBlock').style.display=isCatering?'none':'';
+
   const dateFrom=document.getElementById('finDateFrom')?.value||'';
   const dateTo=document.getElementById('finDateTo')?.value||'';
   const typeFilter=document.getElementById('finType')?.value||'';
