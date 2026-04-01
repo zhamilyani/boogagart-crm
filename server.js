@@ -343,6 +343,21 @@ const server = http.createServer(async (req, res) => {
       return json(res, { ok: true });
     }
 
+    // Public lead submission from website (no auth needed)
+    if (parts[0] === 'api' && parts[1] === 'leads' && req.method === 'POST' && !req.headers.authorization) {
+      const body = await parseBody(req);
+      if (!body.name || !body.phone) return json(res, { error: 'Name and phone required' }, 400);
+      body.id = genId();
+      body.status = 'new';
+      body.source = body.source || 'website';
+      body.createdAt = new Date().toISOString();
+      return await withTransaction('leads', async (items, client) => {
+        items.push(body);
+        await writeJSON('leads', items, client);
+        return json(res, body, 201);
+      });
+    }
+
     // All other API routes require auth
     if (parts[0] === 'api') {
       const user = await authenticate(req);
