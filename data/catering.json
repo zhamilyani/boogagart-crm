@@ -1,18 +1,362 @@
 [
-  {"id":"cat_01","name":"Бауырсаки","description":"Традиционная пышная выпечка (порция на гостя)","category":"cold","unitPrice":600,"unit":"порция","createdAt":"2026-03-31T00:00:00Z"},
-  {"id":"cat_02","name":"Бутерброды с казы","description":"Деликатесная конина на багете с зеленью","category":"cold","unitPrice":900,"unit":"порция","createdAt":"2026-03-31T00:00:00Z"},
-  {"id":"cat_03","name":"Салат «Цезарь»","description":"Классика с курицей, пармезаном и гренками","category":"cold","unitPrice":1050,"unit":"порция","createdAt":"2026-03-31T00:00:00Z"},
-  {"id":"cat_04","name":"Салат с баклажанами","description":"Хрустящие баклажаны в панировке с томатами","category":"cold","unitPrice":750,"unit":"порция","createdAt":"2026-03-31T00:00:00Z"},
-  {"id":"cat_05","name":"Салат с руколой","description":"Пряная рукола с тигровыми креветками","category":"cold","unitPrice":1250,"unit":"порция","createdAt":"2026-03-31T00:00:00Z"},
-  {"id":"cat_06","name":"Самса с телятиной","description":"Традиционная слоеная самса (рубленое мясо)","category":"pastry","unitPrice":700,"unit":"шт","createdAt":"2026-03-31T00:00:00Z"},
-  {"id":"cat_07","name":"Самса с курицей","description":"Нежная начинка в хрустящем тесте","category":"pastry","unitPrice":600,"unit":"шт","createdAt":"2026-03-31T00:00:00Z"},
-  {"id":"cat_08","name":"Киш в ассортименте","description":"Французский открытый пирог (Семга/Сыр/Курица)","category":"pastry","unitPrice":700,"unit":"шт","createdAt":"2026-03-31T00:00:00Z"},
-  {"id":"cat_09","name":"Сырне","description":"Томленое мясо ягненка с овощами","category":"hot","unitPrice":2000,"unit":"порция","createdAt":"2026-03-31T00:00:00Z"},
-  {"id":"cat_10","name":"Плов","description":"Праздничный плов из отборного риса и говядины","category":"hot","unitPrice":1500,"unit":"порция","createdAt":"2026-03-31T00:00:00Z"},
-  {"id":"cat_11","name":"Мини-шашлык (курица)","description":"Сочное филе на шпажках","category":"hot","unitPrice":1200,"unit":"шт","createdAt":"2026-03-31T00:00:00Z"},
-  {"id":"cat_12","name":"Мини-шашлык (креветка)","description":"Морепродукты, обжаренные на огне","category":"hot","unitPrice":1400,"unit":"шт","createdAt":"2026-03-31T00:00:00Z"},
-  {"id":"cat_13","name":"Чай / Кофе","description":"Черный/зеленый чай, кофе","category":"drinks","unitPrice":500,"unit":"порция","createdAt":"2026-03-31T00:00:00Z"},
-  {"id":"cat_14","name":"Повара","description":"Профессиональное приготовление и подача","category":"service","unitPrice":20000,"unit":"чел","createdAt":"2026-03-31T00:00:00Z"},
-  {"id":"cat_15","name":"Официанты","description":"Сервировка и обслуживание гостей","category":"service","unitPrice":20000,"unit":"чел","createdAt":"2026-03-31T00:00:00Z"},
-  {"id":"cat_16","name":"Аренда и логистика","description":"Оборудование для подогрева, текстиль, посуда","category":"service","unitPrice":80000,"unit":"комплект","createdAt":"2026-03-31T00:00:00Z"}
+  {
+    "id": "cat_mng5z7vr_0",
+    "name": "Канапе с курочкой запеченной на гриле",
+    "category": "cold",
+    "unitPrice": 1200,
+    "unit": "порция",
+    "description": "30 гр",
+    "createdAt": "2026-04-01T14:51:43.912Z"
+  },
+  {
+    "id": "cat_mng5z7wf_1",
+    "name": "Канапе с семгой",
+    "category": "cold",
+    "unitPrice": 1400,
+    "unit": "порция",
+    "description": "30 гр",
+    "createdAt": "2026-04-01T14:51:43.935Z"
+  },
+  {
+    "id": "cat_mng5z7wf_2",
+    "name": "Канапе с творожным сыром и клубникой",
+    "category": "cold",
+    "unitPrice": 900,
+    "unit": "порция",
+    "description": "30 гр",
+    "createdAt": "2026-04-01T14:51:43.935Z"
+  },
+  {
+    "id": "cat_mng5z7wf_3",
+    "name": "Мини шашлычки из курочки",
+    "category": "cold",
+    "unitPrice": 1400,
+    "unit": "порция",
+    "description": "120гр",
+    "createdAt": "2026-04-01T14:51:43.935Z"
+  },
+  {
+    "id": "cat_mng5z7wf_4",
+    "name": "Мини шашлычки из семги",
+    "category": "cold",
+    "unitPrice": 1700,
+    "unit": "порция",
+    "description": "120гр",
+    "createdAt": "2026-04-01T14:51:43.935Z"
+  },
+  {
+    "id": "cat_mng5z7wf_5",
+    "name": "Салат с нежной курочкой",
+    "category": "cold",
+    "unitPrice": 1100,
+    "unit": "порция",
+    "description": "120 гр",
+    "createdAt": "2026-04-01T14:51:43.935Z"
+  },
+  {
+    "id": "cat_mng5z7wf_6",
+    "name": "Соки в ассортименте",
+    "category": "drinks",
+    "unitPrice": 900,
+    "unit": "л",
+    "description": "0.25 мл",
+    "createdAt": "2026-04-01T14:51:43.935Z"
+  },
+  {
+    "id": "cat_mng5z7wf_7",
+    "name": "Сырная закуска с нежным соусом",
+    "category": "cold",
+    "unitPrice": 800,
+    "unit": "порция",
+    "description": "80 гр",
+    "createdAt": "2026-04-01T14:51:43.935Z"
+  },
+  {
+    "id": "cat_mng5z7wf_8",
+    "name": "Сырное ассорти на шпажках с манго и оливками",
+    "category": "cold",
+    "unitPrice": 1300,
+    "unit": "порция",
+    "description": "80 гр",
+    "createdAt": "2026-04-01T14:51:43.935Z"
+  },
+  {
+    "id": "cat_mng5z7wf_9",
+    "name": "Тарталетки с клубникой и творожным сыром",
+    "category": "cold",
+    "unitPrice": 1100,
+    "unit": "порция",
+    "description": "40 гр",
+    "createdAt": "2026-04-01T14:51:43.935Z"
+  },
+  {
+    "id": "cat_mng5z7wg_10",
+    "name": "Цезарь с курочкой",
+    "category": "cold",
+    "unitPrice": 1100,
+    "unit": "порция",
+    "description": "120 гр",
+    "createdAt": "2026-04-01T14:51:43.936Z"
+  },
+  {
+    "id": "cat_mng5z7wg_11",
+    "name": "Шашлычки из креветок с апельсином",
+    "category": "cold",
+    "unitPrice": 1600,
+    "unit": "порция",
+    "description": "120гр",
+    "createdAt": "2026-04-01T14:51:43.936Z"
+  },
+  {
+    "id": "cat_mng5z7wg_12",
+    "name": "Шашлычки с белой рыбой и цветной капустой",
+    "category": "cold",
+    "unitPrice": 1200,
+    "unit": "порция",
+    "description": "130 гр",
+    "createdAt": "2026-04-01T14:51:43.936Z"
+  },
+  {
+    "id": "cat_mng5z7wg_13",
+    "name": "Киш с курочкой и грибами",
+    "category": "pastry",
+    "unitPrice": 900,
+    "unit": "порция",
+    "description": "80 гр",
+    "createdAt": "2026-04-01T14:51:43.936Z"
+  },
+  {
+    "id": "cat_mng5z7wg_14",
+    "name": "Клубника с шоколаде",
+    "category": "pastry",
+    "unitPrice": 700,
+    "unit": "порция",
+    "description": "50 гр",
+    "createdAt": "2026-04-01T14:51:43.936Z"
+  },
+  {
+    "id": "cat_mng5z7wg_15",
+    "name": "Корзинки песочные со сливочным кремом",
+    "category": "pastry",
+    "unitPrice": 750,
+    "unit": "порция",
+    "description": "80 гр",
+    "createdAt": "2026-04-01T14:51:43.936Z"
+  },
+  {
+    "id": "cat_mng5z7wg_16",
+    "name": "Макарун",
+    "category": "pastry",
+    "unitPrice": 800,
+    "unit": "порция",
+    "description": "60 гр",
+    "createdAt": "2026-04-01T14:51:43.936Z"
+  },
+  {
+    "id": "cat_mng5z7wg_17",
+    "name": "Мини киш с курицей, грибами, томатами черри и сливками",
+    "category": "pastry",
+    "unitPrice": 900,
+    "unit": "порция",
+    "description": "80 гр",
+    "createdAt": "2026-04-01T14:51:43.936Z"
+  },
+  {
+    "id": "cat_mng5z7wg_18",
+    "name": "Мини круассан с индейкой и овощами",
+    "category": "pastry",
+    "unitPrice": 1250,
+    "unit": "порция",
+    "description": "80 гр",
+    "createdAt": "2026-04-01T14:51:43.936Z"
+  },
+  {
+    "id": "cat_mng5z7wg_19",
+    "name": "Мини пирожки с французской слойки со шпинатом",
+    "category": "pastry",
+    "unitPrice": 850,
+    "unit": "порция",
+    "description": "120 гр",
+    "createdAt": "2026-04-01T14:51:43.936Z"
+  },
+  {
+    "id": "cat_mng5z7wg_20",
+    "name": "Мини самса с курочкой",
+    "category": "pastry",
+    "unitPrice": 750,
+    "unit": "порция",
+    "description": "80 гр",
+    "createdAt": "2026-04-01T14:51:43.936Z"
+  },
+  {
+    "id": "cat_mng5z7wg_21",
+    "name": "Мини самса с телятиной",
+    "category": "pastry",
+    "unitPrice": 850,
+    "unit": "порция",
+    "description": "80 гр",
+    "createdAt": "2026-04-01T14:51:43.936Z"
+  },
+  {
+    "id": "cat_mng5z7wg_22",
+    "name": "Пирог с семгой",
+    "category": "pastry",
+    "unitPrice": 800,
+    "unit": "порция",
+    "description": "60 гр",
+    "createdAt": "2026-04-01T14:51:43.936Z"
+  },
+  {
+    "id": "cat_mng5z7wg_23",
+    "name": "Брускетта с беконом из конины и печеными перцами",
+    "category": "cold",
+    "unitPrice": 1100,
+    "unit": "порция",
+    "description": "40 гр",
+    "createdAt": "2026-04-01T14:51:43.936Z"
+  },
+  {
+    "id": "cat_mng5z7wg_24",
+    "name": "Брускетта с ростбифом и печеными перцами",
+    "category": "cold",
+    "unitPrice": 1600,
+    "unit": "порция",
+    "description": "40 гр",
+    "createdAt": "2026-04-01T14:51:43.936Z"
+  },
+  {
+    "id": "cat_mng5z7wg_25",
+    "name": "Брускетта с семгой на творожно-сырной подушке",
+    "category": "cold",
+    "unitPrice": 1400,
+    "unit": "порция",
+    "description": "40 гр",
+    "createdAt": "2026-04-01T14:51:43.936Z"
+  },
+  {
+    "id": "cat_mng5z7wg_26",
+    "name": "Брускетта с томатами и зеленью",
+    "category": "cold",
+    "unitPrice": 700,
+    "unit": "порция",
+    "description": "40гр",
+    "createdAt": "2026-04-01T14:51:43.936Z"
+  },
+  {
+    "id": "cat_mng5z7wg_27",
+    "name": "Брускетта с томатами и творожным сыром",
+    "category": "cold",
+    "unitPrice": 900,
+    "unit": "порция",
+    "description": "40 гр",
+    "createdAt": "2026-04-01T14:51:43.936Z"
+  },
+  {
+    "id": "cat_mng5z7wg_28",
+    "name": "Картофельные дольки/пюре",
+    "category": "hot",
+    "unitPrice": 1600,
+    "unit": "порция",
+    "description": "150 гр",
+    "createdAt": "2026-04-01T14:51:43.936Z"
+  },
+  {
+    "id": "cat_mng5z7wg_29",
+    "name": "Медальоны из телятины",
+    "category": "hot",
+    "unitPrice": 4200,
+    "unit": "порция",
+    "description": "230 гр",
+    "createdAt": "2026-04-01T14:51:43.936Z"
+  },
+  {
+    "id": "cat_mng5z7wg_30",
+    "name": "Овощи гриль",
+    "category": "hot",
+    "unitPrice": 1600,
+    "unit": "порция",
+    "description": "150 гр",
+    "createdAt": "2026-04-01T14:51:43.936Z"
+  },
+  {
+    "id": "cat_mng5z7wg_31",
+    "name": "Рис по-турецки",
+    "category": "hot",
+    "unitPrice": 1300,
+    "unit": "порция",
+    "description": "150 гр",
+    "createdAt": "2026-04-01T14:51:43.936Z"
+  },
+  {
+    "id": "cat_mng5z7wg_32",
+    "name": "Руккола с креветками",
+    "category": "cold",
+    "unitPrice": 1400,
+    "unit": "порция",
+    "description": "120 гр",
+    "createdAt": "2026-04-01T14:51:43.936Z"
+  },
+  {
+    "id": "cat_mng5z7wg_33",
+    "name": "Сочные брокколи с баклажанами",
+    "category": "hot",
+    "unitPrice": 1000,
+    "unit": "порция",
+    "description": "140 гр",
+    "createdAt": "2026-04-01T14:51:43.936Z"
+  },
+  {
+    "id": "cat_mng5z7wg_34",
+    "name": "Стейк из семги",
+    "category": "hot",
+    "unitPrice": 4800,
+    "unit": "порция",
+    "description": "200 гр",
+    "createdAt": "2026-04-01T14:51:43.936Z"
+  },
+  {
+    "id": "cat_mng5z7wg_35",
+    "name": "Тарталетки с красной икрой",
+    "category": "cold",
+    "unitPrice": 1700,
+    "unit": "порция",
+    "description": "40 гр",
+    "createdAt": "2026-04-01T14:51:43.936Z"
+  },
+  {
+    "id": "cat_mng5z7wg_36",
+    "name": "Тарталетки с творожным сыром и клубникой",
+    "category": "cold",
+    "unitPrice": 900,
+    "unit": "порция",
+    "description": "30 гр",
+    "createdAt": "2026-04-01T14:51:43.936Z"
+  },
+  {
+    "id": "cat_mng5z7wg_37",
+    "name": "Шоты с моцареллой и томатами",
+    "category": "cold",
+    "unitPrice": 1100,
+    "unit": "порция",
+    "description": "50 гр",
+    "createdAt": "2026-04-01T14:51:43.936Z"
+  },
+  {
+    "id": "cat_mng5z7wg_38",
+    "name": "Вода без газа",
+    "category": "drinks",
+    "unitPrice": 700,
+    "unit": "л",
+    "description": "0.25 мл",
+    "createdAt": "2026-04-01T14:51:43.936Z"
+  },
+  {
+    "id": "cat_mng5z7wg_39",
+    "name": "Игристое шампанское",
+    "category": "drinks",
+    "unitPrice": 4800,
+    "unit": "л",
+    "description": "0.75 мл",
+    "createdAt": "2026-04-01T14:51:43.936Z"
+  }
 ]
