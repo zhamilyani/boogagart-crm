@@ -426,8 +426,23 @@
         <div class="stat-card"><div class="stat-icon" style="background:var(--yellow-bg);color:var(--yellow)">&#127968;</div><div class="stat-label">Локации</div><div class="stat-value" id="statLocations">0</div><div class="stat-sub">в базе</div></div>
       </div>
       <div class="table-wrap">
-        <div class="table-header"><h3>Последние заявки</h3></div>
-        <table><thead><tr><th>Дата</th><th>Имя</th><th>Тип</th><th>Гости</th><th>Статус</th></tr></thead>
+        <div class="table-header">
+          <h3>Последние заявки</h3>
+          <div style="display:flex;gap:0.5rem;align-items:center;flex-wrap:wrap">
+            <input id="dashSearch" placeholder="Поиск по всем полям..." oninput="render()" style="background:var(--bg3);border:1px solid var(--border);color:var(--text2);border-radius:6px;padding:0.35rem 0.8rem;font-size:0.78rem;font-family:inherit;width:200px;outline:none">
+            <select id="dashFilterType" onchange="render()" style="background:var(--bg3);border:1px solid var(--border);color:var(--text2);border-radius:6px;padding:0.35rem 0.5rem;font-size:0.78rem;font-family:inherit">
+              <option value="">Все типы</option>
+            </select>
+            <select id="dashFilterStatus" onchange="render()" style="background:var(--bg3);border:1px solid var(--border);color:var(--text2);border-radius:6px;padding:0.35rem 0.5rem;font-size:0.78rem;font-family:inherit">
+              <option value="">Все статусы</option>
+              <option value="new">Новые</option>
+              <option value="progress">В работе</option>
+              <option value="done">Готово</option>
+              <option value="cancelled">Отменено</option>
+            </select>
+          </div>
+        </div>
+        <table><thead><tr><th>Дата</th><th>Имя</th><th>Телефон</th><th>Тип</th><th>Гости</th><th>Бюджет</th><th>Статус</th><th></th></tr></thead>
         <tbody id="dashLeads"></tbody></table>
       </div>
     </div>
@@ -950,16 +965,38 @@ function render(){
   document.getElementById('statLocations').textContent=data.locations.length;
   document.getElementById('leadsCount').textContent=newLeads||'';
 
-  // Dashboard recent
-  const recent=[...visible].sort((a,b)=>new Date(b.createdAt)-new Date(a.createdAt)).slice(0,5);
-  document.getElementById('dashLeads').innerHTML=recent.length?recent.map(l=>`
+  // Fill type filter options
+  const typeSelect=document.getElementById('dashFilterType');
+  if(typeSelect&&!typeSelect.dataset.filled){
+    typeSelect.innerHTML='<option value="">Все типы</option>'+Object.entries(EV).map(([k,v])=>`<option value="${k}">${v}</option>`).join('');
+    typeSelect.dataset.filled='1';
+  }
+
+  // Dashboard filtered
+  const dashSearch=(document.getElementById('dashSearch')?.value||'').toLowerCase();
+  const dashType=document.getElementById('dashFilterType')?.value||'';
+  const dashStatus=document.getElementById('dashFilterStatus')?.value||'';
+  let dashList=[...visible].sort((a,b)=>new Date(b.createdAt)-new Date(a.createdAt));
+  if(dashType)dashList=dashList.filter(l=>l.eventType===dashType);
+  if(dashStatus)dashList=dashList.filter(l=>(l.status||'new')===dashStatus);
+  if(dashSearch)dashList=dashList.filter(l=>{
+    const s=[l.name,l.phone,EV[l.eventType],l.guests,l.budget,ST[l.status||'new'],fmtDate(l.createdAt),fmtDate(l.eventDate)].join(' ').toLowerCase();
+    return s.includes(dashSearch);
+  });
+  document.getElementById('dashLeads').innerHTML=dashList.length?dashList.map(l=>`
     <tr>
       <td>${fmtDate(l.createdAt)}</td>
       <td style="color:var(--white);font-weight:500">${esc(l.name||'-')}</td>
+      <td>${esc(l.phone||'-')}</td>
       <td>${EV[l.eventType]||l.eventType||'-'}</td>
       <td>${esc(l.guests||'-')}</td>
+      <td>${esc(l.budget||'-')}</td>
       <td><span class="status status-${l.status||'new'}">${ST[l.status||'new']}</span></td>
-    </tr>`).join(''):'<tr><td colspan="5" class="empty">Нет заявок</td></tr>';
+      <td><div class="actions">
+        ${canEdit()?`<button class="act-btn" onclick="openLeadModal('${l.id}')" title="Редактировать">&#9998;</button>`:''}
+        <button class="act-btn" onclick="openProposalForLead('${l.id}')" title="Предложение" style="color:var(--primary)">&#9889;</button>
+      </div></td>
+    </tr>`).join(''):'<tr><td colspan="8" class="empty">Нет заявок по фильтру</td></tr>';
 
   // Leads
   const filter=document.querySelector('.filter-btn.active')?.dataset.filter||'all';
@@ -1146,8 +1183,9 @@ function openLeadModal(id){
       <div class="form-group"><label>Кол-во гостей</label><input id="fGuests" value="${esc(l.guests||'')}"></div>
       <div class="form-group"><label>Бюджет</label><input id="fBudget" value="${esc(l.budget||'')}"></div>
     </div>
-    <div class="form-row">
+    <div class="form-row-3">
       <div class="form-group"><label>Дата мероприятия</label><input type="date" id="fDate" value="${esc(l.eventDate||l.date||'')}"></div>
+      <div class="form-group"><label>Бюджет на кейтеринг (₸)</label><input type="number" id="fCateringBudget" value="${l.cateringBudget||0}"></div>
       <div class="form-group"><label>Статус</label>
         <select id="fStatus">${['new','progress','done','cancelled'].map(s=>`<option value="${s}" ${(l.status||'new')===s?'selected':''}>${ST[s]}</option>`).join('')}</select></div>
     </div>
@@ -1208,6 +1246,7 @@ async function saveLead(id){
     guests:document.getElementById('fGuests').value,
     budget:document.getElementById('fBudget').value,
     eventDate:document.getElementById('fDate').value,
+    cateringBudget:+document.getElementById('fCateringBudget').value||0,
     status:document.getElementById('fStatus').value,
     comment:document.getElementById('fComment').value,
     source:document.getElementById('fSource').value,
@@ -2499,7 +2538,7 @@ function copyDocHTML(){
 
 // === UTILS ===
 function esc(s){const d=document.createElement('div');d.textContent=s;return d.innerHTML;}
-function fmtDate(d){if(!d)return'—';const p=d.split('-');if(p.length===3)return`${p[2]}.${p[1]}.${p[0]}`;return new Date(d).toLocaleDateString('ru-RU',{day:'2-digit',month:'2-digit',year:'numeric'});}
+function fmtDate(d){if(!d)return'—';const s=d.length>10?d.slice(0,10):d;const p=s.split('-');if(p.length===3)return`${p[2]}.${p[1]}.${p[0]}`;return new Date(d).toLocaleDateString('ru-RU',{day:'2-digit',month:'2-digit',year:'numeric'});}
 function fmtMoney(n){return(n||0).toLocaleString('ru-RU')+' тг';}
 
 // === THEME ===
