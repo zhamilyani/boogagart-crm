@@ -2358,7 +2358,7 @@ async function saveUser(id){
 }
 
 // === CHANGE PASSWORD ===
-function openChangePassword(){
+async function openChangePassword(){
   const me=data.users.find(u=>u.name===currentUser&&u.role===currentRole);
   if(!me){await alertDialog('Пользователь не найден');return;}
   openModal('Сменить пароль',`
