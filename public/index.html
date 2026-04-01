@@ -567,6 +567,7 @@
           <input id="cateringSearch" placeholder="Поиск по названию..." oninput="renderCateringTable()" style="background:var(--bg3);border:1px solid var(--border);color:var(--text2);border-radius:6px;padding:0.3rem 0.7rem;font-size:0.78rem;font-family:inherit;width:180px;outline:none;margin-right:0.3rem">
           <button class="btn btn-sm btn-primary" onclick="filterCatering('')">Все</button>
           <button class="btn btn-sm btn-secondary" onclick="filterCatering('cold')">Холодные закуски</button>
+          <button class="btn btn-sm btn-secondary" onclick="filterCatering('hot_snack')">Горячие закуски</button>
           <button class="btn btn-sm btn-secondary" onclick="filterCatering('salad')">Салаты</button>
           <button class="btn btn-sm btn-secondary" onclick="filterCatering('pastry')">Выпечка</button>
           <button class="btn btn-sm btn-secondary" onclick="filterCatering('dessert')">Десерты</button>
@@ -1625,8 +1626,8 @@ function generateCateringMenu(){
   const service=document.getElementById('catService').value;
 
   let allowedCats=[];
-  if(format==='banquet') allowedCats=['cold','salad','pastry','dessert','hot','drinks'];
-  else if(format==='buffet') allowedCats=['cold','salad','pastry','dessert','drinks'];
+  if(format==='banquet') allowedCats=['cold','hot_snack','salad','pastry','dessert','hot','drinks'];
+  else if(format==='buffet') allowedCats=['cold','hot_snack','salad','pastry','dessert','drinks'];
   else if(format==='coffee') allowedCats=['pastry','dessert','drinks'];
 
   let pool=data.catering.filter(c=>allowedCats.includes(c.category));
@@ -1652,7 +1653,7 @@ function generateCateringMenu(){
   const catGroups={};
   pool.forEach(c=>{if(!catGroups[c.category])catGroups[c.category]=[];catGroups[c.category].push(c);});
 
-  const rules={banquet:{cold:3,salad:2,pastry:2,dessert:2,hot:2,drinks:1},buffet:{cold:3,salad:1,pastry:2,dessert:1,hot:1,drinks:1},coffee:{pastry:3,dessert:2,drinks:1}};
+  const rules={banquet:{cold:3,hot_snack:2,salad:2,pastry:2,dessert:2,hot:2,drinks:1},buffet:{cold:3,hot_snack:2,salad:1,pastry:2,dessert:1,hot:1,drinks:1},coffee:{pastry:3,dessert:2,drinks:1}};
   const maxPerCat=rules[format]||rules.banquet;
   const selected=[];
   let totalFoodCost=0;
@@ -1761,8 +1762,8 @@ function renderCateringResult(){
   const m=currentCateringMenu;
   const grouped={};
   m.items.forEach(i=>{if(!grouped[i.category])grouped[i.category]=[];grouped[i.category].push(i);});
-  const catOrder=['cold','salad','pastry','dessert','hot','drinks'];
-  const catTitles={cold:'I. Холодные закуски',salad:'II. Салаты',pastry:'III. Выпечка и киши',dessert:'IV. Десерты',hot:'V. Горячие блюда и Гриль',drinks:'VI. Напитки'};
+  const catOrder=['cold','hot_snack','salad','pastry','dessert','hot','drinks'];
+  const catTitles={cold:'I. Холодные закуски',hot_snack:'II. Горячие закуски',salad:'III. Салаты',pastry:'IV. Выпечка и киши',dessert:'V. Десерты',hot:'VI. Горячие блюда и Гриль',drinks:'VII. Напитки'};
 
   let html='<div style="margin-top:1.2rem;background:var(--bg2);border-radius:var(--radius);padding:1.2rem;border:1px solid var(--border)">';
   html+='<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;flex-wrap:wrap;gap:0.5rem"><h3 style="color:var(--white)">Предварительное меню на '+m.guests+' персон</h3><div style="display:flex;gap:0.5rem"><button class="btn btn-sm btn-secondary" onclick="printCateringMenu()">&#128424; Печать</button><button class="btn btn-sm btn-primary" onclick="saveCateringToLead()">&#128190; Сохранить в заявку</button></div></div>';
@@ -1859,12 +1860,12 @@ function viewLeadCateringMenu(leadId){
   const l=data.leads.find(x=>x.id===leadId);
   if(!l||!l.cateringMenu)return;
   const m=l.cateringMenu;
-  const catTitles={cold:'Холодные закуски',salad:'Салаты',pastry:'Выпечка и киши',dessert:'Десерты',hot:'Горячие блюда',drinks:'Напитки'};
+  const catTitles={cold:'Холодные закуски',hot_snack:'Горячие закуски',salad:'Салаты',pastry:'Выпечка и киши',dessert:'Десерты',hot:'Горячие блюда',drinks:'Напитки'};
   const grouped={};
   (m.items||[]).filter(i=>i.qty>0).forEach(i=>{if(!grouped[i.category])grouped[i.category]=[];grouped[i.category].push(i);});
   let html='<div style="max-height:60vh;overflow-y:auto">';
   html+=`<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem"><span style="color:var(--text)">На <strong style="color:var(--white)">${m.guests}</strong> персон</span><span style="color:var(--green);font-weight:600">${(m.perPerson||0).toLocaleString('ru-RU')} ₸/чел</span></div>`;
-  for(const cat of ['cold','salad','pastry','dessert','hot','drinks']){
+  for(const cat of ['cold','hot_snack','salad','pastry','dessert','hot','drinks']){
     if(!grouped[cat])continue;
     html+=`<h4 style="color:var(--primary);font-size:0.8rem;margin:0.8rem 0 0.4rem">${catTitles[cat]}</h4>`;
     grouped[cat].forEach(i=>{
@@ -1970,10 +1971,10 @@ function printCateringMenu(){
   html+=`<h1>КЕЙТЕРИНГ-МЕНЮ НА ${m.guests} ПЕРСОН</h1>`;
   if(lead)html+=`<div class="meta">${lead.name} — ${EV[lead.eventType]||''} | ${lead.eventDate?fmtDate(lead.eventDate):''}</div>`;
 
-  const catTitles={cold:'I. Холодные закуски',salad:'II. Салаты',pastry:'III. Выпечка и киши',dessert:'IV. Десерты',hot:'V. Горячие блюда и Гриль',drinks:'VI. Напитки'};
+  const catTitles={cold:'I. Холодные закуски',hot_snack:'II. Горячие закуски',salad:'III. Салаты',pastry:'IV. Выпечка и киши',dessert:'V. Десерты',hot:'VI. Горячие блюда и Гриль',drinks:'VII. Напитки'};
   const grouped={};
   m.items.filter(i=>i.qty>0).forEach(i=>{if(!grouped[i.category])grouped[i.category]=[];grouped[i.category].push(i);});
-  ['cold','salad','pastry','dessert','hot','drinks'].forEach(cat=>{
+  ['cold','hot_snack','salad','pastry','dessert','hot','drinks'].forEach(cat=>{
     if(!grouped[cat])return;
     const bt=grouped[cat].reduce((s,i)=>s+i.total,0);
     html+=`<h2>${catTitles[cat]}</h2><table><tr><th>Позиция</th><th>Описание</th><th>Цена</th><th>Кол-во</th><th>Итого</th></tr>`;
@@ -1993,8 +1994,8 @@ function printCateringMenu(){
 }
 
 // === CATERING TABLE ===
-const CAT_CATS={cold:'Холодные закуски',salad:'Салаты',pastry:'Выпечка и киши',dessert:'Десерты',hot:'Горячие блюда',drinks:'Напитки',service:'Сервис'};
-const CAT_COLORS={cold:'var(--blue)',salad:'var(--green)',pastry:'var(--yellow)',dessert:'var(--purple)',hot:'var(--red)',drinks:'#0ea5e9',service:'var(--text)'};
+const CAT_CATS={cold:'Холодные закуски',hot_snack:'Горячие закуски',salad:'Салаты',pastry:'Выпечка и киши',dessert:'Десерты',hot:'Горячие блюда',drinks:'Напитки',service:'Сервис'};
+const CAT_COLORS={cold:'var(--blue)',hot_snack:'var(--primary)',salad:'var(--green)',pastry:'var(--yellow)',dessert:'var(--purple)',hot:'var(--red)',drinks:'#0ea5e9',service:'var(--text)'};
 let cateringFilter='';
 function filterCatering(cat){
   cateringFilter=cat;
