@@ -777,6 +777,7 @@ let data={leads:[],contests:[],hosts:[],locations:[],equipment:[],inventory:[],s
 const EV={birthday:'День рождения',kids:'Детский праздник',newyear:'Новый год',corporate:'Корпоратив',wedding:'Свадьба',other:'Другое'};
 const ST={new:'Новая',progress:'В работе',approval:'На согласовании',approved:'Согласована',rework:'На доработке',rejected:'Отказано',done:'Завершена',cancelled:'Отменена'};
 const VN={indoor:'Помещение',outdoor:'Улица',both:'Любое'};
+const SOURCES={manual:'Вручную',website:'Сайт',instagram:'Instagram',whatsapp:'WhatsApp',referral:'Рекомендация',other:'Другое'};
 const ROLES={ceo:'Генеральный директор',admin:'Администратор',host:'Ведущий',dj:'Ди-джей',catering:'Кейтеринг'};
 const ROLE_LEVELS={dj:1,host:1,catering:1,admin:2,ceo:3};
 
@@ -1329,7 +1330,7 @@ function viewLead(id){
     <div><span style="color:var(--text)">Бюджет:</span> <strong style="color:var(--white)">${esc(l.budget||'—')}</strong></div>
     <div><span style="color:var(--text)">Дата:</span> <strong style="color:var(--white)">${l.eventDate?fmtDate(l.eventDate):'—'}</strong></div>
     <div><span style="color:var(--text)">Статус:</span> <span class="status status-${l.status||'new'}">${ST[l.status||'new']}</span></div>
-    <div><span style="color:var(--text)">Источник:</span> <strong style="color:var(--white)">${esc(l.source||'—')}</strong></div>
+    <div><span style="color:var(--text)">Источник:</span> <strong style="color:var(--white)">${SOURCES[l.source]||esc(l.source||'—')}</strong></div>
     <div><span style="color:var(--text)">Ведущий:</span> <strong style="color:var(--white)">${host?esc(host.name):'—'}</strong></div>
     <div><span style="color:var(--text)">Ди-джей:</span> <strong style="color:var(--white)">${dj?esc(dj.name):'—'}</strong></div>
     <div><span style="color:var(--text)">Локация:</span> <strong style="color:var(--white)">${loc?esc(loc.name):'—'}</strong></div>
@@ -1411,7 +1412,16 @@ function openLeadModal(id){
         <select id="fLocation" ${dis}><option value="">— Не выбрана —</option>${data.locations.map(x=>`<option value="${x.id}" ${l.locationId===x.id?'selected':''}>${x.name}</option>`).join('')}</select></div>
     </div>
     <div class="form-group"><label>Комментарий</label><textarea id="fComment" ${dis}>${esc(l.comment||'')}</textarea></div>
-    <div class="form-group"><label>Источник</label><input id="fSource" value="${esc(l.source||'')}" ${dis}></div>
+    <div class="form-group"><label>Источник</label>
+      <select id="fSource" ${dis}>
+        <option value="">— Не указан —</option>
+        <option value="manual" ${l.source==='manual'?'selected':''}>Введена вручную</option>
+        <option value="website" ${l.source==='website'?'selected':''}>С сайта</option>
+        <option value="instagram" ${l.source==='instagram'?'selected':''}>Instagram</option>
+        <option value="whatsapp" ${l.source==='whatsapp'?'selected':''}>WhatsApp</option>
+        <option value="referral" ${l.source==='referral'?'selected':''}>По рекомендации</option>
+        <option value="other" ${l.source==='other'?'selected':''}>Другое</option>
+      </select></div>
     <div class="booking-section">
       <h4>&#128274; Бронирование оборудования</h4>
       <div class="booking-date-warn" id="bookingWarn"></div>
