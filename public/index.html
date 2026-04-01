@@ -551,6 +551,15 @@
         <button class="btn btn-green" onclick="showSavedMenus()" style="padding:0.7rem 1.5rem;font-size:0.88rem">&#128190; Сохранённые меню</button>
       </div>
       <div id="cateringResult"></div>
+      <!-- SAVED MENUS TABLE -->
+      <div class="table-wrap" id="savedMenusWrap" style="display:none;margin-bottom:1.5rem">
+        <div class="table-header">
+          <h3>Сохранённые меню</h3>
+          <button class="btn btn-sm btn-secondary" onclick="hideSavedMenus()">&#10005; Закрыть</button>
+        </div>
+        <table><thead><tr><th>Клиент</th><th>Тип</th><th>Дата</th><th>Персон</th><th>Позиций</th><th>Сумма (₸)</th><th></th></tr></thead>
+        <tbody id="savedMenusTable"></tbody></table>
+      </div>
       <!-- MENU TABLE -->
       <div class="table-wrap">
         <div class="table-header"><h3>Кейтеринг-меню (справочник)</h3></div>
@@ -1913,35 +1922,29 @@ function printLeadCateringMenu(leadId){
 }
 
 function showSavedMenus(){
+  const wrap=document.getElementById('savedMenusWrap');
+  wrap.style.display='block';
   const leads=data.leads.filter(l=>l.cateringMenu);
-  if(!leads.length){
-    openModal('Сохранённые меню','<div class="empty"><div class="empty-icon">&#128190;</div>Нет сохранённых меню</div>',
-      '<button class="btn btn-secondary" onclick="closeModal()">Закрыть</button>');
-    return;
-  }
-  const catTitles={cold:'Закуски',pastry:'Выпечка',hot:'Горячие',drinks:'Напитки'};
-  let html='<div style="max-height:70vh;overflow-y:auto">';
-  leads.forEach(l=>{
+  document.getElementById('savedMenusTable').innerHTML=leads.length?leads.map(l=>{
     const m=l.cateringMenu;
     const itemCount=(m.items||[]).filter(i=>i.qty>0).length+(m.service||[]).filter(i=>i.qty>0).length;
-    const evDate=l.eventDate?fmtDate(l.eventDate):'—';
-    html+=`<div style="background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius);padding:1rem;margin-bottom:0.8rem;cursor:pointer;transition:border-color 0.2s" onmouseenter="this.style.borderColor='var(--primary)'" onmouseleave="this.style.borderColor='var(--border)'" onclick="closeModal();viewLeadCateringMenu('${l.id}')">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.4rem">
-        <div>
-          <span style="color:var(--white);font-weight:600;font-size:0.88rem">${esc(l.name)}</span>
-          <span style="color:var(--text);font-size:0.75rem;margin-left:0.5rem">${EV[l.eventType]||''}</span>
-        </div>
-        <span style="color:var(--text);font-size:0.75rem">${evDate}</span>
-      </div>
-      <div style="display:flex;justify-content:space-between;align-items:center">
-        <span style="color:var(--text);font-size:0.78rem">${m.guests} персон &middot; ${itemCount} позиций</span>
-        <span style="color:var(--green);font-weight:700;font-size:0.88rem">${(m.grandTotal||0).toLocaleString('ru-RU')} ₸</span>
-      </div>
-    </div>`;
-  });
-  html+='</div>';
-  openModal('Сохранённые меню ('+leads.length+')',html,
-    '<button class="btn btn-secondary" onclick="closeModal()">Закрыть</button>');
+    return`<tr style="cursor:pointer" onclick="viewLeadCateringMenu('${l.id}')">
+      <td style="color:var(--white);font-weight:500">${esc(l.name)}</td>
+      <td>${EV[l.eventType]||l.eventType||'—'}</td>
+      <td>${l.eventDate?fmtDate(l.eventDate):'—'}</td>
+      <td>${m.guests||'—'}</td>
+      <td>${itemCount}</td>
+      <td style="font-weight:600;color:var(--green)">${(m.grandTotal||0).toLocaleString('ru-RU')}</td>
+      <td><div class="actions">
+        <button class="act-btn" onclick="event.stopPropagation();loadCateringMenuForEdit('${l.id}')" title="Редактировать">&#9998;</button>
+        <button class="act-btn" onclick="event.stopPropagation();printLeadCateringMenu('${l.id}')" title="Печать">&#128424;</button>
+        <button class="act-btn del" onclick="event.stopPropagation();deleteCateringMenu('${l.id}')" title="Удалить">&times;</button>
+      </div></td>
+    </tr>`;
+  }).join(''):'<tr><td colspan="7" class="empty"><div class="empty-icon">&#128190;</div>Нет сохранённых меню</td></tr>';
+}
+function hideSavedMenus(){
+  document.getElementById('savedMenusWrap').style.display='none';
 }
 
 function printCateringMenu(){
