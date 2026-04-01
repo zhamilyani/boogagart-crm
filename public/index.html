@@ -1304,7 +1304,7 @@ function openLeadModal(id){
       <div class="booking-grid" id="bookingEqGrid">
         ${data.equipment.map(e=>`<div class="booking-item${(l.bookedEquipment||[]).includes(e.id)?' selected':''}" data-id="${e.id}" onclick="toggleBooking(this,'eq')">
           <span class="bk-check">${(l.bookedEquipment||[]).includes(e.id)?'&#10003;':''}</span>
-          <span class="bk-name">${esc(e.name)}</span>
+          <span class="bk-name">${esc(e.name)}${e.description?`<br><span style="font-size:0.65rem;color:var(--text);font-weight:400">${esc(e.description)}</span>`:''}</span>
           <span class="bk-avail ok">${e.quantity} шт</span>
         </div>`).join('')}
       </div>
@@ -1312,7 +1312,7 @@ function openLeadModal(id){
       <div class="booking-grid" id="bookingInvGrid">
         ${data.inventory.map(i=>`<div class="booking-item${(l.bookedInventory||[]).includes(i.id)?' selected':''}" data-id="${i.id}" onclick="toggleBooking(this,'inv')">
           <span class="bk-check">${(l.bookedInventory||[]).includes(i.id)?'&#10003;':''}</span>
-          <span class="bk-name">${esc(i.name)}</span>
+          <span class="bk-name">${esc(i.name)}${i.description?`<br><span style="font-size:0.65rem;color:var(--text);font-weight:400">${esc(i.description)}</span>`:''}</span>
           <span class="bk-avail ok">${i.quantity} шт</span>
         </div>`).join('')}
       </div>
