@@ -741,11 +741,6 @@
         <div class="fin-card fin-profit"><div class="fin-label">Баланс (прочее)</div><div class="fin-value" id="finOtherBalance">0</div></div>
         <div class="fin-card fin-avg"><div class="fin-label">Записей</div><div class="fin-value" id="finOtherCount">0</div></div>
       </div>
-      <div class="table-wrap">
-        <div class="table-header"><h3>Прочее — детализация</h3></div>
-        <table><thead><tr><th>Дата</th><th>Описание</th><th>Тип</th><th>Сумма</th></tr></thead>
-        <tbody id="finOtherTable"></tbody></table>
-      </div>
       </div>
     </div>
 
@@ -2832,13 +2827,6 @@ function renderFinance(){
   document.getElementById('finOtherExpense').textContent=fmtMoney(otherExpense);
   document.getElementById('finOtherBalance').textContent=fmtMoney(otherIncome-otherExpense);
   document.getElementById('finOtherCount').textContent=otherEntries.length;
-  document.getElementById('finOtherTable').innerHTML=otherEntries.length?
-    [...otherEntries].sort((a,b)=>new Date(b.date||b.createdAt)-new Date(a.date||a.createdAt)).map(e=>`<tr>
-      <td>${fmtDate(e.date||e.createdAt)}</td>
-      <td style="color:var(--white);font-weight:500">${esc(e.description||'-')}</td>
-      <td><span class="status ${e.type==='income'?'status-done':'status-cancelled'}">${e.type==='income'?'Доход':'Расход'}</span></td>
-      <td style="font-weight:600;color:${e.type==='income'?'var(--green)':'var(--red)'}">${e.type==='income'?'+':'−'}${fmtMoney(e.amount||0)}</td>
-    </tr>`).join(''):'<tr><td colspan="4" class="empty">Нет записей</td></tr>';
 }
 
 // === DOCS ===
