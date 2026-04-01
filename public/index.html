@@ -306,6 +306,22 @@
     [data-theme="light"] .stat-card:hover{border-color:rgba(232,93,42,0.15)}
     [data-theme="light"] .cal-day.today{background:rgba(232,93,42,0.04)}
 
+    /* MANUAL MENU MODE */
+    .manual-mode .manual-col{display:flex!important}
+    .manual-col{display:none;align-items:center;gap:0.3rem}
+    .manual-check{width:26px;height:26px;border-radius:6px;border:1px solid var(--border);background:var(--bg3);color:var(--text);cursor:pointer;font-size:0.8rem;display:flex;align-items:center;justify-content:center;transition:all 0.2s;flex-shrink:0}
+    .manual-check:hover{border-color:var(--primary)}
+    .manual-check.checked{background:var(--green);border-color:var(--green);color:#fff}
+    .qty-wrap{display:flex;align-items:center;gap:0;border:1px solid var(--border);border-radius:6px;overflow:hidden}
+    .qty-btn{width:26px;height:26px;border:none;background:var(--bg3);color:var(--text2);cursor:pointer;font-size:1rem;display:flex;align-items:center;justify-content:center;font-family:inherit}
+    .qty-btn:hover{background:var(--primary-bg);color:var(--primary)}
+    .qty-val{width:40px;text-align:center;background:var(--bg);color:var(--white);border:none;border-left:1px solid var(--border);border-right:1px solid var(--border);font-size:0.78rem;font-family:inherit;padding:2px 0}
+    .catering-in-lead{background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius);padding:0.8rem;margin-top:0.5rem;font-size:0.78rem}
+    .catering-in-lead h5{color:var(--primary);margin-bottom:0.4rem;font-size:0.75rem}
+    .catering-in-lead .cil-row{display:flex;justify-content:space-between;padding:0.15rem 0;border-bottom:1px solid var(--border)}
+    .catering-in-lead .cil-row:last-child{border:none}
+    .catering-in-lead .cil-total{font-weight:700;color:var(--white);margin-top:0.4rem;text-align:right}
+
     .empty{text-align:center;padding:3rem;color:var(--text)}
     .empty-icon{font-size:2.5rem;margin-bottom:0.8rem;opacity:0.5}
     .page{display:none}.page.active{display:block}
@@ -513,9 +529,9 @@
 
     <!-- CATERING -->
     <div class="page" id="page-catering">
-      <!-- GENERATOR -->
+      <!-- CONTROLS -->
       <div class="table-wrap" style="max-width:800px;margin-bottom:1.5rem">
-        <div class="table-header"><h3>Генератор меню</h3></div>
+        <div class="table-header"><h3>Составление меню</h3></div>
         <div style="padding:1.2rem">
           <div class="form-group"><label>Привязать к заявке</label>
             <select id="catLead" style="background:var(--bg3);border:1px solid var(--border);color:var(--text2);border-radius:6px;padding:0.4rem;font-size:0.8rem;font-family:inherit;width:100%" onchange="fillCateringFromLead()">
@@ -526,30 +542,10 @@
             <div class="form-group"><label>Кол-во гостей</label><input type="number" id="catGuests" value="50"></div>
             <div class="form-group"><label>Бюджет на кейтеринг (₸)</label><input type="number" id="catBudget" value="850000"></div>
           </div>
-          <div class="form-row-3">
-            <div class="form-group"><label>Формат</label>
-              <select id="catFormat">
-                <option value="banquet">Банкет (полное меню)</option>
-                <option value="buffet">Фуршет (лёгкий)</option>
-                <option value="coffee">Кофе-брейк</option>
-              </select>
-            </div>
-            <div class="form-group"><label>Предпочтения</label>
-              <select id="catPref">
-                <option value="all">Все блюда</option>
-                <option value="no-seafood">Без морепродуктов</option>
-                <option value="light">Лёгкое меню (без тяжёлых)</option>
-              </select>
-            </div>
-            <div class="form-group"><label>Сервис</label>
-              <select id="catService">
-                <option value="full">Полный (повара+официанты+логистика)</option>
-                <option value="staff">Только персонал</option>
-                <option value="none">Без сервиса</option>
-              </select>
-            </div>
+          <div style="display:flex;gap:0.5rem;flex-wrap:wrap">
+            <button class="btn btn-primary" onclick="openGeneratorModal()">&#127860; Сгенерировать меню</button>
+            <button class="btn btn-secondary" onclick="startManualMenu()">&#9998; Составить вручную</button>
           </div>
-          <button class="btn btn-primary" onclick="generateCateringMenu()">&#127860; Сгенерировать меню</button>
           <div id="cateringResult"></div>
         </div>
       </div>
@@ -996,6 +992,7 @@ function render(){
         ${canEdit()?`<button class="act-btn" onclick="openLeadModal('${l.id}')" title="Редактировать">&#9998;</button>
         <button class="act-btn del" onclick="deleteItem('leads','${l.id}')" title="Удалить">&times;</button>`:''}
         <button class="act-btn" onclick="openProposalForLead('${l.id}')" title="Предложение" style="color:var(--primary)">&#9889;</button>
+        ${l.cateringMenu?`<button class="act-btn" onclick="viewLeadCateringMenu('${l.id}')" title="Кейтеринг-меню" style="color:var(--green)">&#127860;</button>`:''}
       </div></td>
     </tr>`).join(''):'<tr><td colspan="8" class="empty">Нет заявок</td></tr>';
 
@@ -1203,6 +1200,12 @@ function openLeadModal(id){
       </div>
       <div class="conflict-list" id="conflictList"></div>
     </div>
+    ${l.cateringMenu?`<div class="catering-in-lead">
+      <h5>&#127860; Кейтеринг-меню (${l.cateringMenu.guests} персон)</h5>
+      ${(l.cateringMenu.items||[]).filter(i=>i.qty>0).map(i=>`<div class="cil-row"><span>${esc(i.name)} ×${i.qty}</span><span>${(i.total||0).toLocaleString('ru-RU')} ₸</span></div>`).join('')}
+      ${(l.cateringMenu.service||[]).filter(i=>i.qty>0).map(i=>`<div class="cil-row"><span>${esc(i.name)} ×${i.qty}</span><span>${(i.total||0).toLocaleString('ru-RU')} ₸</span></div>`).join('')}
+      <div class="cil-total">Итого: ${(l.cateringMenu.grandTotal||0).toLocaleString('ru-RU')} ₸</div>
+    </div>`:''}
   `,`<button class="btn btn-secondary" onclick="closeModal()">Отмена</button>
     <button class="btn btn-primary" onclick="saveLead('${id||''}')">${id?'Сохранить':'Добавить'}</button>`);
   const dateInput=document.getElementById('fDate');
@@ -1506,6 +1509,42 @@ function fillCateringFromLead(){
   const l=data.leads.find(x=>x.id===id);if(!l)return;
   const gMap={'5-10':8,'10-25':18,'25-50':38,'50+':60};
   document.getElementById('catGuests').value=gMap[l.guests]||parseInt(l.guests)||50;
+  // Load existing menu if present
+  if(l.cateringMenu){
+    manualMenuMode=true;
+    manualSelections={};
+    (l.cateringMenu.items||[]).forEach(i=>{if(i.qty>0)manualSelections[i.id]=i.qty;});
+    (l.cateringMenu.service||[]).forEach(i=>{if(i.qty>0)manualSelections[i.id]=i.qty;});
+    rebuildManualMenu();
+    renderCateringTable();
+  }
+}
+
+// Open generator modal with format/pref/service options
+function openGeneratorModal(){
+  openModal('Сгенерировать меню',`
+    <div class="form-row-3">
+      <div class="form-group"><label>Формат</label>
+        <select id="catFormat">
+          <option value="banquet">Банкет (полное меню)</option>
+          <option value="buffet">Фуршет (лёгкий)</option>
+          <option value="coffee">Кофе-брейк</option>
+        </select></div>
+      <div class="form-group"><label>Предпочтения</label>
+        <select id="catPref">
+          <option value="all">Все блюда</option>
+          <option value="no-seafood">Без морепродуктов</option>
+          <option value="light">Лёгкое меню (без тяжёлых)</option>
+        </select></div>
+      <div class="form-group"><label>Сервис</label>
+        <select id="catService">
+          <option value="full">Полный (повара+официанты+логистика)</option>
+          <option value="staff">Только персонал</option>
+          <option value="none">Без сервиса</option>
+        </select></div>
+    </div>
+  `,`<button class="btn btn-secondary" onclick="closeModal()">Отмена</button>
+    <button class="btn btn-primary" onclick="generateCateringMenu();closeModal()">&#127860; Сгенерировать</button>`);
 }
 
 function generateCateringMenu(){
@@ -1515,56 +1554,39 @@ function generateCateringMenu(){
   const pref=document.getElementById('catPref').value;
   const service=document.getElementById('catService').value;
 
-  // Determine which categories to include based on format
   let allowedCats=[];
   if(format==='banquet') allowedCats=['cold','pastry','hot','drinks'];
   else if(format==='buffet') allowedCats=['cold','pastry','drinks'];
   else if(format==='coffee') allowedCats=['pastry','drinks'];
 
-  // Filter menu items
   let pool=data.catering.filter(c=>allowedCats.includes(c.category));
-
-  // Apply preferences
   if(pref==='no-seafood') pool=pool.filter(c=>!/креветк|морепродукт|семга|рыб/i.test(c.name+c.description));
   if(pref==='light') pool=pool.filter(c=>!/шашлык|плов|сырне|ягнен/i.test(c.name+c.description));
 
-  // For buffet, add select hot items (lighter ones)
   if(format==='buffet'){
     const hotItems=data.catering.filter(c=>c.category==='hot'&&!/плов|сырне/i.test(c.name));
     if(pref==='no-seafood') pool=pool.concat(hotItems.filter(c=>!/креветк/i.test(c.name+c.description)));
     else pool=pool.concat(hotItems);
   }
 
-  // Service items
   let serviceItems=[];
   if(service==='full') serviceItems=data.catering.filter(c=>c.category==='service');
   else if(service==='staff') serviceItems=data.catering.filter(c=>c.category==='service'&&c.name!=='Аренда и логистика');
 
-  // Calculate service cost first
   const serviceCost=serviceItems.reduce((s,c)=>{
     const qty=c.name==='Аренда и логистика'?1:Math.ceil(guests/25);
     return s+c.unitPrice*qty;
   },0);
 
   const foodBudget=budget-serviceCost;
-  const perPersonBudget=foodBudget/guests;
-
-  // Group by category, pick best items within budget
   const catGroups={};
   pool.forEach(c=>{if(!catGroups[c.category])catGroups[c.category]=[];catGroups[c.category].push(c);});
 
-  // Distribution rules by format
-  const rules={
-    banquet:{cold:3,pastry:2,hot:2,drinks:1},
-    buffet:{cold:3,pastry:2,hot:1,drinks:1},
-    coffee:{pastry:3,drinks:1}
-  };
+  const rules={banquet:{cold:3,pastry:2,hot:2,drinks:1},buffet:{cold:3,pastry:2,hot:1,drinks:1},coffee:{pastry:3,drinks:1}};
   const maxPerCat=rules[format]||rules.banquet;
-
   const selected=[];
   let totalFoodCost=0;
 
-  // Select items per category, sorted by price (variety first)
   for(const [cat,items] of Object.entries(catGroups)){
     const max=maxPerCat[cat]||2;
     const sorted=[...items].sort((a,b)=>a.unitPrice-b.unitPrice);
@@ -1579,8 +1601,6 @@ function generateCateringMenu(){
       }
     }
   }
-
-  // If budget allows, add more items
   const remaining=pool.filter(p=>!selected.find(s=>s.id===p.id));
   for(const item of remaining.sort((a,b)=>a.unitPrice-b.unitPrice)){
     const cost=item.unitPrice*guests;
@@ -1590,7 +1610,6 @@ function generateCateringMenu(){
     }
   }
 
-  // Add service
   const serviceSelected=serviceItems.map(c=>{
     const qty=c.name==='Аренда и логистика'?1:Math.ceil(guests/25);
     return{...c,qty,total:c.unitPrice*qty};
@@ -1598,8 +1617,62 @@ function generateCateringMenu(){
 
   const grandTotal=totalFoodCost+serviceCost;
   const perPerson=Math.round(grandTotal/guests);
-
   currentCateringMenu={items:selected,service:serviceSelected,guests,grandTotal,perPerson};
+  manualMenuMode=false;
+  renderCateringTable();
+  renderCateringResult();
+}
+
+// === MANUAL MENU ===
+let manualMenuMode=false;
+let manualSelections={};// id -> qty
+
+function startManualMenu(){
+  const guests=parseInt(document.getElementById('catGuests').value)||50;
+  manualMenuMode=true;
+  manualSelections={};
+  currentCateringMenu={items:[],service:[],guests,grandTotal:0,perPerson:0};
+  renderCateringTable();
+  renderCateringResult();
+}
+
+function toggleManualItem(id){
+  if(manualSelections[id]){
+    delete manualSelections[id];
+  }else{
+    const guests=parseInt(document.getElementById('catGuests').value)||50;
+    manualSelections[id]=guests;
+  }
+  rebuildManualMenu();
+  renderCateringTable();
+}
+
+function changeManualQty(id,delta){
+  if(!manualSelections[id])return;
+  manualSelections[id]=Math.max(0,manualSelections[id]+delta);
+  if(manualSelections[id]===0){delete manualSelections[id];}
+  rebuildManualMenu();
+  renderCateringTable();
+}
+
+function setManualQty(id,val){
+  val=parseInt(val)||0;
+  if(val<=0){delete manualSelections[id];}
+  else{manualSelections[id]=val;}
+  rebuildManualMenu();
+}
+
+function rebuildManualMenu(){
+  const guests=parseInt(document.getElementById('catGuests').value)||50;
+  const items=[];const service=[];
+  for(const [id,qty] of Object.entries(manualSelections)){
+    const c=data.catering.find(x=>x.id===id);if(!c)continue;
+    const entry={...c,qty,total:c.unitPrice*qty};
+    if(c.category==='service')service.push(entry);
+    else items.push(entry);
+  }
+  const grandTotal=items.reduce((s,i)=>s+i.total,0)+service.reduce((s,i)=>s+i.total,0);
+  currentCateringMenu={items,service,guests,grandTotal,perPerson:Math.round(grandTotal/guests)};
   renderCateringResult();
 }
 
@@ -1691,6 +1764,67 @@ async function saveCateringToLead(){
   alert('Меню кейтеринга сохранено в заявку «'+l.name+'»');
 }
 
+function viewLeadCateringMenu(leadId){
+  const l=data.leads.find(x=>x.id===leadId);
+  if(!l||!l.cateringMenu)return;
+  const m=l.cateringMenu;
+  const catTitles={cold:'Холодные закуски',pastry:'Выпечка и киши',hot:'Горячие блюда',drinks:'Напитки'};
+  const grouped={};
+  (m.items||[]).filter(i=>i.qty>0).forEach(i=>{if(!grouped[i.category])grouped[i.category]=[];grouped[i.category].push(i);});
+  let html='<div style="max-height:60vh;overflow-y:auto">';
+  html+=`<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem"><span style="color:var(--text)">На <strong style="color:var(--white)">${m.guests}</strong> персон</span><span style="color:var(--green);font-weight:600">${(m.perPerson||0).toLocaleString('ru-RU')} ₸/чел</span></div>`;
+  for(const cat of ['cold','pastry','hot','drinks']){
+    if(!grouped[cat])continue;
+    html+=`<h4 style="color:var(--primary);font-size:0.8rem;margin:0.8rem 0 0.4rem">${catTitles[cat]}</h4>`;
+    grouped[cat].forEach(i=>{
+      html+=`<div style="display:flex;justify-content:space-between;padding:0.3rem 0.5rem;border-bottom:1px solid var(--border);font-size:0.8rem"><span style="color:var(--text2)">${esc(i.name)} <span style="color:var(--text);font-size:0.7rem">×${i.qty}</span></span><span style="font-weight:600">${i.total.toLocaleString('ru-RU')} ₸</span></div>`;
+    });
+  }
+  const svc=(m.service||[]).filter(i=>i.qty>0);
+  if(svc.length){
+    html+='<h4 style="color:var(--primary);font-size:0.8rem;margin:0.8rem 0 0.4rem">Сервис</h4>';
+    svc.forEach(i=>{
+      html+=`<div style="display:flex;justify-content:space-between;padding:0.3rem 0.5rem;border-bottom:1px solid var(--border);font-size:0.8rem"><span style="color:var(--text2)">${esc(i.name)} <span style="color:var(--text);font-size:0.7rem">×${i.qty}</span></span><span style="font-weight:600">${i.total.toLocaleString('ru-RU')} ₸</span></div>`;
+    });
+  }
+  html+=`<div style="display:flex;justify-content:space-between;padding:0.8rem 0.5rem;margin-top:0.5rem;font-weight:700;font-size:0.95rem;color:var(--white);border-top:2px solid var(--primary)"><span>ИТОГО</span><span>${(m.grandTotal||0).toLocaleString('ru-RU')} ₸</span></div>`;
+  html+='</div>';
+  openModal('Кейтеринг-меню — '+esc(l.name),html,`
+    <button class="btn btn-secondary" onclick="closeModal()">Закрыть</button>
+    <button class="btn btn-secondary" onclick="loadCateringMenuForEdit('${leadId}')">&#9998; Редактировать</button>
+    <button class="btn btn-primary" onclick="printLeadCateringMenu('${leadId}')">&#128424; Печать</button>`);
+}
+
+function loadCateringMenuForEdit(leadId){
+  const l=data.leads.find(x=>x.id===leadId);
+  if(!l||!l.cateringMenu)return;
+  closeModal();
+  // Switch to catering page
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  document.querySelector('[data-page="catering"]').classList.add('active');
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.getElementById('page-catering').classList.add('active');
+  document.getElementById('pageTitle').textContent='Кейтеринг';
+  // Set lead
+  document.getElementById('catLead').value=leadId;
+  document.getElementById('catGuests').value=l.cateringMenu.guests||50;
+  // Load into manual mode
+  manualMenuMode=true;
+  manualSelections={};
+  (l.cateringMenu.items||[]).forEach(i=>{if(i.qty>0)manualSelections[i.id]=i.qty;});
+  (l.cateringMenu.service||[]).forEach(i=>{if(i.qty>0)manualSelections[i.id]=i.qty;});
+  rebuildManualMenu();
+  renderCateringTable();
+}
+
+function printLeadCateringMenu(leadId){
+  const l=data.leads.find(x=>x.id===leadId);
+  if(!l||!l.cateringMenu)return;
+  currentCateringMenu=l.cateringMenu;
+  document.getElementById('catLead').value=leadId;
+  printCateringMenu();
+}
+
 function printCateringMenu(){
   if(!currentCateringMenu)return;
   const w=window.open('','_blank');
@@ -1713,7 +1847,7 @@ function printCateringMenu(){
 
   const catTitles={cold:'I. Холодные закуски и салаты',pastry:'II. Выпечка и киши',hot:'III. Горячие блюда и Гриль',drinks:'IV. Напитки'};
   const grouped={};
-  m.items.forEach(i=>{if(!grouped[i.category])grouped[i.category]=[];grouped[i.category].push(i);});
+  m.items.filter(i=>i.qty>0).forEach(i=>{if(!grouped[i.category])grouped[i.category]=[];grouped[i.category].push(i);});
   ['cold','pastry','hot','drinks'].forEach(cat=>{
     if(!grouped[cat])return;
     const bt=grouped[cat].reduce((s,i)=>s+i.total,0);
@@ -1721,10 +1855,11 @@ function printCateringMenu(){
     grouped[cat].forEach(i=>html+=`<tr><td><strong>${i.name}</strong></td><td>${i.description||''}</td><td>${i.unitPrice.toLocaleString('ru-RU')}</td><td>${i.qty}</td><td>${i.total.toLocaleString('ru-RU')}</td></tr>`);
     html+=`<tr><td colspan="4" style="text-align:right"><strong>Итого:</strong></td><td><strong>${bt.toLocaleString('ru-RU')} ₸</strong></td></tr></table>`;
   });
-  if(m.service.length){
-    const st=m.service.reduce((s,i)=>s+i.total,0);
+  const printService=m.service.filter(i=>i.qty>0);
+  if(printService.length){
+    const st=printService.reduce((s,i)=>s+i.total,0);
     html+=`<h2>V. Сервис</h2><table><tr><th>Позиция</th><th>Описание</th><th>Цена</th><th>Кол-во</th><th>Итого</th></tr>`;
-    m.service.forEach(i=>html+=`<tr><td><strong>${i.name}</strong></td><td>${i.description||''}</td><td>${i.unitPrice.toLocaleString('ru-RU')}</td><td>${i.qty}</td><td>${i.total.toLocaleString('ru-RU')}</td></tr>`);
+    printService.forEach(i=>html+=`<tr><td><strong>${i.name}</strong></td><td>${i.description||''}</td><td>${i.unitPrice.toLocaleString('ru-RU')}</td><td>${i.qty}</td><td>${i.total.toLocaleString('ru-RU')}</td></tr>`);
     html+=`<tr><td colspan="4" style="text-align:right"><strong>Итого:</strong></td><td><strong>${st.toLocaleString('ru-RU')} ₸</strong></td></tr></table>`;
   }
   html+=`<div class="total">ОБЩАЯ СУММА: ${m.grandTotal.toLocaleString('ru-RU')} ₸ <span class="per">На 1 персону: ${m.perPerson.toLocaleString('ru-RU')} ₸</span></div>`;
@@ -1745,18 +1880,34 @@ function filterCatering(cat){
 }
 function renderCateringTable(){
   const items=cateringFilter?data.catering.filter(c=>c.category===cateringFilter):data.catering;
-  document.getElementById('cateringTable').innerHTML=items.length?items.map(c=>`
-    <tr>
+  const wrap=document.querySelector('#page-catering .table-wrap:last-child');
+  if(manualMenuMode)wrap.classList.add('manual-mode');
+  else wrap.classList.remove('manual-mode');
+  document.getElementById('cateringTable').innerHTML=items.length?items.map(c=>{
+    const sel=!!manualSelections[c.id];
+    const qty=manualSelections[c.id]||0;
+    return`<tr>
       <td style="color:var(--white);font-weight:500">${esc(c.name)}</td>
       <td><span style="display:inline-block;padding:2px 8px;border-radius:4px;font-size:0.7rem;font-weight:600;background:${CAT_COLORS[c.category]||'var(--bg4)'};color:#fff">${CAT_CATS[c.category]||c.category}</span></td>
       <td style="font-size:0.75rem;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${esc(c.description||'')}">${esc(c.description||'-')}</td>
       <td style="font-weight:600;color:var(--green)">${(c.unitPrice||0).toLocaleString('ru-RU')} ₸</td>
       <td>${esc(c.unit||'шт')}</td>
-      <td>${canEdit()?`<div class="actions">
-        <button class="act-btn" onclick="openCateringModal('${c.id}')" title="Редактировать">&#9998;</button>
-        <button class="act-btn del" onclick="deleteItem('catering','${c.id}')" title="Удалить">&times;</button>
-      </div>`:''}</td>
-    </tr>`).join(''):'<tr><td colspan="6" class="empty"><div class="empty-icon">&#127860;</div>Добавьте позиции меню</td></tr>';
+      <td><div style="display:flex;align-items:center;gap:0.3rem">
+        <div class="manual-col">
+          <button class="manual-check${sel?' checked':''}" onclick="toggleManualItem('${c.id}')">${sel?'&#10003;':''}</button>
+          ${sel?`<div class="qty-wrap">
+            <button class="qty-btn" onclick="changeManualQty('${c.id}',-1)">−</button>
+            <input class="qty-val" type="number" value="${qty}" onchange="setManualQty('${c.id}',this.value)">
+            <button class="qty-btn" onclick="changeManualQty('${c.id}',1)">+</button>
+          </div>`:''}
+        </div>
+        ${canEdit()?`<div class="actions">
+          <button class="act-btn" onclick="openCateringModal('${c.id}')" title="Редактировать">&#9998;</button>
+          <button class="act-btn del" onclick="deleteItem('catering','${c.id}')" title="Удалить">&times;</button>
+        </div>`:''}
+      </div></td>
+    </tr>`;
+  }).join(''):'<tr><td colspan="6" class="empty"><div class="empty-icon">&#127860;</div>Добавьте позиции меню</td></tr>';
 }
 function openCateringModal(id){
   const c=id?data.catering.find(x=>x.id===id):{};
@@ -2326,7 +2477,7 @@ function copyDocHTML(){
 
 // === UTILS ===
 function esc(s){const d=document.createElement('div');d.textContent=s;return d.innerHTML;}
-function fmtDate(d){if(!d)return'—';const p=d.split('-');if(p.length===3)return`${p[2]}.${p[1]}.${p[0].slice(-2)}`;return new Date(d).toLocaleDateString('ru-RU',{day:'2-digit',month:'2-digit',year:'2-digit'});}
+function fmtDate(d){if(!d)return'—';const p=d.split('-');if(p.length===3)return`${p[2]}.${p[1]}.${p[0]}`;return new Date(d).toLocaleDateString('ru-RU',{day:'2-digit',month:'2-digit',year:'numeric'});}
 function fmtMoney(n){return(n||0).toLocaleString('ru-RU')+' тг';}
 
 // === THEME ===
