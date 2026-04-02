@@ -857,11 +857,14 @@ function applyAuth(){
     });
     document.querySelector('.nav-item[data-page="finance"]')?.classList.remove('hidden');
   }
-  // Host/DJ/Catering: start on relevant page
-  if(currentRole==='host'||currentRole==='dj'){
+  // Restore last page or default for role
+  const savedPage=localStorage.getItem('crm_page');
+  const navBtn=savedPage&&document.querySelector(`.nav-item[data-page="${savedPage}"]:not(.hidden)`);
+  if(navBtn){
+    navBtn.click();
+  } else if(currentRole==='host'||currentRole==='dj'){
     document.querySelector('.nav-item[data-page="calendar"]')?.click();
-  }
-  if(currentRole==='catering'){
+  } else if(currentRole==='catering'){
     document.querySelector('.nav-item[data-page="catering"]')?.click();
   }
   loadAll();
@@ -1035,6 +1038,7 @@ const PAGES={
 document.querySelectorAll('.nav-item[data-page]').forEach(btn=>{
   btn.addEventListener('click',()=>{
     currentPage=btn.dataset.page;
+    localStorage.setItem('crm_page',currentPage);
     document.querySelectorAll('.nav-item').forEach(b=>b.classList.remove('active'));
     btn.classList.add('active');
     document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
