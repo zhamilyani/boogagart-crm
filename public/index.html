@@ -451,10 +451,10 @@
           <div id="dashWeather" style="padding:0.8rem 1.2rem;display:flex;gap:0.5rem;overflow-x:auto"></div>
         </div>
       </div>
-      <!-- Monthly revenue for CEO -->
-      <div class="table-wrap" id="dashRevenueWrap" style="display:none">
-        <div class="table-header"><h3>&#128176; Выручка за текущий месяц</h3></div>
-        <div id="dashRevenue" style="padding:1rem 1.2rem"></div>
+      <!-- Tasks by executor -->
+      <div class="table-wrap">
+        <div class="table-header"><h3>&#128203; Задачи по исполнителям</h3></div>
+        <div id="dashTasks" style="padding:0.8rem 1.2rem"></div>
       </div>
     </div>
 
@@ -1145,27 +1145,56 @@ function render(){
     </div>`;
   }).join(''):'<div style="color:var(--text);font-size:0.82rem;padding:1rem 0;text-align:center">Нет мероприятий на ближайшие 7 дней</div>';
 
-  // Revenue for CEO
-  const revWrap=document.getElementById('dashRevenueWrap');
-  if(revWrap){
-    if(canFinance()){
-      revWrap.style.display='';
-      const now=new Date();
-      const monthLeads=visible.filter(l=>l.status==='done'&&l.eventDate&&new Date(l.eventDate).getMonth()===now.getMonth()&&new Date(l.eventDate).getFullYear()===now.getFullYear());
-      const monthRevenue=monthLeads.reduce((s,l)=>s+(l.revenue||0),0);
-      const monthExpense=monthLeads.reduce((s,l)=>s+(l.expPhoto||0)+(l.expMobile||0)+(l.expLight||0)+(l.expEquip||0)+(l.expShow||0)+(l.expOther||0),0);
-      const monthNames=['Январь','Февраль','Март','Апрель','Май','Июнь','Июль','Август','Сентябрь','Октябрь','Ноябрь','Декабрь'];
-      document.getElementById('dashRevenue').innerHTML=`
-        <div style="display:flex;gap:2rem;flex-wrap:wrap">
-          <div><div style="font-size:0.72rem;color:var(--text);text-transform:uppercase;letter-spacing:1px">${monthNames[now.getMonth()]} ${now.getFullYear()}</div>
-          <div style="font-size:1.4rem;font-weight:700;color:var(--green);margin-top:0.3rem">${monthRevenue.toLocaleString('ru-RU')} ₸</div>
-          <div style="font-size:0.75rem;color:var(--text);margin-top:0.2rem">выручка (${monthLeads.length} мероприятий)</div></div>
-          <div><div style="font-size:0.72rem;color:var(--text);text-transform:uppercase;letter-spacing:1px">Расходы</div>
-          <div style="font-size:1.4rem;font-weight:700;color:var(--primary);margin-top:0.3rem">${monthExpense.toLocaleString('ru-RU')} ₸</div></div>
-          <div><div style="font-size:0.72rem;color:var(--text);text-transform:uppercase;letter-spacing:1px">Прибыль</div>
-          <div style="font-size:1.4rem;font-weight:700;color:${monthRevenue-monthExpense>=0?'var(--green)':'var(--red)'};margin-top:0.3rem">${(monthRevenue-monthExpense).toLocaleString('ru-RU')} ₸</div></div>
+  // Tasks by executor
+  const tasksEl=document.getElementById('dashTasks');
+  if(tasksEl){
+    const todos=(data.other||[]).filter(o=>o.type==='todo');
+    const now=new Date();now.setHours(0,0,0,0);
+    // Group by executor
+    const byExec={};
+    todos.forEach(t=>{
+      const ex=t.executor||'Не назначен';
+      if(!byExec[ex])byExec[ex]={done:0,active:0,overdue:0};
+      if(t.done){byExec[ex].done++;}
+      else if(t.deadline&&new Date(t.deadline)<now){byExec[ex].overdue++;}
+      else{byExec[ex].active++;}
+    });
+    const totalDone=todos.filter(t=>t.done).length;
+    const totalActive=todos.filter(t=>!t.done&&(!t.deadline||new Date(t.deadline)>=now)).length;
+    const totalOverdue=todos.filter(t=>!t.done&&t.deadline&&new Date(t.deadline)<now).length;
+    let html=`<div style="display:flex;gap:1.5rem;margin-bottom:1rem;flex-wrap:wrap">
+      <div style="display:flex;align-items:center;gap:0.4rem"><span style="width:10px;height:10px;border-radius:50%;background:var(--green);display:inline-block"></span><span style="font-size:0.78rem;color:var(--text)">Выполнено: <strong style="color:var(--green)">${totalDone}</strong></span></div>
+      <div style="display:flex;align-items:center;gap:0.4rem"><span style="width:10px;height:10px;border-radius:50%;background:var(--blue);display:inline-block"></span><span style="font-size:0.78rem;color:var(--text)">В процессе: <strong style="color:var(--blue)">${totalActive}</strong></span></div>
+      <div style="display:flex;align-items:center;gap:0.4rem"><span style="width:10px;height:10px;border-radius:50%;background:var(--red);display:inline-block"></span><span style="font-size:0.78rem;color:var(--text)">Просрочено: <strong style="color:var(--red)">${totalOverdue}</strong></span></div>
+    </div>`;
+    const execs=Object.entries(byExec).sort((a,b)=>(b[1].overdue-a[1].overdue)||(b[1].active-a[1].active));
+    if(execs.length){
+      execs.forEach(([name,c])=>{
+        const total=c.done+c.active+c.overdue;
+        const pDone=total?Math.round(c.done/total*100):0;
+        const pActive=total?Math.round(c.active/total*100):0;
+        const pOver=total?100-pDone-pActive:0;
+        html+=`<div style="margin-bottom:0.8rem">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.3rem">
+            <span style="font-weight:600;color:var(--white);font-size:0.82rem">${esc(name)}</span>
+            <span style="font-size:0.7rem;color:var(--text)">${c.done}/${total}</span>
+          </div>
+          <div style="display:flex;height:8px;border-radius:4px;overflow:hidden;background:var(--bg3)">
+            ${pDone?`<div style="width:${pDone}%;background:var(--green)"></div>`:''}
+            ${pActive?`<div style="width:${pActive}%;background:var(--blue)"></div>`:''}
+            ${pOver?`<div style="width:${pOver}%;background:var(--red)"></div>`:''}
+          </div>
+          <div style="display:flex;gap:0.8rem;margin-top:0.2rem;font-size:0.68rem;color:var(--text)">
+            ${c.done?`<span style="color:var(--green)">${c.done} готово</span>`:''}
+            ${c.active?`<span style="color:var(--blue)">${c.active} в работе</span>`:''}
+            ${c.overdue?`<span style="color:var(--red)">${c.overdue} просрочено</span>`:''}
+          </div>
         </div>`;
-    } else { revWrap.style.display='none'; }
+      });
+    } else {
+      html+='<div style="color:var(--text);font-size:0.82rem;text-align:center;padding:0.5rem 0">Нет задач</div>';
+    }
+    tasksEl.innerHTML=html;
   }
 
   // Leads
