@@ -53,8 +53,8 @@
     .sidebar-logo{padding:1.5rem;border-bottom:1px solid var(--border)}
     .sidebar-logo img{width:160px;height:auto;display:block;margin:0 auto}
     .sidebar-logo small{display:block;font-size:0.65rem;color:var(--text);letter-spacing:1px;text-transform:uppercase;margin-top:6px;text-align:center}
-    .sidebar-logo .partner-logo{width:120px;height:auto;display:block;margin:8px auto 0}
-    [data-theme="dark"] .sidebar-logo .partner-logo{filter:invert(1)}
+    .sidebar-logo .partner-logo{width:120px;height:auto;display:block;margin:8px auto 0;mix-blend-mode:multiply}
+    [data-theme="dark"] .sidebar-logo .partner-logo{filter:invert(1);mix-blend-mode:screen}
     .sidebar-nav{flex:1;padding:0.8rem 0;overflow-y:auto}
     .nav-group{padding:0.5rem 1.5rem 0.3rem;font-size:0.6rem;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;color:var(--text);margin-top:0.5rem}
     .nav-item{display:flex;align-items:center;gap:0.8rem;padding:0.6rem 1.5rem;color:var(--text);font-size:0.83rem;font-weight:500;cursor:pointer;transition:all 0.2s;border:none;background:none;width:100%;text-align:left;font-family:inherit}
@@ -345,6 +345,7 @@
       .nav-item{justify-content:center;padding:0.7rem}
       .main{margin-left:60px}
       .stats-grid,.fin-grid{grid-template-columns:repeat(2,1fr)}
+      #dashGridRow{grid-template-columns:1fr!important}
       .form-row,.form-row-3{grid-template-columns:1fr}
     }
     @media(max-width:600px){
@@ -433,30 +434,27 @@
     <!-- DASHBOARD -->
     <div class="page active" id="page-dashboard">
       <div class="stats-grid">
-        <div class="stat-card"><div class="stat-icon" style="background:var(--primary-bg);color:var(--primary)">&#128172;</div><div class="stat-label">Заявки</div><div class="stat-value" id="statLeads">0</div><div class="stat-sub" id="statLeadsSub">всего</div></div>
-        <div class="stat-card"><div class="stat-icon" style="background:var(--green-bg);color:var(--green)">&#127922;</div><div class="stat-label">Конкурсы</div><div class="stat-value" id="statContests">0</div><div class="stat-sub">в базе</div></div>
-        <div class="stat-card"><div class="stat-icon" style="background:var(--blue-bg);color:var(--blue)">&#127908;</div><div class="stat-label">Ведущие</div><div class="stat-value" id="statHosts">0</div><div class="stat-sub">доступно</div></div>
-        <div class="stat-card"><div class="stat-icon" style="background:var(--yellow-bg);color:var(--yellow)">&#127968;</div><div class="stat-label">Локации</div><div class="stat-value" id="statLocations">0</div><div class="stat-sub">в базе</div></div>
+        <div class="stat-card"><div class="stat-icon" style="background:var(--primary-bg);color:var(--primary)">&#128313;</div><div class="stat-label">Новые</div><div class="stat-value" id="statNew">0</div><div class="stat-sub" id="statNewSub">заявки</div></div>
+        <div class="stat-card"><div class="stat-icon" style="background:var(--blue-bg);color:var(--blue)">&#9881;</div><div class="stat-label">В работе</div><div class="stat-value" id="statProgress">0</div><div class="stat-sub">заявки</div></div>
+        <div class="stat-card"><div class="stat-icon" style="background:var(--yellow-bg);color:var(--yellow)">&#128269;</div><div class="stat-label">На согласовании</div><div class="stat-value" id="statApproval">0</div><div class="stat-sub">заявки</div></div>
+        <div class="stat-card"><div class="stat-icon" style="background:var(--green-bg);color:var(--green)">&#10003;</div><div class="stat-label">Завершённые</div><div class="stat-value" id="statDone">0</div><div class="stat-sub" id="statDoneSub">за всё время</div></div>
       </div>
-      <div class="table-wrap">
-        <div class="table-header">
-          <h3>Последние заявки</h3>
-          <div style="display:flex;gap:0.5rem;align-items:center;flex-wrap:wrap">
-            <input id="dashSearch" placeholder="Поиск по всем полям..." oninput="render()" style="background:var(--bg3);border:1px solid var(--border);color:var(--text2);border-radius:6px;padding:0.35rem 0.8rem;font-size:0.78rem;font-family:inherit;width:200px;outline:none">
-            <select id="dashFilterType" onchange="render()" style="background:var(--bg3);border:1px solid var(--border);color:var(--text2);border-radius:6px;padding:0.35rem 0.5rem;font-size:0.78rem;font-family:inherit">
-              <option value="">Все типы</option>
-            </select>
-            <select id="dashFilterStatus" onchange="render()" style="background:var(--bg3);border:1px solid var(--border);color:var(--text2);border-radius:6px;padding:0.35rem 0.5rem;font-size:0.78rem;font-family:inherit">
-              <option value="">Все статусы</option>
-              <option value="new">Новые</option>
-              <option value="progress">В работе</option>
-              <option value="done">Готово</option>
-              <option value="cancelled">Отменено</option>
-            </select>
-          </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.2rem;margin-bottom:1.5rem" id="dashGridRow">
+        <!-- Upcoming events -->
+        <div class="table-wrap" style="margin:0">
+          <div class="table-header"><h3>&#128197; Ближайшие мероприятия</h3></div>
+          <div id="dashUpcoming" style="padding:0.8rem 1.2rem"></div>
         </div>
-        <table><thead><tr><th>Дата</th><th>Имя</th><th>Телефон</th><th>Тип</th><th>Гости</th><th>Бюджет</th><th>Статус</th><th></th></tr></thead>
-        <tbody id="dashLeads"></tbody></table>
+        <!-- Weather -->
+        <div class="table-wrap" style="margin:0">
+          <div class="table-header"><h3>&#9925; Погода — Алматы, 7 дней</h3></div>
+          <div id="dashWeather" style="padding:0.8rem 1.2rem;display:flex;gap:0.5rem;overflow-x:auto"></div>
+        </div>
+      </div>
+      <!-- Monthly revenue for CEO -->
+      <div class="table-wrap" id="dashRevenueWrap" style="display:none">
+        <div class="table-header"><h3>&#128176; Выручка за текущий месяц</h3></div>
+        <div id="dashRevenue" style="padding:1rem 1.2rem"></div>
       </div>
     </div>
 
@@ -1002,6 +1000,43 @@ async function loadAll(){
     [data.leads,data.contests,data.hosts,data.locations,data.equipment,data.inventory,data.scenarios,data.djs,data.users,data.catering,data.other]=results.map(r=>Array.isArray(r)?r:[]);
   }catch(e){console.error('loadAll error:',e);}
   render();
+  loadWeather();
+}
+
+// Weather (Open-Meteo, free, no API key)
+let weatherLoaded=false;
+async function loadWeather(){
+  if(weatherLoaded)return;
+  const el=document.getElementById('dashWeather');if(!el)return;
+  try{
+    const res=await fetch('https://api.open-meteo.com/v1/forecast?latitude=43.24&longitude=76.95&daily=weathercode,temperature_2m_max,temperature_2m_min,precipitation_probability_max,windspeed_10m_max&timezone=Asia/Almaty&forecast_days=7');
+    const w=await res.json();
+    const days=w.daily.time;
+    const dayNames=['Вс','Пн','Вт','Ср','Чт','Пт','Сб'];
+    const wmoIcons={0:'&#9728;',1:'&#127780;',2:'&#9925;',3:'&#9729;',45:'&#127787;',48:'&#127787;',51:'&#127782;',53:'&#127782;',55:'&#127782;',61:'&#127783;',63:'&#127783;',65:'&#127783;',71:'&#127784;',73:'&#127784;',75:'&#127784;',80:'&#127783;',81:'&#127783;',82:'&#127783;',95:'&#9889;',96:'&#9889;',99:'&#9889;'};
+    el.innerHTML=days.map((d,i)=>{
+      const dt=new Date(d+'T12:00:00');
+      const dn=dayNames[dt.getDay()];
+      const dd=d.slice(8);const mm=d.slice(5,7);
+      const code=w.daily.weathercode[i];
+      const icon=wmoIcons[code]||'&#9728;';
+      const hi=Math.round(w.daily.temperature_2m_max[i]);
+      const lo=Math.round(w.daily.temperature_2m_min[i]);
+      const rain=w.daily.precipitation_probability_max[i]||0;
+      const wind=Math.round(w.daily.windspeed_10m_max[i]);
+      const isToday=i===0;
+      return`<div style="flex:1;min-width:75px;text-align:center;padding:0.6rem 0.3rem;background:${isToday?'var(--primary-bg)':'var(--bg3)'};border-radius:8px;border:1px solid ${isToday?'var(--primary)':'var(--border)'}">
+        <div style="font-size:0.7rem;color:${isToday?'var(--primary)':'var(--text)'};font-weight:${isToday?'700':'500'}">${isToday?'Сегодня':dn}</div>
+        <div style="font-size:0.65rem;color:var(--text)">${dd}.${mm}</div>
+        <div style="font-size:1.5rem;margin:0.3rem 0">${icon}</div>
+        <div style="font-weight:700;color:var(--white);font-size:0.85rem">${hi>0?'+':''}${hi}°</div>
+        <div style="font-size:0.7rem;color:var(--text)">${lo>0?'+':''}${lo}°</div>
+        ${rain>30?`<div style="font-size:0.6rem;color:var(--blue);margin-top:0.2rem">&#128167; ${rain}%</div>`:''}
+        ${wind>30?`<div style="font-size:0.6rem;color:var(--yellow);margin-top:0.1rem">&#128168; ${wind} км/ч</div>`:''}
+      </div>`;
+    }).join('');
+    weatherLoaded=true;
+  }catch(e){el.innerHTML='<div style="color:var(--text);font-size:0.8rem;padding:0.5rem">Не удалось загрузить погоду</div>';}
 }
 
 // Auto-sync when back online
@@ -1080,45 +1115,58 @@ function renderRating(n){
 function render(){
   const visible=getVisibleLeads();
   const newLeads=visible.filter(l=>(l.status||'new')==='new').length;
-  document.getElementById('statLeads').textContent=visible.length;
-  document.getElementById('statLeadsSub').textContent=newLeads+' новых';
-  document.getElementById('statContests').textContent=data.contests.length;
-  document.getElementById('statHosts').textContent=data.hosts.length;
-  document.getElementById('statLocations').textContent=data.locations.length;
+  const progressLeads=visible.filter(l=>l.status==='progress').length;
+  const approvalLeads=visible.filter(l=>l.status==='approval').length;
+  const doneLeads=visible.filter(l=>l.status==='done').length;
+  document.getElementById('statNew').textContent=newLeads;
+  document.getElementById('statProgress').textContent=progressLeads;
+  document.getElementById('statApproval').textContent=approvalLeads;
+  document.getElementById('statDone').textContent=doneLeads;
   document.getElementById('leadsCount').textContent=newLeads||'';
 
-  // Fill type filter options
-  const typeSelect=document.getElementById('dashFilterType');
-  if(typeSelect&&!typeSelect.dataset.filled){
-    typeSelect.innerHTML='<option value="">Все типы</option>'+Object.entries(EV).map(([k,v])=>`<option value="${k}">${v}</option>`).join('');
-    typeSelect.dataset.filled='1';
-  }
+  // Upcoming events (next 7 days)
+  const today=new Date();today.setHours(0,0,0,0);
+  const week=new Date(today);week.setDate(week.getDate()+7);
+  const upcoming=visible.filter(l=>l.eventDate&&new Date(l.eventDate)>=today&&new Date(l.eventDate)<=week&&l.status!=='cancelled'&&l.status!=='done')
+    .sort((a,b)=>new Date(a.eventDate)-new Date(b.eventDate));
+  const upEl=document.getElementById('dashUpcoming');
+  if(upEl)upEl.innerHTML=upcoming.length?upcoming.map(l=>{
+    const d=new Date(l.eventDate);
+    const dayNames=['Вс','Пн','Вт','Ср','Чт','Пт','Сб'];
+    const isToday=d.toDateString()===today.toDateString();
+    const tmr=new Date(today);tmr.setDate(tmr.getDate()+1);
+    const isTomorrow=d.toDateString()===tmr.toDateString();
+    const dayLabel=isToday?'<span style="color:var(--primary);font-weight:700">Сегодня</span>':isTomorrow?'<span style="color:var(--yellow);font-weight:600">Завтра</span>':dayNames[d.getDay()]+', '+fmtDate(l.eventDate);
+    return`<div style="display:flex;justify-content:space-between;align-items:center;padding:0.6rem 0;border-bottom:1px solid var(--border);gap:0.5rem">
+      <div><span style="font-weight:600;color:var(--white);cursor:pointer;border-bottom:1px dashed var(--text)" onclick="viewLead('${l.id}')">${esc(l.name)}</span>
+      <span style="font-size:0.72rem;color:var(--text);margin-left:0.4rem">${EV[l.eventType]||''}</span></div>
+      <div style="text-align:right;white-space:nowrap"><div style="font-size:0.78rem">${dayLabel}</div>
+      <span class="status status-${l.status||'new'}" style="font-size:0.65rem">${ST[l.status||'new']}</span></div>
+    </div>`;
+  }).join(''):'<div style="color:var(--text);font-size:0.82rem;padding:1rem 0;text-align:center">Нет мероприятий на ближайшие 7 дней</div>';
 
-  // Dashboard filtered
-  const dashSearch=(document.getElementById('dashSearch')?.value||'').toLowerCase();
-  const dashType=document.getElementById('dashFilterType')?.value||'';
-  const dashStatus=document.getElementById('dashFilterStatus')?.value||'';
-  let dashList=[...visible].sort((a,b)=>new Date(b.createdAt)-new Date(a.createdAt));
-  if(dashType)dashList=dashList.filter(l=>l.eventType===dashType);
-  if(dashStatus)dashList=dashList.filter(l=>(l.status||'new')===dashStatus);
-  if(dashSearch)dashList=dashList.filter(l=>{
-    const s=[l.name,l.phone,EV[l.eventType],l.guests,l.budget,ST[l.status||'new'],fmtDate(l.createdAt),fmtDate(l.eventDate)].join(' ').toLowerCase();
-    return s.includes(dashSearch);
-  });
-  document.getElementById('dashLeads').innerHTML=dashList.length?dashList.map(l=>`
-    <tr>
-      <td>${fmtDate(l.createdAt)}</td>
-      <td><a href="#" onclick="event.preventDefault();viewLead('${l.id}')" style="color:var(--white);font-weight:500;text-decoration:none;border-bottom:1px dashed var(--text);cursor:pointer">${esc(l.name||'-')}</a></td>
-      <td>${esc(l.phone||'-')}</td>
-      <td>${EV[l.eventType]||l.eventType||'-'}</td>
-      <td>${esc(l.guests||'-')}</td>
-      <td>${esc(l.budget||'-')}</td>
-      <td><span class="status status-${l.status||'new'}">${ST[l.status||'new']}</span></td>
-      <td><div class="actions">
-        ${canEdit()?`<button class="act-btn" onclick="openLeadModal('${l.id}')" title="Редактировать">&#9998;</button>`:''}
-        <button class="act-btn" onclick="openProposalForLead('${l.id}')" title="Предложение" style="color:var(--primary)">&#9889;</button>
-      </div></td>
-    </tr>`).join(''):'<tr><td colspan="8" class="empty">Нет заявок по фильтру</td></tr>';
+  // Revenue for CEO
+  const revWrap=document.getElementById('dashRevenueWrap');
+  if(revWrap){
+    if(canFinance()){
+      revWrap.style.display='';
+      const now=new Date();
+      const monthLeads=visible.filter(l=>l.status==='done'&&l.eventDate&&new Date(l.eventDate).getMonth()===now.getMonth()&&new Date(l.eventDate).getFullYear()===now.getFullYear());
+      const monthRevenue=monthLeads.reduce((s,l)=>s+(l.revenue||0),0);
+      const monthExpense=monthLeads.reduce((s,l)=>s+(l.expPhoto||0)+(l.expMobile||0)+(l.expLight||0)+(l.expEquip||0)+(l.expShow||0)+(l.expOther||0),0);
+      const monthNames=['Январь','Февраль','Март','Апрель','Май','Июнь','Июль','Август','Сентябрь','Октябрь','Ноябрь','Декабрь'];
+      document.getElementById('dashRevenue').innerHTML=`
+        <div style="display:flex;gap:2rem;flex-wrap:wrap">
+          <div><div style="font-size:0.72rem;color:var(--text);text-transform:uppercase;letter-spacing:1px">${monthNames[now.getMonth()]} ${now.getFullYear()}</div>
+          <div style="font-size:1.4rem;font-weight:700;color:var(--green);margin-top:0.3rem">${monthRevenue.toLocaleString('ru-RU')} ₸</div>
+          <div style="font-size:0.75rem;color:var(--text);margin-top:0.2rem">выручка (${monthLeads.length} мероприятий)</div></div>
+          <div><div style="font-size:0.72rem;color:var(--text);text-transform:uppercase;letter-spacing:1px">Расходы</div>
+          <div style="font-size:1.4rem;font-weight:700;color:var(--primary);margin-top:0.3rem">${monthExpense.toLocaleString('ru-RU')} ₸</div></div>
+          <div><div style="font-size:0.72rem;color:var(--text);text-transform:uppercase;letter-spacing:1px">Прибыль</div>
+          <div style="font-size:1.4rem;font-weight:700;color:${monthRevenue-monthExpense>=0?'var(--green)':'var(--red)'};margin-top:0.3rem">${(monthRevenue-monthExpense).toLocaleString('ru-RU')} ₸</div></div>
+        </div>`;
+    } else { revWrap.style.display='none'; }
+  }
 
   // Leads
   const filter=document.querySelector('.filter-btn.active')?.dataset.filter||'all';
