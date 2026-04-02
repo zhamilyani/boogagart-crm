@@ -2135,15 +2135,17 @@ function loadCateringMenuForEdit(leadId){
   document.getElementById('pageTitle').textContent='Кейтеринг';
   // Set lead
   currentCateringLeadId=leadId;
-  // Load into manual mode
+  // Load saved menu directly (not from catalog)
   manualMenuMode=true;
   manualSelections={};
-  (l.cateringMenu.items||[]).forEach(i=>{
+  const savedItems=(l.cateringMenu.items||[]).map(i=>({...i}));
+  savedItems.forEach(i=>{
     if(i.category==='service')manualSelections[i.id]=1;
     else if(i.qty>0)manualSelections[i.id]=i.qty;
   });
-  currentCateringMenu={...l.cateringMenu,service:[]};
-  rebuildManualMenu();
+  const guests=l.cateringMenu.guests||50;
+  const grandTotal=savedItems.reduce((s,i)=>s+i.total,0);
+  currentCateringMenu={items:savedItems,service:[],guests,grandTotal,perPerson:Math.round(grandTotal/guests)};
   renderCateringTable();
   renderCateringResult();
 }
