@@ -458,7 +458,7 @@
       </div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.2rem;margin-bottom:1.5rem" id="dashTasksRow">
         <div class="table-wrap" style="margin:0">
-          <div class="table-header"><h3>&#128203; Задачи — сводка</h3></div>
+          <div class="table-header"><h3>&#128203; Задачи на сегодня</h3></div>
           <div id="dashTasksSummary" style="padding:0.8rem 1.2rem"></div>
         </div>
         <div class="table-wrap" style="margin:0">
@@ -1166,27 +1166,30 @@ function render(){
   // Left: summary with big numbers
   const sumEl=document.getElementById('dashTasksSummary');
   if(sumEl){
-    const pDoneAll=totalAll?Math.round(totalDone/totalAll*100):0;
-    const pActiveAll=totalAll?Math.round(totalActive/totalAll*100):0;
-    const pOverAll=totalAll?100-pDoneAll-pActiveAll:0;
-    sumEl.innerHTML=totalAll?`
-      <div style="display:flex;justify-content:space-around;text-align:center;margin-bottom:1rem">
-        <div><div style="font-size:1.8rem;font-weight:800;color:var(--green)">${totalDone}</div><div style="font-size:0.7rem;color:var(--text)">Выполнено</div></div>
-        <div><div style="font-size:1.8rem;font-weight:800;color:var(--blue)">${totalActive}</div><div style="font-size:0.7rem;color:var(--text)">В процессе</div></div>
-        <div><div style="font-size:1.8rem;font-weight:800;color:var(--red)">${totalOverdue}</div><div style="font-size:0.7rem;color:var(--text)">Просрочено</div></div>
-      </div>
-      <div style="display:flex;height:10px;border-radius:5px;overflow:hidden;background:var(--bg3);margin-bottom:0.6rem">
-        ${pDoneAll?`<div style="width:${pDoneAll}%;background:var(--green)"></div>`:''}
-        ${pActiveAll?`<div style="width:${pActiveAll}%;background:var(--blue)"></div>`:''}
-        ${pOverAll?`<div style="width:${pOverAll}%;background:var(--red)"></div>`:''}
-      </div>
-      <div style="display:flex;justify-content:space-between;font-size:0.7rem;color:var(--text)">
-        <span><span style="color:var(--green)">${pDoneAll}%</span> готово</span>
-        <span><span style="color:var(--blue)">${pActiveAll}%</span> в работе</span>
-        <span><span style="color:var(--red)">${pOverAll>0?pOverAll:0}%</span> просрочено</span>
-      </div>
-      <div style="text-align:center;margin-top:0.8rem;font-size:0.75rem;color:var(--text)">Всего задач: <strong style="color:var(--white)">${totalAll}</strong></div>
-    `:'<div style="color:var(--text);font-size:0.82rem;text-align:center;padding:1.5rem 0">Нет задач</div>';
+    // Tasks for today: deadline=today OR overdue (not done)
+    const todayStr=nowT.toISOString().slice(0,10);
+    const todayTasks=todos.filter(t=>!t.done&&t.deadline&&t.deadline===todayStr);
+    const overdueTasks=todos.filter(t=>!t.done&&t.deadline&&new Date(t.deadline)<nowT);
+    const allToday=[...overdueTasks.sort((a,b)=>new Date(a.deadline)-new Date(b.deadline)),...todayTasks];
+    let html='';
+    if(allToday.length){
+      allToday.forEach(t=>{
+        const isOverdue=new Date(t.deadline)<nowT;
+        html+=`<div style="display:flex;align-items:flex-start;gap:0.6rem;padding:0.5rem 0;border-bottom:1px solid var(--border)">
+          <button class="manual-check" onclick="toggleTodoDone('${t.id}')" style="width:22px;height:22px;flex-shrink:0;margin-top:1px"></button>
+          <div style="flex:1;min-width:0">
+            <div style="font-size:0.82rem;color:var(--white);font-weight:500">${esc(t.task||'—')}</div>
+            <div style="font-size:0.68rem;color:var(--text);margin-top:0.15rem;display:flex;gap:0.6rem;flex-wrap:wrap">
+              ${t.executor?`<span>&#128100; ${esc(t.executor)}</span>`:''}
+              <span style="color:${isOverdue?'var(--red)':'var(--text)'}${isOverdue?';font-weight:600':''}">&#128197; ${fmtDate(t.deadline)}${isOverdue?' (просрочена)':''}</span>
+            </div>
+          </div>
+        </div>`;
+      });
+    } else {
+      html='<div style="color:var(--text);font-size:0.82rem;text-align:center;padding:1.5rem 0">&#10024; Все задачи на сегодня выполнены!</div>';
+    }
+    sumEl.innerHTML=html;
   }
 
   // Right: by executor with %
