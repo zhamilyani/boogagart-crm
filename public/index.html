@@ -1832,6 +1832,7 @@ function openManualMenuModal(){
 }
 
 function generateCateringMenu(){
+  hideSavedMenus();
   currentCateringLeadId=document.getElementById('catLead')?.value||'';
   const guests=parseInt(document.getElementById('catGuests').value)||50;
   const budget=parseInt(document.getElementById('catBudget').value)||999999;
@@ -1907,6 +1908,7 @@ let manualMenuMode=false;
 let manualSelections={};// id -> qty
 
 function startManualMenu(){
+  hideSavedMenus();
   currentCateringLeadId=document.getElementById('catLead')?.value||currentCateringLeadId;
   const guests=parseInt(document.getElementById('catGuests')?.value)||50;
   manualMenuMode=true;
@@ -2124,6 +2126,7 @@ function loadCateringMenuForEdit(leadId){
   const l=data.leads.find(x=>x.id===leadId);
   if(!l||!l.cateringMenu)return;
   closeModal();
+  hideSavedMenus();
   // Switch to catering page
   document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
   document.querySelector('[data-page="catering"]').classList.add('active');
