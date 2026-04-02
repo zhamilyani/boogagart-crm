@@ -392,7 +392,7 @@
   <div class="sidebar-logo"><img src="logo.png" alt="BooGagArt"><img src="provkus-logo.jpeg" alt="Provkus Catering" class="partner-logo"><small>CRM-система</small></div>
   <nav class="sidebar-nav">
     <div class="nav-group">Основное</div>
-    <button class="nav-item active" data-page="dashboard"><span class="icon">&#9632;</span><span>Дашборд</span></button>
+    <button class="nav-item active" data-page="dashboard"><span class="icon">&#9632;</span><span>Главная</span></button>
     <button class="nav-item" data-page="calendar"><span class="icon">&#128197;</span><span>Календарь</span></button>
     <button class="nav-item" data-page="leads"><span class="icon">&#128172;</span><span>Заявки</span><span class="badge" id="leadsCount">0</span></button>
     <div class="nav-group">База данных</div>
@@ -422,7 +422,7 @@
 <!-- MAIN -->
 <div class="main" id="mainArea" style="display:none">
   <div class="topbar">
-    <h1 id="pageTitle">Дашборд</h1>
+    <h1 id="pageTitle">Главная</h1>
     <div style="display:flex;gap:0.7rem;align-items:center">
       <div class="topbar-actions" id="topbarActions"></div>
       <button class="theme-btn" onclick="openTodoPanel()" title="To-Do лист" id="todoBtnTop" style="position:relative">&#128203;<span id="todoBadge" style="position:absolute;top:-4px;right:-4px;background:var(--red);color:#fff;font-size:0.55rem;font-weight:700;min-width:16px;height:16px;border-radius:8px;display:none;align-items:center;justify-content:center"></span></button>
@@ -1063,7 +1063,7 @@ window.addEventListener('offline',()=>{
 
 // === NAVIGATION ===
 const PAGES={
-  dashboard:{title:'Дашборд',btn:null},
+  dashboard:{title:'Главная',btn:null},
   calendar:{title:'Календарь событий',btn:null},
   leads:{title:'Заявки',btn:{label:'+ Новая заявка',action:()=>openLeadModal()}},
   contests:{title:'База конкурсов',btn:{label:'+ Добавить конкурс',action:()=>openContestModal()}},
