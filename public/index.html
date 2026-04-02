@@ -345,7 +345,7 @@
       .nav-item{justify-content:center;padding:0.7rem}
       .main{margin-left:60px}
       .stats-grid,.fin-grid{grid-template-columns:repeat(2,1fr)}
-      #dashGridRow{grid-template-columns:1fr!important}
+      #dashGridRow,#dashTasksRow{grid-template-columns:1fr!important}
       .form-row,.form-row-3{grid-template-columns:1fr}
     }
     @media(max-width:600px){
@@ -433,10 +433,10 @@
 
     <!-- DASHBOARD -->
     <div class="page active" id="page-dashboard">
-      <div id="dashQuote" style="background:linear-gradient(135deg,var(--bg2),var(--bg3));border:1px solid var(--border);border-radius:var(--radius);padding:1.2rem 1.5rem;margin-bottom:1.5rem;position:relative;overflow:hidden">
-        <div style="position:absolute;top:-8px;left:12px;font-size:3rem;color:var(--primary);opacity:0.15;font-family:Georgia,serif;line-height:1">&ldquo;</div>
-        <div id="quoteText" style="font-size:0.88rem;color:var(--white);font-style:italic;line-height:1.6;padding-left:1.2rem"></div>
-        <div id="quoteAuthor" style="font-size:0.75rem;color:var(--primary);font-weight:600;margin-top:0.5rem;text-align:right"></div>
+      <div id="dashQuote" style="background:linear-gradient(135deg,var(--bg2),var(--bg3));border:1px solid var(--border);border-radius:var(--radius);padding:0.8rem 1.5rem;margin-bottom:1.5rem;position:relative;overflow:hidden;display:flex;align-items:center;gap:1rem">
+        <div style="font-size:2.5rem;color:var(--primary);opacity:0.2;font-family:Georgia,serif;line-height:1;flex-shrink:0">&ldquo;</div>
+        <div style="flex:1;min-width:0"><div id="quoteText" style="font-size:1.05rem;color:var(--white);font-style:italic;line-height:1.4;white-space:nowrap;overflow:hidden;text-overflow:ellipsis"></div>
+        <div id="quoteAuthor" style="font-size:0.75rem;color:var(--primary);font-weight:600;margin-top:0.2rem;text-align:right"></div></div>
       </div>
       <div class="stats-grid">
         <div class="stat-card"><div class="stat-icon" style="background:var(--primary-bg);color:var(--primary)">&#128313;</div><div class="stat-label">Новые</div><div class="stat-value" id="statNew">0</div><div class="stat-sub" id="statNewSub">заявки</div></div>
@@ -456,10 +456,15 @@
           <div id="dashWeather" style="padding:0.8rem 1.2rem;display:flex;gap:0.5rem;overflow-x:auto"></div>
         </div>
       </div>
-      <!-- Tasks by executor -->
-      <div class="table-wrap">
-        <div class="table-header"><h3>&#128203; Задачи по исполнителям</h3></div>
-        <div id="dashTasks" style="padding:0.8rem 1.2rem"></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.2rem;margin-bottom:1.5rem" id="dashTasksRow">
+        <div class="table-wrap" style="margin:0">
+          <div class="table-header"><h3>&#128203; Задачи — сводка</h3></div>
+          <div id="dashTasksSummary" style="padding:0.8rem 1.2rem"></div>
+        </div>
+        <div class="table-wrap" style="margin:0">
+          <div class="table-header"><h3>&#128100; Задачи по исполнителям</h3></div>
+          <div id="dashTasksByExec" style="padding:0.8rem 1.2rem"></div>
+        </div>
       </div>
     </div>
 
@@ -1150,29 +1155,53 @@ function render(){
     </div>`;
   }).join(''):'<div style="color:var(--text);font-size:0.82rem;padding:1rem 0;text-align:center">Нет мероприятий на ближайшие 7 дней</div>';
 
-  // Tasks by executor
-  const tasksEl=document.getElementById('dashTasks');
-  if(tasksEl){
-    const todos=(data.other||[]).filter(o=>o.type==='todo');
-    const now=new Date();now.setHours(0,0,0,0);
-    // Group by executor
+  // Tasks — summary + by executor
+  const todos=(data.other||[]).filter(o=>o.type==='todo');
+  const nowT=new Date();nowT.setHours(0,0,0,0);
+  const totalDone=todos.filter(t=>t.done).length;
+  const totalActive=todos.filter(t=>!t.done&&(!t.deadline||new Date(t.deadline)>=nowT)).length;
+  const totalOverdue=todos.filter(t=>!t.done&&t.deadline&&new Date(t.deadline)<nowT).length;
+  const totalAll=todos.length;
+
+  // Left: summary with big numbers
+  const sumEl=document.getElementById('dashTasksSummary');
+  if(sumEl){
+    const pDoneAll=totalAll?Math.round(totalDone/totalAll*100):0;
+    const pActiveAll=totalAll?Math.round(totalActive/totalAll*100):0;
+    const pOverAll=totalAll?100-pDoneAll-pActiveAll:0;
+    sumEl.innerHTML=totalAll?`
+      <div style="display:flex;justify-content:space-around;text-align:center;margin-bottom:1rem">
+        <div><div style="font-size:1.8rem;font-weight:800;color:var(--green)">${totalDone}</div><div style="font-size:0.7rem;color:var(--text)">Выполнено</div></div>
+        <div><div style="font-size:1.8rem;font-weight:800;color:var(--blue)">${totalActive}</div><div style="font-size:0.7rem;color:var(--text)">В процессе</div></div>
+        <div><div style="font-size:1.8rem;font-weight:800;color:var(--red)">${totalOverdue}</div><div style="font-size:0.7rem;color:var(--text)">Просрочено</div></div>
+      </div>
+      <div style="display:flex;height:10px;border-radius:5px;overflow:hidden;background:var(--bg3);margin-bottom:0.6rem">
+        ${pDoneAll?`<div style="width:${pDoneAll}%;background:var(--green)"></div>`:''}
+        ${pActiveAll?`<div style="width:${pActiveAll}%;background:var(--blue)"></div>`:''}
+        ${pOverAll?`<div style="width:${pOverAll}%;background:var(--red)"></div>`:''}
+      </div>
+      <div style="display:flex;justify-content:space-between;font-size:0.7rem;color:var(--text)">
+        <span><span style="color:var(--green)">${pDoneAll}%</span> готово</span>
+        <span><span style="color:var(--blue)">${pActiveAll}%</span> в работе</span>
+        <span><span style="color:var(--red)">${pOverAll>0?pOverAll:0}%</span> просрочено</span>
+      </div>
+      <div style="text-align:center;margin-top:0.8rem;font-size:0.75rem;color:var(--text)">Всего задач: <strong style="color:var(--white)">${totalAll}</strong></div>
+    `:'<div style="color:var(--text);font-size:0.82rem;text-align:center;padding:1.5rem 0">Нет задач</div>';
+  }
+
+  // Right: by executor with %
+  const execEl=document.getElementById('dashTasksByExec');
+  if(execEl){
     const byExec={};
     todos.forEach(t=>{
       const ex=t.executor||'Не назначен';
       if(!byExec[ex])byExec[ex]={done:0,active:0,overdue:0};
       if(t.done){byExec[ex].done++;}
-      else if(t.deadline&&new Date(t.deadline)<now){byExec[ex].overdue++;}
+      else if(t.deadline&&new Date(t.deadline)<nowT){byExec[ex].overdue++;}
       else{byExec[ex].active++;}
     });
-    const totalDone=todos.filter(t=>t.done).length;
-    const totalActive=todos.filter(t=>!t.done&&(!t.deadline||new Date(t.deadline)>=now)).length;
-    const totalOverdue=todos.filter(t=>!t.done&&t.deadline&&new Date(t.deadline)<now).length;
-    let html=`<div style="display:flex;gap:1.5rem;margin-bottom:1rem;flex-wrap:wrap">
-      <div style="display:flex;align-items:center;gap:0.4rem"><span style="width:10px;height:10px;border-radius:50%;background:var(--green);display:inline-block"></span><span style="font-size:0.78rem;color:var(--text)">Выполнено: <strong style="color:var(--green)">${totalDone}</strong></span></div>
-      <div style="display:flex;align-items:center;gap:0.4rem"><span style="width:10px;height:10px;border-radius:50%;background:var(--blue);display:inline-block"></span><span style="font-size:0.78rem;color:var(--text)">В процессе: <strong style="color:var(--blue)">${totalActive}</strong></span></div>
-      <div style="display:flex;align-items:center;gap:0.4rem"><span style="width:10px;height:10px;border-radius:50%;background:var(--red);display:inline-block"></span><span style="font-size:0.78rem;color:var(--text)">Просрочено: <strong style="color:var(--red)">${totalOverdue}</strong></span></div>
-    </div>`;
     const execs=Object.entries(byExec).sort((a,b)=>(b[1].overdue-a[1].overdue)||(b[1].active-a[1].active));
+    let html='';
     if(execs.length){
       execs.forEach(([name,c])=>{
         const total=c.done+c.active+c.overdue;
@@ -1182,24 +1211,24 @@ function render(){
         html+=`<div style="margin-bottom:0.8rem">
           <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.3rem">
             <span style="font-weight:600;color:var(--white);font-size:0.82rem">${esc(name)}</span>
-            <span style="font-size:0.7rem;color:var(--text)">${c.done}/${total}</span>
+            <span style="font-size:0.68rem;color:var(--text)">${pDone}% выполнено</span>
           </div>
           <div style="display:flex;height:8px;border-radius:4px;overflow:hidden;background:var(--bg3)">
             ${pDone?`<div style="width:${pDone}%;background:var(--green)"></div>`:''}
             ${pActive?`<div style="width:${pActive}%;background:var(--blue)"></div>`:''}
-            ${pOver?`<div style="width:${pOver}%;background:var(--red)"></div>`:''}
+            ${pOver>0?`<div style="width:${pOver}%;background:var(--red)"></div>`:''}
           </div>
-          <div style="display:flex;gap:0.8rem;margin-top:0.2rem;font-size:0.68rem;color:var(--text)">
-            ${c.done?`<span style="color:var(--green)">${c.done} готово</span>`:''}
-            ${c.active?`<span style="color:var(--blue)">${c.active} в работе</span>`:''}
-            ${c.overdue?`<span style="color:var(--red)">${c.overdue} просрочено</span>`:''}
+          <div style="display:flex;gap:0.8rem;margin-top:0.2rem;font-size:0.65rem;color:var(--text)">
+            ${c.done?`<span style="color:var(--green)">${c.done} (${pDone}%)</span>`:''}
+            ${c.active?`<span style="color:var(--blue)">${c.active} (${pActive}%)</span>`:''}
+            ${c.overdue?`<span style="color:var(--red)">${c.overdue} (${pOver>0?pOver:0}%)</span>`:''}
           </div>
         </div>`;
       });
     } else {
-      html+='<div style="color:var(--text);font-size:0.82rem;text-align:center;padding:0.5rem 0">Нет задач</div>';
+      html='<div style="color:var(--text);font-size:0.82rem;text-align:center;padding:1.5rem 0">Нет задач</div>';
     }
-    tasksEl.innerHTML=html;
+    execEl.innerHTML=html;
   }
 
   // Leads
