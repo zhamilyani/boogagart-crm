@@ -51,8 +51,10 @@
     /* SIDEBAR */
     .sidebar{width:250px;background:var(--bg2);border-right:1px solid var(--border);display:flex;flex-direction:column;position:fixed;top:0;bottom:0;z-index:50}
     .sidebar-logo{padding:1.5rem;border-bottom:1px solid var(--border)}
-    .sidebar-logo img{width:160px;height:auto;display:block}
-    .sidebar-logo small{display:block;font-size:0.65rem;color:var(--text);letter-spacing:1px;text-transform:uppercase;margin-top:6px}
+    .sidebar-logo img{width:160px;height:auto;display:block;margin:0 auto}
+    .sidebar-logo small{display:block;font-size:0.65rem;color:var(--text);letter-spacing:1px;text-transform:uppercase;margin-top:6px;text-align:center}
+    .sidebar-logo .partner-logo{width:120px;height:auto;display:block;margin:8px auto 0}
+    [data-theme="dark"] .sidebar-logo .partner-logo{filter:invert(1)}
     .sidebar-nav{flex:1;padding:0.8rem 0;overflow-y:auto}
     .nav-group{padding:0.5rem 1.5rem 0.3rem;font-size:0.6rem;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;color:var(--text);margin-top:0.5rem}
     .nav-item{display:flex;align-items:center;gap:0.8rem;padding:0.6rem 1.5rem;color:var(--text);font-size:0.83rem;font-weight:500;cursor:pointer;transition:all 0.2s;border:none;background:none;width:100%;text-align:left;font-family:inherit}
@@ -339,7 +341,7 @@
     .act-btn.del:hover{color:var(--red)}
     @media(max-width:900px){
       .sidebar{width:60px}
-      .sidebar-logo img{width:40px}.sidebar-logo small,.nav-item span:not(.icon),.nav-item .badge,.nav-group,.sidebar-user .info{display:none}
+      .sidebar-logo img{width:40px}.sidebar-logo small,.sidebar-logo .partner-logo,.nav-item span:not(.icon),.nav-item .badge,.nav-group,.sidebar-user .info{display:none}
       .nav-item{justify-content:center;padding:0.7rem}
       .main{margin-left:60px}
       .stats-grid,.fin-grid{grid-template-columns:repeat(2,1fr)}
@@ -386,7 +388,7 @@
 
 <!-- SIDEBAR -->
 <aside class="sidebar" id="sidebar" style="display:none">
-  <div class="sidebar-logo"><img src="logo.png" alt="BooGagArt"><small>CRM-система</small></div>
+  <div class="sidebar-logo"><img src="logo.png" alt="BooGagArt"><img src="provkus-logo.jpeg" alt="Provkus Catering" class="partner-logo"><small>CRM-система</small></div>
   <nav class="sidebar-nav">
     <div class="nav-group">Основное</div>
     <button class="nav-item active" data-page="dashboard"><span class="icon">&#9632;</span><span>Дашборд</span></button>
