@@ -1102,6 +1102,7 @@ document.querySelectorAll('.nav-item[data-page]').forEach(btn=>{
     ta.innerHTML='';
     const cfg=PAGES[currentPage]?.btn;
     if(cfg&&canEdit()){const b=document.createElement('button');b.className='btn btn-primary';b.textContent=cfg.label;b.onclick=cfg.action;ta.appendChild(b);}
+    if(currentPage==='catering')hideSavedMenus();
     if(currentPage==='calendar')renderCalendar();
     if(currentPage==='finance')renderFinance();
     if(currentPage==='other')renderOther();
