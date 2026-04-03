@@ -2234,12 +2234,12 @@ function viewLeadCateringMenu(leadId){
   const l=data.leads.find(x=>x.id===leadId);
   if(!l||!l.cateringMenu)return;
   const m=l.cateringMenu;
-  const catTitles={cold:'Холодные закуски',hot_snack:'Горячие закуски',salad:'Салаты',pastry:'Выпечка',dessert:'Десерты',hot:'Горячие блюда',garnish:'Гарниры',drinks:'Напитки'};
+  const catTitles={cold:'Холодные закуски',hot_snack:'Горячие закуски',salad:'Салаты',soup:'Супы',pasta:'Пасты',pastry:'Выпечка',dessert:'Десерты',hot:'Горячие блюда',garnish:'Гарниры',sandwich:'Сэндвичи/Бургеры',breakfast:'Завтраки',drinks:'Напитки'};
   const grouped={};
   (m.items||[]).filter(i=>i.qty>0).forEach(i=>{if(!grouped[i.category])grouped[i.category]=[];grouped[i.category].push(i);});
   let html='<div style="max-height:60vh;overflow-y:auto">';
   html+=`<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem"><span style="color:var(--text)">На <strong style="color:var(--white)">${m.guests}</strong> персон</span><span style="color:var(--green);font-weight:600">${(m.perPerson||0).toLocaleString('ru-RU')} ₸/чел</span></div>`;
-  for(const cat of ['cold','hot_snack','salad','pastry','dessert','hot','garnish','drinks']){
+  for(const cat of ['cold','hot_snack','salad','soup','pasta','pastry','dessert','hot','garnish','sandwich','breakfast','drinks']){
     if(!grouped[cat])continue;
     html+=`<h4 style="color:var(--primary);font-size:0.8rem;margin:0.8rem 0 0.4rem">${catTitles[cat]}</h4>`;
     grouped[cat].forEach(i=>{
@@ -2357,10 +2357,10 @@ function printCateringMenu(staffMode){
   html+=`<h1>КЕЙТЕРИНГ-МЕНЮ НА ${m.guests} ПЕРСОН${sf?'<span class="badge">для сотрудников</span>':''}</h1>`;
   if(lead)html+=`<div class="meta">${lead.name} — ${EV[lead.eventType]||''} | ${lead.eventDate?fmtDate(lead.eventDate):''}</div>`;
 
-  const catTitles={cold:'I. Холодные закуски',hot_snack:'II. Горячие закуски',salad:'III. Салаты',pastry:'IV. Выпечка',dessert:'V. Десерты',hot:'VI. Горячие блюда и Гриль',garnish:'VII. Гарниры',drinks:'VIII. Напитки'};
+  const catTitles={cold:'I. Холодные закуски',hot_snack:'II. Горячие закуски',salad:'III. Салаты',soup:'IV. Супы',pasta:'V. Пасты',pastry:'VI. Выпечка',dessert:'VII. Десерты',hot:'VIII. Горячие блюда и Гриль',garnish:'IX. Гарниры',sandwich:'X. Сэндвичи/Бургеры',breakfast:'XI. Завтраки',drinks:'XII. Напитки'};
   const grouped={};
   m.items.filter(i=>i.qty>0&&i.category!=='service').forEach(i=>{if(!grouped[i.category])grouped[i.category]=[];grouped[i.category].push(i);});
-  ['cold','hot_snack','salad','pastry','dessert','hot','garnish','drinks'].forEach(cat=>{
+  ['cold','hot_snack','salad','soup','pasta','pastry','dessert','hot','garnish','sandwich','breakfast','drinks'].forEach(cat=>{
     if(!grouped[cat])return;
     const bt=grouped[cat].reduce((s,i)=>s+i.total,0);
     if(sf){
