@@ -583,12 +583,20 @@
           <button class="btn btn-sm btn-secondary" onclick="filterCatering('cold')">Холодные закуски</button>
           <button class="btn btn-sm btn-secondary" onclick="filterCatering('hot_snack')">Горячие закуски</button>
           <button class="btn btn-sm btn-secondary" onclick="filterCatering('salad')">Салаты</button>
+          <button class="btn btn-sm btn-secondary" onclick="filterCatering('soup')">Супы</button>
+          <button class="btn btn-sm btn-secondary" onclick="filterCatering('pasta')">Пасты</button>
           <button class="btn btn-sm btn-secondary" onclick="filterCatering('pastry')">Выпечка</button>
           <button class="btn btn-sm btn-secondary" onclick="filterCatering('dessert')">Десерты</button>
           <button class="btn btn-sm btn-secondary" onclick="filterCatering('hot')">Горячие блюда</button>
           <button class="btn btn-sm btn-secondary" onclick="filterCatering('garnish')">Гарниры</button>
+          <button class="btn btn-sm btn-secondary" onclick="filterCatering('sandwich')">Сэндвичи</button>
+          <button class="btn btn-sm btn-secondary" onclick="filterCatering('breakfast')">Завтраки</button>
           <button class="btn btn-sm btn-secondary" onclick="filterCatering('drinks')">Напитки</button>
           <button class="btn btn-sm btn-secondary" onclick="filterCatering('service')">Сервис</button>
+          <span style="margin-left:0.5rem;border-left:1px solid var(--border);padding-left:0.5rem;display:inline-flex;gap:0.3rem">
+            <button class="btn btn-sm btn-secondary" onclick="filterCateringTag('vegetarian')" id="tagBtnVegetarian" style="font-size:0.7rem">&#127793; Вегетарианское</button>
+            <button class="btn btn-sm btn-secondary" onclick="filterCateringTag('seafood')" id="tagBtnSeafood" style="font-size:0.7rem">&#127843; Морепродукты</button>
+          </span>
         </div>
         <table><thead><tr><th>Позиция</th><th>Категория</th><th>Описание</th><th>Цена (₸)</th><th class="cost-col">Себест. (₸)</th><th>Ед.</th><th></th></tr></thead>
         <tbody id="cateringTable"></tbody></table>
@@ -1962,12 +1970,12 @@ function generateCateringMenu(){
   const service=document.getElementById('catService').value;
 
   let allowedCats=[];
-  if(format==='banquet') allowedCats=['cold','hot_snack','salad','pastry','dessert','hot','garnish','drinks'];
-  else if(format==='buffet') allowedCats=['cold','hot_snack','salad','pastry','dessert','garnish','drinks'];
+  if(format==='banquet') allowedCats=['cold','hot_snack','salad','soup','pasta','pastry','dessert','hot','garnish','sandwich','breakfast','drinks'];
+  else if(format==='buffet') allowedCats=['cold','hot_snack','salad','soup','pasta','pastry','dessert','garnish','sandwich','drinks'];
   else if(format==='coffee') allowedCats=['pastry','dessert','drinks'];
 
   let pool=data.catering.filter(c=>allowedCats.includes(c.category));
-  if(pref==='no-seafood') pool=pool.filter(c=>!/креветк|морепродукт|семга|рыб/i.test(c.name+c.description));
+  if(pref==='no-seafood') pool=pool.filter(c=>!(c.tags||[]).includes('seafood')&&!/креветк|морепродукт|семга|рыб|лосос|форел|дорадо|сибас|тунец|кальмар|угр/i.test(c.name+c.description));
   if(pref==='light') pool=pool.filter(c=>!/шашлык|плов|сырне|ягнен/i.test(c.name+c.description));
 
   if(format==='buffet'){
@@ -1980,7 +1988,7 @@ function generateCateringMenu(){
   const catGroups={};
   pool.forEach(c=>{if(!catGroups[c.category])catGroups[c.category]=[];catGroups[c.category].push(c);});
 
-  const rules={banquet:{cold:3,hot_snack:2,salad:2,pastry:2,dessert:2,hot:2,garnish:2,drinks:1},buffet:{cold:3,hot_snack:2,salad:1,pastry:2,dessert:1,hot:1,garnish:1,drinks:1},coffee:{pastry:3,dessert:2,drinks:1}};
+  const rules={banquet:{cold:3,hot_snack:2,salad:2,soup:1,pasta:1,pastry:2,dessert:2,hot:2,garnish:2,sandwich:1,breakfast:1,drinks:1},buffet:{cold:3,hot_snack:2,salad:1,soup:1,pasta:1,pastry:2,dessert:1,hot:1,garnish:1,sandwich:1,drinks:1},coffee:{pastry:3,dessert:2,drinks:1}};
   const maxPerCat=rules[format]||rules.banquet;
   const selected=[];
   let totalFoodCost=0;
@@ -2103,8 +2111,8 @@ function renderCateringResult(){
   const m=currentCateringMenu;
   const grouped={};
   m.items.forEach(i=>{if(!grouped[i.category])grouped[i.category]=[];grouped[i.category].push(i);});
-  const catOrder=['cold','hot_snack','salad','pastry','dessert','hot','garnish','drinks'];
-  const catTitles={cold:'I. Холодные закуски',hot_snack:'II. Горячие закуски',salad:'III. Салаты',pastry:'IV. Выпечка',dessert:'V. Десерты',hot:'VI. Горячие блюда и Гриль',garnish:'VII. Гарниры',drinks:'VIII. Напитки'};
+  const catOrder=['cold','hot_snack','salad','soup','pasta','pastry','dessert','hot','garnish','sandwich','breakfast','drinks'];
+  const catTitles={cold:'I. Холодные закуски',hot_snack:'II. Горячие закуски',salad:'III. Салаты',soup:'IV. Супы',pasta:'V. Пасты',pastry:'VI. Выпечка',dessert:'VII. Десерты',hot:'VIII. Горячие блюда и Гриль',garnish:'IX. Гарниры',sandwich:'X. Сэндвичи/Бургеры',breakfast:'XI. Завтраки',drinks:'XII. Напитки'};
 
   let html='<div style="margin-top:1.2rem;background:var(--bg2);border-radius:var(--radius);padding:1.2rem;border:1px solid var(--border)">';
   html+='<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;flex-wrap:wrap;gap:0.5rem"><h3 style="color:var(--white)">Предварительное меню на '+m.guests+' персон</h3><div style="display:flex;gap:0.5rem"><button class="btn btn-sm btn-secondary" onclick="printCateringMenu(false)">&#128424; Печать</button><button class="btn btn-sm btn-secondary" onclick="printCateringMenu(true)">&#128424; Для сотрудников</button><button class="btn btn-sm btn-primary" onclick="saveCateringToLead()">&#128190; Сохранить в заявку</button></div></div>';
@@ -2380,19 +2388,30 @@ function printCateringMenu(staffMode){
 }
 
 // === CATERING TABLE ===
-const CAT_CATS={cold:'Холодные закуски',hot_snack:'Горячие закуски',salad:'Салаты',pastry:'Выпечка',dessert:'Десерты',hot:'Горячие блюда',garnish:'Гарниры',drinks:'Напитки',service:'Сервис'};
-const CAT_COLORS={cold:'var(--blue)',hot_snack:'var(--primary)',salad:'var(--green)',pastry:'var(--yellow)',dessert:'var(--purple)',hot:'var(--red)',garnish:'#d97706',drinks:'#0ea5e9',service:'var(--text)'};
+const CAT_CATS={cold:'Холодные закуски',hot_snack:'Горячие закуски',salad:'Салаты',soup:'Супы',pasta:'Пасты',pastry:'Выпечка',dessert:'Десерты',hot:'Горячие блюда',garnish:'Гарниры',sandwich:'Сэндвичи/Бургеры',breakfast:'Завтраки',drinks:'Напитки',service:'Сервис'};
+const CAT_COLORS={cold:'var(--blue)',hot_snack:'var(--primary)',salad:'var(--green)',soup:'#f59e0b',pasta:'#ec4899',pastry:'var(--yellow)',dessert:'var(--purple)',hot:'var(--red)',garnish:'#d97706',sandwich:'#14b8a6',breakfast:'#f97316',drinks:'#0ea5e9',service:'var(--text)'};
+const TAG_LABELS={vegetarian:'Вегетарианское',seafood:'Морепродукты'};
+const TAG_COLORS={vegetarian:'#22c55e',seafood:'#3b82f6'};
 let cateringFilter='';
+let cateringTagFilter='';
 function filterCatering(cat){
   cateringFilter=cat;
+  cateringTagFilter='';
   document.querySelectorAll('#cateringFilters .btn').forEach((b,i)=>{
+    if(b.id&&b.id.startsWith('tagBtn')){b.className='btn btn-sm btn-secondary';return;}
     b.className='btn btn-sm '+((!cat&&i===0)||(b.textContent===CAT_CATS[cat])?'btn-primary':'btn-secondary');
   });
+  renderCateringTable();
+}
+function filterCateringTag(tag){
+  if(cateringTagFilter===tag){cateringTagFilter='';document.getElementById('tagBtn'+tag.charAt(0).toUpperCase()+tag.slice(1)).className='btn btn-sm btn-secondary';}
+  else{cateringTagFilter=tag;document.querySelectorAll('[id^=tagBtn]').forEach(b=>b.className='btn btn-sm btn-secondary');document.getElementById('tagBtn'+tag.charAt(0).toUpperCase()+tag.slice(1)).className='btn btn-sm btn-primary';}
   renderCateringTable();
 }
 function renderCateringTable(){
   const search=(document.getElementById('cateringSearch')?.value||'').toLowerCase();
   let items=cateringFilter?data.catering.filter(c=>c.category===cateringFilter):[...data.catering];
+  if(cateringTagFilter)items=items.filter(c=>(c.tags||[]).includes(cateringTagFilter));
   if(search)items=items.filter(c=>c.name.toLowerCase().includes(search)||(c.description||'').toLowerCase().includes(search));
   items.sort((a,b)=>a.name.localeCompare(b.name,'ru'));
   const wrap=document.querySelector('#page-catering .table-wrap:last-child');
@@ -2403,7 +2422,7 @@ function renderCateringTable(){
     const qty=manualSelections[c.id]||0;
     return`<tr>
       <td style="color:var(--white);font-weight:500">${esc(c.name)}</td>
-      <td><span style="display:inline-block;padding:2px 8px;border-radius:4px;font-size:0.7rem;font-weight:600;background:${CAT_COLORS[c.category]||'var(--bg4)'};color:#fff">${CAT_CATS[c.category]||c.category}</span></td>
+      <td><span style="display:inline-block;padding:2px 8px;border-radius:4px;font-size:0.7rem;font-weight:600;background:${CAT_COLORS[c.category]||'var(--bg4)'};color:#fff">${CAT_CATS[c.category]||c.category}</span>${(c.tags||[]).map(t=>`<span style="display:inline-block;padding:1px 5px;border-radius:3px;font-size:0.6rem;font-weight:500;background:${TAG_COLORS[t]||'#666'};color:#fff;margin-left:3px">${t==='vegetarian'?'&#127793;':'&#127843;'}</span>`).join('')}</td>
       <td style="font-size:0.75rem;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${esc(c.description||'')}">${esc(c.description||'-')}</td>
       <td style="font-weight:600;color:var(--green)">${c.category==='service'&&c.unit==='%'?(c.unitPrice||0)+'%':(c.unitPrice||0).toLocaleString('ru-RU')+' ₸'}</td>
       <td class="cost-col" style="color:var(--text)">${c.category==='service'&&c.unit==='%'?'—':(c.costPrice||0).toLocaleString('ru-RU')+' ₸'}</td>
@@ -2440,10 +2459,17 @@ function openCateringModal(id){
         <select id="fcUnit">${['порция','шт','чел','комплект','л','%'].map(u=>`<option value="${u}" ${c.unit===u?'selected':''}>${u}</option>`).join('')}</select></div>
     </div>
     <div class="form-group"><label>Описание</label><textarea id="fcDesc">${esc(c.description||'')}</textarea></div>
+    <div class="form-group"><label>Теги</label><div style="display:flex;gap:0.8rem;margin-top:0.3rem">
+      <label style="display:flex;align-items:center;gap:0.3rem;cursor:pointer;font-size:0.8rem;color:var(--text2)"><input type="checkbox" id="fcTagVeg" ${(c.tags||[]).includes('vegetarian')?'checked':''}> &#127793; Вегетарианское</label>
+      <label style="display:flex;align-items:center;gap:0.3rem;cursor:pointer;font-size:0.8rem;color:var(--text2)"><input type="checkbox" id="fcTagSea" ${(c.tags||[]).includes('seafood')?'checked':''}> &#127843; Морепродукты</label>
+    </div></div>
   `,`<button class="btn btn-secondary" onclick="closeModal()">Отмена</button>
     <button class="btn btn-primary" onclick="saveCatering('${id||''}')">${id?'Сохранить':'Добавить'}</button>`);
 }
 async function saveCatering(id){
+  const tags=[];
+  if(document.getElementById('fcTagVeg')?.checked)tags.push('vegetarian');
+  if(document.getElementById('fcTagSea')?.checked)tags.push('seafood');
   const body={
     name:document.getElementById('fcName').value,
     category:document.getElementById('fcCat').value,
@@ -2451,6 +2477,7 @@ async function saveCatering(id){
     costPrice:+document.getElementById('fcCostPrice').value||0,
     unit:document.getElementById('fcUnit').value,
     description:document.getElementById('fcDesc').value,
+    tags,
   };
   await apiCall(id?'catering/'+id:'catering',id?'PUT':'POST',body);
   closeModal();await loadAll();
