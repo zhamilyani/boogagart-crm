@@ -2088,8 +2088,9 @@ function rebuildManualMenu(){
   const existingItems=(currentCateringMenu&&currentCateringMenu.items)||[];
   const items=[];
   for(const [id,qty] of Object.entries(manualSelections)){
+    const existing=existingItems.find(x=>x.id===id);
     const c=data.catering.find(x=>x.id===id);
-    const src=c||existingItems.find(x=>x.id===id);
+    const src=existing||c;
     if(!src)continue;
     if(src.category==='service'&&src.unit==='%'){
       items.push({...src,qty:1,total:0});
@@ -2188,7 +2189,13 @@ function updateMenuItemPrice(type,id,price,qty){
   const item=currentCateringMenu[type].find(i=>i.id===id);
   if(!item)return;
   if(price!==null&&price!==undefined)item.unitPrice=price;
-  if(qty!==null&&qty!==undefined)item.qty=qty;
+  if(qty!==null&&qty!==undefined){
+    item.qty=qty;
+    if(manualMenuMode&&item.category!=='service'){
+      if(qty<=0)delete manualSelections[id];
+      else manualSelections[id]=qty;
+    }
+  }
   if(item.category!=='service')item.total=item.unitPrice*item.qty;
   recalcCateringTotals();
 }
